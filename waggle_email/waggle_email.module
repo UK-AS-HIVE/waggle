@@ -1,0 +1,83 @@
+<?php
+
+/*
+ * Implements hook_cron
+ */
+function waggle_email_cron()
+{
+  // TODO: eventually check the imap server for incoming messages, but
+  // first make sure it _works_ and second make sure hook_cron is the right place
+  // for this... sometimes the process is long-running, so it may not be
+}
+
+/*
+ * Implements hook_menu().
+ */
+function waggle_email_menu()
+{
+  $items = array();
+  $items['admin/config/waggle/email'] = array(
+    'title' => 'Waggle Email Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('waggle_email_admin_form'),
+    'access callback' => array('administer content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/*
+ * Implements form callback
+ */
+function waggle_email_admin_form()
+{
+  $form['server'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Server',
+    '#default_value' => variable_get('waggle_email_imap_server', ''),
+    '#required' => TRUE,
+  );
+
+  $form['user'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Account user name',
+    '#default_value' => variable_get('waggle_email_imap_user', ''),
+    '#required' => TRUE,
+  );
+
+  $form['pass'] = array(
+    '#type' => 'password',
+    '#title' => 'Password',
+    '#default_value' => variable_get('waggle_email_imap_pass', ''),
+    '#required' => TRUE,
+  );
+
+  $form['secure'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Secure connection',
+    '#default_value' => variable_get('waggle_email_imap_secure', 1),
+    '#required' => TRUE,
+  );
+
+  return $form;
+}
+
+function waggle_email_admin_form_validate($form, &$form_state)
+{
+}
+
+function waggle_email_admin_form_submit($form, $form_state)
+{
+}
+
+// TODO: this is the big mamma jamma-- connect to imap, get messages,
+// create stories
+function waggle_email_collect_imap_messages()
+{
+  $server = variable_get('waggle_email_imap_server');
+  $imap_user = variable_get('waggle_email_imap_user');
+  $imap_pass = variable_get('waggle_email_imap_pass');
+  $use_secure = variable_get('waggle_email_imap_secure', 1);
+}
+
