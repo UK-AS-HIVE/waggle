@@ -1,0 +1,5 @@
+name = Waggle
+description = Implements Cash Integration
+package = Waggle
+core = 7.x
+files[] = waggle.module

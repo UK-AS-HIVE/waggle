@@ -1,0 +1,71 @@
+<?php
+
+/**
+ *  Implements hook_menu()
+ */
+function waggle_menu()
+{
+    $items['stories'] = array(
+      'page callback' => 'waggle_stories',
+      'access arguments' => array('access content'),
+    );
+    // API
+    $items['waggle/api/load-user'] = array(
+      'page callback' => 'waggle_load_user',  
+      'type' => MENU_CALLBACK,
+    );
+    $items['waggle/api/get-stories'] = array(
+      'page callback' => 'waggle_load_stories_default',  
+      'type' => MENU_CALLBACK,
+    );
+    $items['waggle/api/get-stories/%'] = array(
+      'page callback' => 'waggle_load_stories',  
+      'page arguments' => array(3),
+      'type' => MENU_CALLBACK,
+    );
+
+    return $items;
+}
+
+function waggle_stories()
+{
+    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
+    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
+    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
+    //drupal_add_js(drupal_get_path('module', 'waggle') . '/js/story-dom.js');
+    drupal_add_js('
+      jQuery(document).ready(function() {
+        LoadUser();
+        GetTickets();
+        PrepareInterface();    
+      });
+    ', 'inline');
+
+    return 'Loading Stories...';
+}
+
+
+/*****   API CALLS  ********/
+
+/**
+ *   function to load and return the current user
+ */
+function waggle_load_user(){
+  global $user;
+  return drupal_json_encode($user);
+}
+
+/**
+ *  function to load default stories, pass them through the appropriate view, and return the rendered html
+ */
+function waggle_load_stories_default(){
+  return views_embed_view('waggle_stories', 'page');
+}
+
+/**
+ *  function to load stories of given nids, pass them through the appropriate view, and return the rendered html
+ */
+function waggle_load_stories($stories_arg){
+  dsm($stories_arg);
+  return views_embed_view('waggle_stories', 'page');
+}
