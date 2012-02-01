@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Implements hook_help().
+ */
+function waggle_email_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#waggle_email':
+      return '<p>' . t("Waggle email.") . '</p>';
+  }
+}
+
 /*
  * Implements hook_cron
  */
@@ -16,54 +26,25 @@ function waggle_email_cron()
 function waggle_email_menu()
 {
   $items = array();
-  $items['admin/config/waggle/email'] = array(
-    'title' => 'Waggle Email Settings',
+  $items['admin/config/waggle_email'] = array(
+    'title' => 'Waggle Email',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('waggle_email_admin_form'),
-    'access callback' => array('administer content'),
-    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer site configuration'), 
+    'file' => 'waggle_email.admin.inc',
+  );
+  $items['admin/config/waggle_email/imap_credentials'] = array(
+    'title' => 'IMAP Credentials',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('waggle_email_admin_form'),
+    'access arguments' => array('administer site configuration'), 
+    'file' => 'waggle_email.admin.inc',
   );
 
   return $items;
 }
 
-/*
- * Implements form callback
- */
-function waggle_email_admin_form()
-{
-  $form['server'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Server',
-    '#default_value' => variable_get('waggle_email_imap_server', ''),
-    '#required' => TRUE,
-  );
-
-  $form['user'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Account user name',
-    '#default_value' => variable_get('waggle_email_imap_user', ''),
-    '#required' => TRUE,
-  );
-
-  $form['pass'] = array(
-    '#type' => 'password',
-    '#title' => 'Password',
-    '#default_value' => variable_get('waggle_email_imap_pass', ''),
-    '#required' => TRUE,
-  );
-
-  $form['secure'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'Secure connection',
-    '#default_value' => variable_get('waggle_email_imap_secure', 1),
-    '#required' => TRUE,
-  );
-
-  return $form;
-}
-
-function waggle_email_admin_form_validate($form, &$form_state)
+function waggle_email_admin_form_validate($form, $form_state)
 {
 }
 
