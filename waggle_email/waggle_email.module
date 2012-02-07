@@ -18,6 +18,7 @@ function waggle_email_cron()
   // TODO: eventually check the imap server for incoming messages, but
   // first make sure it _works_ and second make sure hook_cron is the right place
   // for this... sometimes the process is long-running, so it may not be
+  waggle_email_collect_imap_messages();
 }
 
 /*
@@ -68,5 +69,72 @@ function waggle_email_collect_imap_messages()
   $imap_user = variable_get('waggle_email_imap_user');
   $imap_pass = variable_get('waggle_email_imap_pass');
   $use_secure = variable_get('waggle_email_imap_secure', 1);
+
+  $imap = imap_open('{' . $server . ($use_secure?':993/imap/ssl}':':143/imap}'), $imap_user, $imap_pass, NULL, 1, array('DISABLE_AUTHENTICATOR' => 'GSSAPI') );
+
+  $folders = imap_listmailbox($imap, '{' . $server . ':' . ($use_secure?'993':'143') . '}', '*');
+  drupal_set_message('folders: ' . print_r($folders,true));
+
+  // TODO: store last date checked, and check against that
+  $search = imap_search($imap, 'SINCE "7 February 2012" UNSEEN', SE_UID);
+
+  if (!$search)
+  {
+    // no new messages
+    return;
+  }
+
+  foreach ($search as $index => $uid)
+  {
+    // get message body. this marks it SEEN as well
+    $body = imap_body($imap, $uid, FT_UID + FT_PEEK); // TODO: remove FT_PEEK to mark messages SEEN
+    $header = imap_headerinfo($imap, $index, FT_PEEK);
+    $structure = imap_fetchstructure($imap, $uid, FT_UID);
+
+    if ($structure->type === 0)
+    {
+      // text
+      $text = $body;
+    }
+    else if ($structure->type === 1)
+    {
+      // multipart -- this has attachments
+      $parts = explode($structure->parameters[0]->value,$body);
+      $text = $parts[0];
+    }
+
+    // base-64 encoded
+    if ($structure->encoding === 3)
+    {
+      $text = base64_decode($text);
+    }
+    elseif ($structure->encoding === 4)
+    {
+      $text = quoted_printable_decode($text);
+    }
+
+    drupal_set_message('<pre>' . print_r(array($header, $structure, $text),true) . '</pre>');
+
+    // TODO: is this a note on a story, or a new story?
+
+    // TODO: map to users -- from, to, cc, bcc, sender
+    $recipients = array();
+    foreach(array('to','cc','bcc') as $recipient_type)
+      if (isset($header->$recipient_type))
+        $recipients = array_merge($recipients, $header->$recipient_type);
+      
+    foreach ($recipients as $recipient)
+    {
+      if ($recipient->host === 'uky.edu')
+      {
+        // mailbox name is LinkBlue name
+        $associates[] = $recipient->mailbox;
+      }
+    }
+
+  }
+
+  imap_close($imap);
+
 }
 

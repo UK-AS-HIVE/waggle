@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Provide administration screens for ec_checkout module.
+ * Provide administration screens for waggle_email module.
  */
 
 /* * Implements form callback */
