@@ -48,8 +48,16 @@ function waggle_email_admin_form_validate($form, $form_state)
 {
 }
 
-function waggle_email_admin_form_submit($form, $form_state)
+function waggle_email_admin_form_submit($form, &$form_state)
 {
+  $server = $form_state['values']['server'];
+  $user = $form_state['values']['user'];
+  $pass = $form_state['values']['pass'];
+  $secure = $form_state['values']['secure'];
+  variable_set('waggle_email_imap_server', $server);
+  variable_set('waggle_email_imap_user', $user);
+  variable_set('waggle_email_imap_pass', $pass);
+  variable_set('waggle_email_imap_secure', $secure);
 }
 
 // TODO: this is the big mamma jamma-- connect to imap, get messages,
