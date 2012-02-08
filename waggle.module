@@ -31,15 +31,21 @@ function waggle_menu()
       'type' => MENU_CALLBACK,
       'access arguments' => array('access content'),
     );
+    $items['waggle/api/remove-user/%node/%'] = array(
+      'page callback' => 'waggle_remove_user',  
+      'type' => MENU_CALLBACK,
+      'page arguments' => array(3, 4),
+      'access arguments' => array('access content'),
+    );
 
     return $items;
 }
 
 function waggle_stories()
 {
+    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
-    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
     //drupal_add_js(drupal_get_path('module', 'waggle') . '/js/story-dom.js');
     drupal_add_js('
       jQuery(document).ready(function() {
@@ -136,4 +142,19 @@ function waggle_add_note(){
   }
   drupal_json_output(views_embed_view('waggle_story_actions', 'block', $get['nid']));
   //return 'yes';
+}
+
+/**
+ * Function to remove a giver user from a given node.
+ */
+function waggle_remove_user($node, $uid){
+  $found = false;
+  foreach($node->field_associated_users['und'] as $delta => $data){
+    if($data['uid'] == $uid){
+	  unset($node->field_associated_users['und'][$delta]);
+	  node_save($node);
+	  break;
+	}
+  }
+  drupal_json_output('');
 }

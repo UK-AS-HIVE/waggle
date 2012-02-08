@@ -28,7 +28,6 @@ PreviousStory = function(){
 }
 
 NextStory = function(){
-  console.log('next');
   if($('.story.expanded').length == 0 || $('.story.expanded').attr('id') == $('.view-waggle-stories .views-row-last .story').attr('id')) {
     ExpandStory($('.view-waggle-stories .views-row-first .story'), 0);
   }	
@@ -38,7 +37,6 @@ NextStory = function(){
 }
 
 ExpandStory = function(story, speed){
-  console.log('expand');
   if(story.length != 1) {
     return;
   }
