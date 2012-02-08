@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * Implements hook_menu
+ */
+function waggle_users_menu(){
+  $items['waggle/api/user-push'] = array(
+    'page callback' => 'waggle_user_push',  
+    //'type' => MENU_NORMAL_ITEM,
+	'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+function waggle_user_push(){
+  if(substr($_SERVER['REMOTE_ADDR'], 0, 7) != '128.163')
+    return;
+  $get = $_GET;
+  $account = user_load_by_name($get['name']);
+  if(!$account){
+    watchdog('waggle_users', 'Tried to save information for \'' . $get['name'] . '\', but no user with that login is in the system.');
+    return FALSE;
+  }
+    
+  if(isset($get['office']))
+    $account->field_office['und'][0]['value'] = $get['office'];
+  if(isset($get['phone']))
+    $account->field_phone['und'][0]['value'] = $get['phone'];
+  if(isset($get['mail']))
+    $account->field_mail['und'][0]['value'] = $get['mail'];
+  if(isset($get['affiliations'])){
+    unset($account->field_department);
+    foreach(explode('|', $get['affiliations']) as $dept)
+	  $account->field_department['und'][] = array('value' => $dept);
+  }
+  $edit = (array)$account;
+  foreach(array('authorid', 'theme', 'timezone', 'language', 'data', 'ip', 'uid', 'pass', 'created', 'access', 'login', 'init', 'revision_timestamp', 'revision_uid') as $field)
+    unset($edit[$field]);
+  if(isset($get['picture']))
+    $edit['picture_upload'] = file_save_data(file_get_contents(str_replace('https', 'http', $get['picture'])), 'public://' . array_pop(explode('/', $get['picture'])));
+
+  $success = user_save($account, $edit);
+  drupal_json_output($account);
+}
