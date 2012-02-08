@@ -53,6 +53,10 @@ ExpandStory = function(story, speed){
   story.switchClass('mini', 'expanded', speed);
   
   ScrollToStory(story, offset, speed);
+  
+  var sidebar = $('#block-waggle-waggle-sidebar');
+  sidebar.css('top', (story.offset().top - $('#sidebar-second').offset().top) + 'px');
+  sidebar.css('position', 'absolute')
 }
 
 ScrollToStory = function(story, offset, speed){

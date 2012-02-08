@@ -53,6 +53,38 @@ function waggle_stories()
 }
 
 
+/**
+ * Implements hook_block_info()
+ */
+function waggle_block_info(){
+  $blocks['waggle_sidebar'] = array(
+    'info' => 'Waggle Sidebar',
+	'cache' => DRUPAL_NO_CACHE,
+	'status' => 1,
+	'region' => 'sidebar_second',
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view()
+ */
+function waggle_block_view($delta = ''){
+  switch ($delta) {
+    case 'waggle_sidebar':
+	  $block['subject'] = NULL;
+	  $block['content'] = array(
+	    '#type' => 'markup',
+		'#markup' => '<div id="waggle-sidebar"></div>',
+	  );
+	  break;
+  }
+  
+  return $block;
+}
+
+
+
 /*****   API CALLS  ********/
 
 /**
