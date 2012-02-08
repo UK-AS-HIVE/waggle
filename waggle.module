@@ -13,15 +13,23 @@ function waggle_menu()
     $items['waggle/api/load-user'] = array(
       'page callback' => 'waggle_load_user',  
       'type' => MENU_CALLBACK,
+      'access callback' => TRUE,
     );
     $items['waggle/api/get-stories'] = array(
       'page callback' => 'waggle_load_stories_default',  
       'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
     );
     $items['waggle/api/get-stories/%'] = array(
       'page callback' => 'waggle_load_stories',  
       'page arguments' => array(3),
       'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
+    );
+    $items['waggle/api/add-note'] = array(
+      'page callback' => 'waggle_add_note',  
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
     );
 
     return $items;
@@ -59,7 +67,8 @@ function waggle_load_user(){
  *  function to load default stories, pass them through the appropriate view, and return the rendered html
  */
 function waggle_load_stories_default(){
-  return views_embed_view('waggle_stories', 'page');
+  //dsm('stories');
+  return drupal_json_output(views_embed_view('waggle_stories', 'block'));
 }
 
 /**
@@ -68,4 +77,31 @@ function waggle_load_stories_default(){
 function waggle_load_stories($stories_arg){
   dsm($stories_arg);
   return views_embed_view('waggle_stories', 'page');
+}
+
+/**
+ * Function to add a note to a given story nid.
+ */
+function waggle_add_note(){
+  $get = $_GET;
+  global $user;
+  $node = node_load($get['nid']);
+  // Return if the given nid is invalid, or belongs to a non-story node, or if the user-provided note is empty, or the user isn't logged in
+  if (!$node || $node->type != 'story' || empty($get['note']) || $user->uid == 0) {
+    return 'There was an error with your request.  If you continue to receive this message, please email ashelp@uky.edu or call 859-257-1541.';
+  }
+  
+  $new_note = (object) array('type' => 'action');
+  node_object_prepare($new_note);
+  
+  $new_note->title = $get['nid'] . '-' . time();
+  $new_note->body['und'][0]['value'] = $get['note'];
+  $new_note->field_story['und'][0]['nid'] = $get['nid'];
+  node_save($new_note);
+  if ($new_note) {
+    $node->field_actions['und'][] = array('nid' => $new_note->nid);
+	node_save($node);
+  }
+  drupal_json_output(views_embed_view('waggle_story_actions', 'block', $get['nid']));
+  //return 'yes';
 }

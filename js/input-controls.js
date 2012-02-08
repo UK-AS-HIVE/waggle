@@ -11,11 +11,11 @@ $(document).ready(function () {
 	$(document).keydown(function (e) {
 		var ec = e.keyCode;
 		if ((ec == 32 || ec == 83) && ($('textarea:focus').length == 0) && ($('input:focus').length == 0)) {
-		  WantsNext(); 
+		  NextStory();
 		  return false;
 		}
 		if (ec == 87 && $('textarea:focus').length == 0) {
-		  WantsPrevious();
+		  PreviousStory();
 		  return false;
 		}
 		if (ec == 73 && $('textarea:focus').length == 0 && ($('input:focus').length == 0) && $('.story.expanded').length == 1){
@@ -25,64 +25,18 @@ $(document).ready(function () {
 		
 		//console.log(e.keyCode);
 		
-	}).keyup(function (e) {
-		var ec = e.keyCode;
-		if((ec ==32 || ec == 83 || ec == 87) && quickAnimate){
-		    quickAnimate = false;
-		    wantsQuickAnimate = false;
-			setTimeout(function(){
-			  if(!moveAgain && !quickAnimate && !wantsQuickAnimate)
-		        ExpandQuickviews();
-			}, 200);
-		}
-	});
-	
+	})
 	
 	/****************************************************
 						  Buttons
 	*****************************************************/
 	$('#navigate-up').click(function(){
-	  WantsPrevious();
+	  PreviousStory();
 	});
 	$('#navigate-down').click(function(){
-	  WantsNext();
+	  NextStory();
 	});
 	
-	
-	
-	
-	
-	/****************************************************
-						  Function calls
-	*****************************************************/
-	function WantsNext(){
-	  if(!$('.story div').is(":animated") && !wantsQuickAnimate)
-			NextStory();
-	  else if(!$('.story div').is(":animated") && wantsQuickAnimate && !quickAnimate){
-		QuickNext();
-		quickAnimate = true;
-		moveAgain = false;
-		setTimeout(function(){quickAnimate = false;}, 2000);
-	  }
-	  else {
-		wantsQuickAnimate = true;
-	  }
-	}
-
-	function WantsPrevious(){
-	  if(!$('.story div').is(":animated") && !wantsQuickAnimate)
-			PreviousStory();
-	  else if(!$('.story div').is(":animated") && wantsQuickAnimate && !quickAnimate){
-		QuickPrevious();
-		quickAnimate = true;
-		moveAgain = false;
-		setTimeout(function(){quickAnimate = false;}, 500);
-	  }
-	  else {
-		wantsQuickAnimate = true;
-		moveAgain = true;
-	  }
-	}  
 	
 	
 	
