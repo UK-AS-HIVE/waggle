@@ -14,7 +14,7 @@ $(document).ready(function () {
 		  NextStory();
 		  return false;
 		}
-		if (ec == 87 && $('textarea:focus').length == 0) {
+		if (ec == 87 && $('textarea:focus').length == 0 && $('input:focus').length == 0) {
 		  PreviousStory();
 		  return false;
 		}
@@ -87,24 +87,84 @@ function SetUpStoryInterface(){
 			return false;
 		});
 		
-		// Asociated Users
-		$('.associated-user').hover(function(){
+		AssociatedUsersSetup('.associated-user');
+		UserListSetup('.add-associated-user');
+		
+		// User searching for association
+		var getAutocomplete;
+		$('.add-user-search input').keyup(function(e){
+		    var nid = $(this).attr('class').substring(5),
+			    myInput = this;
+			window.clearTimeout(getAutocomplete);
+			if($(myInput).val().length > 0){
+				getAutocomplete = window.setTimeout(function(){
+					$.getJSON('waggle/api/autocomplete/user/' + nid + '/' + $(myInput).val(), function(json) {
+						console.log(json);
+						var newHTML = '';
+						for (delta in json) {
+							var account = json[delta];
+							console.log(delta);
+							console.log(account);
+							newHTML += '' +
+							  '<a class="user-candidate user-' + delta + ' node-' + nid + '">' +
+							    '<span class="picture">' + account['picture'] + '</span>' +
+								'<span class="name"></span>' + 
+								'<span class="linkblue">' + account['name'] + '</span>' + 
+							  '</a>';
+						}
+						$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
+						UserListSetup('.add-associated-user');
+					});
+				}, 500)
+			}
+		});
+		
+	}(jQuery));
+}
+
+// These calls are put into a functions so that when new items are added, they can be given these bindings easily.
+function AssociatedUsersSetup(selector){
+    (function($){
+		$(selector).hover(function(){
 			$(this).children('.associated-user-rollover').css('display', 'block');
 		}, function(){
 			$(this).children('.associated-user-rollover').css('display', 'none');
 		});
 		
-		$('.associated-user a.remove-user').click(function(){
-		    //$(this).removeClass('remove-user');
+		$(selector + ' a.remove-user').click(function(){
+			var classes = $(this).attr('class').split(' '),
+				nid = classes[2].substring(5),
+				uid = classes[1].substring(5),
+				container = $(this).parents('.associated-user-rollover');
+			$.getJSON('waggle/api/remove-user/' + nid + '/' + uid, function(json) {
+			  container.remove();
+			});
+			$(this).parents('.associated-user').remove();
+			return false;
+		});
+	}(jQuery));
+}
+
+function UserListSetup(selector){
+	(function($){
+		$(selector).hover(function(){
+			$(this).children('.associated-user-rollover').css('display', 'block');
+			$(this).find('input').focus();
+		}, function(){
+			$(this).children('.associated-user-rollover').css('display', 'none');
+		});
+		
+		$(selector + ' a').click(function(){
 			var classes = $(this).attr('class').split(' '),
 			    nid = classes[2].substring(5),
 				uid = classes[1].substring(5),
-				container = $(this).parent().parent();
-		    $.getJSON('waggle/api/remove-user/' + nid + '/' + uid, function(json) {
-			  console.log('remove user returned');
-			  container.remove();
+				container = $(this);
+		    $.getJSON('waggle/api/add-user/' + nid + '/' + uid, function(json) {
+			    container.remove();
+			    $('#story-' + nid + ' .current-associated-users').append(json);
+				AssociatedUsersSetup('#story-' + nid + ' .associated-user');
 			});
-			$(this).parent().remove();
+			$(this).parents('.associated-user-rollover').css('display', 'none');
 		    return false;
 		});
 	}(jQuery));

@@ -37,6 +37,18 @@ function waggle_menu()
       'page arguments' => array(3, 4),
       'access arguments' => array('access content'),
     );
+	$items['waggle/api/add-user/%node/%'] = array(
+      'page callback' => 'waggle_add_user',  
+      'type' => MENU_CALLBACK,
+      'page arguments' => array(3, 4),
+      'access arguments' => array('access content'),
+    );
+	$items['waggle/api/autocomplete/user/%node/%'] = array(
+      'page callback' => 'waggle_autocomplete_user',  
+      'type' => MENU_CALLBACK,
+      'page arguments' => array(4, 5),
+      'access arguments' => array('access content'),
+    );
 
     return $items;
 }
@@ -145,16 +157,97 @@ function waggle_add_note(){
 }
 
 /**
- * Function to remove a giver user from a given node.
+ * Function to remove a given user from a given node.
  */
 function waggle_remove_user($node, $uid){
-  $found = false;
+  $found = FALSE;
   foreach($node->field_associated_users['und'] as $delta => $data){
     if($data['uid'] == $uid){
 	  unset($node->field_associated_users['und'][$delta]);
 	  node_save($node);
+	  $found = TRUE;
 	  break;
 	}
   }
-  drupal_json_output('');
+  drupal_json_output($found);
+}
+
+/**
+ * Function to add a given user from a given node.
+ */
+function waggle_add_user($node, $uid){
+  $found = FALSE;
+  //Make sure the user isn't already attatched to this story
+  foreach($node->field_associated_users['und'] as $delta => $data){
+    if($data['uid'] == $uid){
+	  $found = TRUE;
+	  break;
+	}
+  }
+  if(!$found){
+    $node->field_associated_users['und'][] = array('uid' => $uid);
+	node_save($node);
+  }
+  $account = user_load($uid);
+  
+  // @TODO This code mimicks the layout in views-view-fields--waggle-stories.tpl.php.  There may be a better way...
+  $picture = '<img src="' . (empty($account->picture) ? drupal_get_path('module', 'waggle') . '/default_user.png' : file_create_url($account->picture->uri)) . '" alt="' . $account->name . '"/>';
+  $name = array();
+  if(!empty($account->field_name)){
+    foreach($account->field_name['und']['0'] as $part){
+	  if(!empty($part)){
+	    $name[] = $part;
+	  }
+    }
+  }
+  $name = implode(' ', $name);
+  $roll_over = 
+    '<div class="associated-user-rollover">' .
+  	  '<div class="picture">' . $picture . '</div>' . 
+	  '<div class="name">' . $name . '</div>' . 
+	  '<div class="linkblue">' . $account->name . '</div>' . 
+	  '<a class="remove-user user-' . $uid . ' node-' . $node->nid . '" href="">Unassociate</a>' .
+    '</div>';
+  $json = '<div class="associated-user user-' . $uid . '"><div class="small-picture">' . $picture . '</div>' . $roll_over . '</div>';
+  
+  drupal_json_output($json);
+}
+
+/**
+ * Autocomplete function for Add Associated User boxes
+ */
+function waggle_autocomplete_user($node, $string){
+  $associated = array();
+  foreach($node->field_associated_users['und'] as $delta => $data){
+    if(!in_array($data['uid'], $associated)){
+	  $associated[] = $data['uid'];
+	}
+  }
+  $string_parts = explode(' ', $string);
+  
+  $query = db_select('users', 'u');
+  $query->leftJoin('field_data_field_name', 'f', 'u.uid=f.entity_id');
+  foreach($string_parts as $part){
+	$query->condition(db_or()->condition('u.name', '%' . $part . '%', 'LIKE')
+	  ->condition('u.mail', '%' . $part . '%', 'LIKE')
+	  ->condition('f.field_name_first', '%' . $part . '%', 'LIKE')
+	  ->condition('f.field_name_first', '%' . $part . '%', 'LIKE')
+	  ->condition('f.field_name_middle', '%' . $part . '%', 'LIKE')
+	);
+  }
+  if(!empty($associated)){
+    $query->condition('u.uid', $associated, 'NOT IN');
+  }
+  $results = $query->fields('u', array('uid', 'name', 'picture'))
+    ->fields('f', array('field_name_first', 'field_name_middle', 'field_name_last'))
+	->condition('u.uid', array(0, 1), 'NOT IN')
+	->range(0,5)
+	->execute()
+	->fetchAllAssoc('uid');
+	
+  foreach($results as $nid => $fields){
+    $results[$nid]->picture = '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>';
+  }
+  drupal_json_output($results);
+  //return '';
 }
