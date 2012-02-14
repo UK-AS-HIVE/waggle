@@ -3,4 +3,5 @@ description = Implements Cash Integration
 package = Waggle
 core = 7.x
 files[] = waggle.module
+files[] = waggle.install
 scripts[] = js/jquery-ui.custom.min.js

@@ -1,5 +1,10 @@
-var loggedInUser = null;
+function WaggleStoriesPage() {
+	LoadUser();
+	GetTickets();
+	PrepareInterface(); 
+}
 
+var loggedInUser = null;
 function LoadUser() {
     (function ($,undefined){
         $.getJSON("/waggle/api/load-user", function(json) {

@@ -61,9 +61,7 @@ function waggle_stories()
     //drupal_add_js(drupal_get_path('module', 'waggle') . '/js/story-dom.js');
     drupal_add_js('
       jQuery(document).ready(function() {
-        LoadUser();
-        GetTickets();
-        PrepareInterface();    
+	    WaggleStoriesPage();   
       });
     ', 'inline');
 
@@ -93,13 +91,30 @@ function waggle_block_view($delta = ''){
 	  $block['subject'] = NULL;
 	  $block['content'] = array(
 	    '#type' => 'markup',
-		'#markup' => '<div id="waggle-sidebar"></div>',
+		'#markup' =>
+			'<div id="waggle-sidebar">
+				<textarea id="waggle-sidebar-search"></textarea>
+			</div>',
 	  );
 	  break;
   }
   
   return $block;
 }
+
+
+/*****   VIEWS HOOKS  ********/
+function waggle_theme($existing) {
+  return array(
+    'views_view_fields__waggle_stories' => array (
+      'arguments' => array('view' => NULL, 'options' => NULL, 'row' => NULL, 'field_alias' => NULL),
+      'template' => 'views-view-fields--waggle-stories',
+      'base hook' => 'views_view_fields',
+      'path' => drupal_get_path('module', 'waggle') . '/templates',
+    ),
+  );
+}
+
 
 
 
