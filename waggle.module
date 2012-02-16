@@ -15,6 +15,11 @@ function waggle_menu()
       'type' => MENU_CALLBACK,
       'access callback' => TRUE,
     );
+	$items['waggle/api/load-all-users'] = array(
+      'page callback' => 'waggle_load_users',  
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
+    );
     $items['waggle/api/get-stories'] = array(
       'page callback' => 'waggle_load_stories_default',  
       'type' => MENU_CALLBACK,
@@ -43,13 +48,12 @@ function waggle_menu()
       'page arguments' => array(3, 4),
       'access arguments' => array('access content'),
     );
-	$items['waggle/api/autocomplete/user/%node/%'] = array(
-      'page callback' => 'waggle_autocomplete_user',  
+	$items['waggle/api/search'] = array(
+      'page callback' => 'waggle_search',  
       'type' => MENU_CALLBACK,
-      'page arguments' => array(4, 5),
       'access arguments' => array('access content'),
     );
-
+	
     return $items;
 }
 
@@ -93,7 +97,10 @@ function waggle_block_view($delta = ''){
 	    '#type' => 'markup',
 		'#markup' =>
 			'<div id="waggle-sidebar">
-				<textarea id="waggle-sidebar-search"></textarea>
+			  <form id="waggle-sidebar-search">
+				<input type="textfield"/>
+			  </form>
+			  <div class="waggle-search-messages"></div>
 			</div>',
 	  );
 	  break;
@@ -132,16 +139,14 @@ function waggle_load_user(){
  *  function to load default stories, pass them through the appropriate view, and return the rendered html
  */
 function waggle_load_stories_default(){
-  //dsm('stories');
-  return drupal_json_output(views_embed_view('waggle_stories', 'block'));
+  drupal_json_output(views_embed_view('waggle_stories', 'block'));
 }
 
 /**
  *  function to load stories of given nids, pass them through the appropriate view, and return the rendered html
  */
 function waggle_load_stories($stories_arg){
-  dsm($stories_arg);
-  return views_embed_view('waggle_stories', 'page');
+  drupal_json_output(views_embed_view('waggle_stories', 'block', $stories_arg));
 }
 
 /**
@@ -231,38 +236,90 @@ function waggle_add_user($node, $uid){
 /**
  * Autocomplete function for Add Associated User boxes
  */
-function waggle_autocomplete_user($node, $string){
-  $associated = array();
-  foreach($node->field_associated_users['und'] as $delta => $data){
-    if(!in_array($data['uid'], $associated)){
-	  $associated[] = $data['uid'];
-	}
-  }
-  $string_parts = explode(' ', $string);
-  
+function waggle_load_users(){  
   $query = db_select('users', 'u');
   $query->leftJoin('field_data_field_name', 'f', 'u.uid=f.entity_id');
-  foreach($string_parts as $part){
-	$query->condition(db_or()->condition('u.name', '%' . $part . '%', 'LIKE')
-	  ->condition('u.mail', '%' . $part . '%', 'LIKE')
-	  ->condition('f.field_name_first', '%' . $part . '%', 'LIKE')
-	  ->condition('f.field_name_first', '%' . $part . '%', 'LIKE')
-	  ->condition('f.field_name_middle', '%' . $part . '%', 'LIKE')
-	);
-  }
-  if(!empty($associated)){
-    $query->condition('u.uid', $associated, 'NOT IN');
-  }
-  $results = $query->fields('u', array('uid', 'name', 'picture'))
+  $results = $query->fields('u', array('uid', 'name', 'picture', 'mail'))
     ->fields('f', array('field_name_first', 'field_name_middle', 'field_name_last'))
 	->condition('u.uid', array(0, 1), 'NOT IN')
-	->range(0,5)
 	->execute()
 	->fetchAllAssoc('uid');
 	
-  foreach($results as $nid => $fields){
-    $results[$nid]->picture = '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>';
+  $accounts = array();
+  foreach($results as $uid => $fields){
+    $name_parts = array();
+	foreach(array('field_name_first', 'field_name_middle', 'field_name_last') as $part){
+	  if(!empty($fields->$part)){
+	    $name_parts[] = $fields->$part;
+	  }
+	}
+    $accounts[$uid] = array(
+	  'name' => implode(' ', $name_parts),
+	  'last_name' => $fields->field_name_last,
+	  'first_name' => implode(' ', array($fields->field_name_first, $fields->field_name_middle)),
+	  'mail' => $fields->mail,
+	  'picture' => '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>',
+	);
   }
-  drupal_json_output($results);
+  drupal_json_output($accounts);
   //return '';
+}
+
+function waggle_search(){
+  if(!isset($_GET['s'])){
+	return;
+  }
+  $keys = $_GET['s'];
+  $index = search_api_index_load(1); 
+  $offset = 0; 
+  $limit = 10; 
+  $fields = NULL; 
+  $sort = NULL; 
+  $filters = NULL;
+  
+  // Slight "hack" for testing complex queries.
+  if ($keys == '|COMPLEX|') {
+    $keys = array(
+      '#conjunction' => 'AND',
+      'test',
+      array(
+        '#conjunction' => 'OR',
+        'baz',
+        'foobar',
+      ),
+      array(
+        '#conjunction' => 'AND',
+        '#negation' => TRUE,
+        'bar',
+      ),
+    );
+  }
+  $query = $index->query()
+    ->keys($keys)
+    ->range($offset, $limit);
+  if ($fields) {
+    $query->fields(explode(',', $fields));
+  }
+  if ($sort) {
+    $sort = explode(',', $sort);
+    $query->sort($sort[0], $sort[1]);
+  }
+  else {
+    $query->sort('search_api_id', 'ASC');
+  }
+  if ($filters) {
+    $filters = explode(',', $filters);
+    foreach ($filters as $filter) {
+      $filter = explode('=', $filter);
+      $query->condition($filter[0], $filter[1]);
+    }
+  }
+  $result = $query->execute();
+
+  $nids = array();
+  foreach($result['results'] as $nid => $fields){
+	$nids[] = $nid;
+  }
+  
+  drupal_json_output($nids);
 }

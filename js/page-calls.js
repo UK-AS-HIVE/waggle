@@ -1,11 +1,21 @@
 function WaggleStoriesPage() {
-	LoadUser();
+	LoadUsers();
+	LoadCurrentUser();
 	GetTickets();
 	PrepareInterface(); 
 }
 
+var users = null;
+function LoadUsers() {
+    (function ($,undefined){
+        $.getJSON("/waggle/api/load-all-users", function(json) {
+            users = json;
+        });
+    }(jQuery));
+}
+
 var loggedInUser = null;
-function LoadUser() {
+function LoadCurrentUser() {
     (function ($,undefined){
         $.getJSON("/waggle/api/load-user", function(json) {
             loggedInUser = json;
@@ -13,9 +23,12 @@ function LoadUser() {
     }(jQuery));
 }
 
-function GetTickets() {
+function GetTickets(nids) {
     (function ($,undefined){
-        $.getJSON("/waggle/api/get-stories", function (json) {
+		var url = (nids === undefined) ? '/waggle/api/get-stories' : ('/waggle/api/get-stories/' + nids.join('+'));
+		console.log(url);
+        $.getJSON(url, function (json) {
+		    console.log(json);
 			$('#block-system-main').html(json);
 			SetUpStoryInterface();
         

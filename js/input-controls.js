@@ -54,6 +54,28 @@ $(document).ready(function () {
         
     });
 	
+	/****************************************************
+					Sidebar Search
+	*****************************************************/
+	$('#waggle-sidebar-search').submit(function(){
+		var form = $('#waggle-sidebar-search'),
+		    input = form.children('input');
+		if(input.val() != ''){
+			input.attr('disabled', 'disabled');
+			$.getJSON('waggle/api/search?s=' + encodeURIComponent(input.val()),function(json) {
+				if(json.length){
+					GetTickets(json);
+					$('#waggle-sidebar .waggle-search-messages').html('');
+				}
+				else{
+					$('#waggle-sidebar .waggle-search-messages').html('<div class="alert">No results returned.</div>');
+				}
+				input.attr('disabled', '');
+			});
+		}
+		return false;
+	});
+	
 });
 
 }(jQuery));
@@ -94,27 +116,46 @@ function SetUpStoryInterface(){
 		var getAutocomplete;
 		$('.add-user-search input').keyup(function(e){
 		    var nid = $(this).attr('class').substring(5),
-			    myInput = this;
+			    myInput = this,
+				currentUsers = new Array();
+			$('#story-' + nid + ' .associated-user').each(function(i, item){
+				var classes = $(item).attr('class').split(' ');
+				currentUsers.push(classes[1].substring(5));
+			});
 			window.clearTimeout(getAutocomplete);
 			if($(myInput).val().length > 0){
 				getAutocomplete = window.setTimeout(function(){
-					$.getJSON('waggle/api/autocomplete/user/' + nid + '/' + $(myInput).val(), function(json) {
-						console.log(json);
-						var newHTML = '';
-						for (delta in json) {
-							var account = json[delta];
-							console.log(delta);
-							console.log(account);
-							newHTML += '' +
-							  '<a class="user-candidate user-' + delta + ' node-' + nid + '">' +
-							    '<span class="picture">' + account['picture'] + '</span>' +
-								'<span class="name"></span>' + 
-								'<span class="linkblue">' + account['name'] + '</span>' + 
-							  '</a>';
+					parts = $(myInput).val().split(' ');
+					candidates = users;
+					for(var uid in candidates) {
+						if($.inArray(uid, currentUsers) != -1) {
+							delete candidates[uid];
 						}
-						$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
-						UserListSetup('.add-associated-user');
-					});
+						else{
+							var matched = new Array();
+							for (var i=0; i<parts.length; i++){
+								var pattern = new RegExp(parts[i]);
+								matched[i] = (pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail']));
+							}
+							if ($.inArray(false, matched)){
+								delete candidates[uid];
+							}
+						}
+						console.log(candidates);
+					}
+					
+					var newHTML = '';
+					for (var i in candidates) {
+						newHTML += '' +
+						  '<a class="user-candidate user-' + i + ' node-' + nid + '">' +
+							'<span class="picture">' + candidates[i]['picture'] + '</span>' +
+							'<span class="name"></span>' + 
+							'<span class="linkblue">' + candidates[i]['name'] + '</span>' + 
+						  '</a>';
+					}
+					$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
+					UserListSetup('.add-associated-user');
+					
 				}, 500)
 			}
 		});
