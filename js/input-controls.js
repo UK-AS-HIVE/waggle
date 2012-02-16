@@ -76,6 +76,34 @@ $(document).ready(function () {
 		return false;
 	});
 	
+	var sideSearchAutocomplete = false;
+	$('#waggle-sidebar-search input').keyup(function(e){
+		var input = this,
+		    value = $(this).val();
+		if(value != ''){
+			var parts = value.split(' '),
+			    last = parts[parts.length - 1];
+			if(last.charAt(0) == '@' && last.length > 1){
+				var search_string = last.substring(1),
+				    candidates = userAutocomplete([search_string]);
+				console.log(candidates);
+				var newHTML = '';
+				for (var i in candidates) {
+					newHTML += '' +
+					  '<a class="user-candidate user-' + i + '">' +
+						'<span class="picture">' + candidates[i]['picture'] + '</span>' +
+						'<span class="name">' + candidates[i]['name'] + '</span>' + 
+						'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
+					  '</a>';
+				}
+				$('#waggle-sidebar-search .autocomplete').html(newHTML);
+			}
+		}
+		else {
+			sideSearchAutocomplete = false;
+		}
+	});
+	
 });
 
 }(jQuery));
@@ -98,12 +126,10 @@ function SetUpStoryInterface(){
 			
 			if($('#note-text-' + nid).val()){
 				$.getJSON('waggle/api/add-note?nid=' + nid + '&note=' + encodeURIComponent(tex.val()),function(json) {
-					  console.log('successfully added a note.');
 					  sub.attr('disabled', '');
 					  tex.attr('disabled', '');
 					  tex.val('');
 					  $('#story-' + nid + ' .current-notes').html(json);
-					  console.log(json);
 				});
 			}
 			return false;
@@ -113,7 +139,6 @@ function SetUpStoryInterface(){
 		UserListSetup('.add-associated-user');
 		
 		// User searching for association
-		var getAutocomplete;
 		$('.add-user-search input').keyup(function(e){
 		    var nid = $(this).attr('class').substring(5),
 			    myInput = this,
@@ -122,41 +147,21 @@ function SetUpStoryInterface(){
 				var classes = $(item).attr('class').split(' ');
 				currentUsers.push(classes[1].substring(5));
 			});
-			window.clearTimeout(getAutocomplete);
 			if($(myInput).val().length > 0){
-				getAutocomplete = window.setTimeout(function(){
-					parts = $(myInput).val().split(' ');
-					candidates = users;
-					for(var uid in candidates) {
-						if($.inArray(uid, currentUsers) != -1) {
-							delete candidates[uid];
-						}
-						else{
-							var matched = new Array();
-							for (var i=0; i<parts.length; i++){
-								var pattern = new RegExp(parts[i]);
-								matched[i] = (pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail']));
-							}
-							if ($.inArray(false, matched)){
-								delete candidates[uid];
-							}
-						}
-						console.log(candidates);
-					}
-					
-					var newHTML = '';
-					for (var i in candidates) {
-						newHTML += '' +
-						  '<a class="user-candidate user-' + i + ' node-' + nid + '">' +
-							'<span class="picture">' + candidates[i]['picture'] + '</span>' +
-							'<span class="name"></span>' + 
-							'<span class="linkblue">' + candidates[i]['name'] + '</span>' + 
-						  '</a>';
-					}
-					$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
-					UserListSetup('.add-associated-user');
-					
-				}, 500)
+				parts = $(myInput).val().split(' ');
+				var candidates = userAutocomplete(parts, currentUsers);
+				
+				var newHTML = '';
+				for (var i in candidates) {
+					newHTML += '' +
+					  '<a class="user-candidate user-' + i + ' node-' + nid + '">' +
+						'<span class="picture">' + candidates[i]['picture'] + '</span>' +
+						'<span class="name">' + candidates[i]['name'] + '</span>' + 
+						'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
+					  '</a>';
+				}
+				$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
+				UserListSetup('.add-associated-user');
 			}
 		});
 		
@@ -193,6 +198,7 @@ function UserListSetup(selector){
 			$(this).find('input').focus();
 		}, function(){
 			$(this).children('.associated-user-rollover').css('display', 'none');
+			$(this).find('input').blur();
 		});
 		
 		$(selector + ' a').click(function(){

@@ -99,6 +99,7 @@ function waggle_block_view($delta = ''){
 			'<div id="waggle-sidebar">
 			  <form id="waggle-sidebar-search">
 				<input type="textfield"/>
+				<div class="autocomplete"></div>
 			  </form>
 			  <div class="waggle-search-messages"></div>
 			</div>',
@@ -258,6 +259,7 @@ function waggle_load_users(){
 	  'last_name' => $fields->field_name_last,
 	  'first_name' => implode(' ', array($fields->field_name_first, $fields->field_name_middle)),
 	  'mail' => $fields->mail,
+	  'linkblue' => $fields->name,
 	  'picture' => '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>',
 	);
   }

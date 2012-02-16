@@ -108,6 +108,33 @@ UpdateSidebar = function(){
 }
 
 
+userAutocomplete = function(parts, currentUsers){
+	// This check and declaration may be unnecessary.  Variable is needed to exclude certain users from autocomplete.
+	if(currentUsers === undefined){
+		currentUsers = new Array();
+	}
+
+	// Need to copy object instead of its pointer
+	var candidates = $.extend({}, users);
+	for(var uid in candidates) {
+		if($.inArray(uid, currentUsers) != -1) {
+			delete candidates[uid];
+		}
+		else{
+			var matched = new Array();
+			for (var i=0; i<parts.length; i++){
+				var pattern = new RegExp(parts[i], 'i');
+				matched.push((pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail'])) ? 'yes' : 'no');
+			}
+			if ($.inArray('no', matched) != -1){
+				delete candidates[uid];
+			}
+		}
+	}
+	return candidates;
+}
+
+
 }(jQuery));
 
 /** 

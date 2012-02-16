@@ -26,9 +26,7 @@ function LoadCurrentUser() {
 function GetTickets(nids) {
     (function ($,undefined){
 		var url = (nids === undefined) ? '/waggle/api/get-stories' : ('/waggle/api/get-stories/' + nids.join('+'));
-		console.log(url);
         $.getJSON(url, function (json) {
-		    console.log(json);
 			$('#block-system-main').html(json);
 			SetUpStoryInterface();
         
