@@ -34,12 +34,27 @@ function waggle_user_push(){
     foreach(explode('|', $get['affiliations']) as $dept)
 	  $account->field_department['und'][] = array('value' => $dept);
   }
+  if(isset($get['first']))
+    $account->field_name['und'][0]['first'] = $get['first'];
+  if(isset($get['middle']))
+    $account->field_name['und'][0]['middle'] = $get['middle'];
+  if(isset($get['last']))
+    $account->field_name['und'][0]['last'] = $get['last'];
+	
+	
   $edit = (array)$account;
   foreach(array('authorid', 'theme', 'timezone', 'language', 'data', 'ip', 'uid', 'pass', 'created', 'access', 'login', 'init', 'revision_timestamp', 'revision_uid') as $field)
     unset($edit[$field]);
-  if(isset($get['picture']))
-    $edit['picture_upload'] = file_save_data(file_get_contents(str_replace('https', 'http', $get['picture'])), 'public://' . array_pop(explode('/', $get['picture'])));
-
+  if(isset($get['picture'])){
+    $file = file_save_data(file_get_contents(str_replace('https', 'http', $get['picture'])), 'public://' . array_pop(explode('/', $get['picture'])));
+	if($file){
+	  $image = image_load($file->uri);
+	  image_scale_and_crop($image, 100, 100);
+	  image_save($image);
+	  $edit['picture_upload'] = $file;
+	}
+  }
+	
   $success = user_save($account, $edit);
   drupal_json_output($account);
 }
