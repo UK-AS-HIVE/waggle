@@ -62,7 +62,7 @@ function waggle_stories()
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
-    //drupal_add_js(drupal_get_path('module', 'waggle') . '/js/story-dom.js');
+    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/autocomplete.js');
     drupal_add_js('
       jQuery(document).ready(function() {
 	    WaggleStoriesPage();   

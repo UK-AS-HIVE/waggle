@@ -2,7 +2,7 @@ function WaggleStoriesPage() {
 	LoadUsers();
 	LoadCurrentUser();
 	GetTickets();
-	PrepareInterface(); 
+	PrepareInterface();	
 }
 
 var users = null;
@@ -10,6 +10,7 @@ function LoadUsers() {
     (function ($,undefined){
         $.getJSON("/waggle/api/load-all-users", function(json) {
             users = json;
+			console.log(users);
         });
     }(jQuery));
 }
