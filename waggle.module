@@ -59,6 +59,7 @@ function waggle_menu()
 
 function waggle_stories()
 {
+    drupal_add_css(drupal_get_path('module', 'waggle') . '/css/waggle.css');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
     drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
@@ -164,14 +165,62 @@ function waggle_add_note(){
   
   $new_note = (object) array('type' => 'action');
   node_object_prepare($new_note);
+
+  // Look for @users and #tags in the body
+  $body_parts = explode(' ', $get['note']);
+  $add_users = array();
+  foreach($body_parts as $delta => $part){
+    switch(substr($part, 0, 1) == '@'){
+      case '@':
+        $linkblue = substr($part, 1);
+        $account = user_load_by_name($linkblue);
+        if($account && $account->uid){
+          if(!empty($account->field_name)){
+            $name_parts = array();
+            foreach(array('first', 'middle', 'last') as $name_part){
+              if(!empty($account->field_name['und'][0][$name_part])){
+                $name_parts[] = $account->field_name['und'][0][$name_part];
+              }
+            }
+            $full_name = implode(' ', $name_parts);
+          }
+          else{
+            $full_name = $account->name;
+          }
+          $body_parts[$delta] = '<span class="tagged-user user-' . $account->uid . '">' . $full_name . '</span>';
+          $add_users[] = $account->uid;
+        }
+        
+        break;
+
+      case '#':
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  //If users were added using @linkblue, only associate them if not already associated
+  if(!empty($node->field_associated_users)){
+    foreach($node->field_associated_users['und'] as $delta => $values){
+      if(in_array($values['uid'], $add_users)){
+        unset($add_users[array_search($values['uid'], $add_users)]);
+      }
+    }
+  }
+  foreach($add_users as $add_uid){
+    $node->field_associated_users['und'][] = array('uid' => $add_uid);
+  }
   
   $new_note->title = $get['nid'] . '-' . time();
-  $new_note->body['und'][0]['value'] = $get['note'];
+  $new_note->body['und'][0]['value'] = implode(' ', $body_parts);
+  $new_note->body['und'][0]['format'] = 'filtered_html';
   $new_note->field_story['und'][0]['nid'] = $get['nid'];
   node_save($new_note);
   if ($new_note) {
     $node->field_actions['und'][] = array('nid' => $new_note->nid);
-	node_save($node);
+	  node_save($node);
   }
   drupal_json_output(views_embed_view('waggle_story_actions', 'block', $get['nid']));
   //return 'yes';

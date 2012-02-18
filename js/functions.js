@@ -107,46 +107,6 @@ UpdateSidebar = function(){
 	);
 }
 
-
-userAutocomplete = function(parts, limit, currentUsers){
-	// This check and declaration may be unnecessary.  Variable is needed to exclude certain users from autocomplete.
-	if(currentUsers === undefined){
-		currentUsers = new Array();
-	}
-
-	// Need to copy object instead of its pointer
-	var candidates = $.extend({}, users),
-	    count = 0;
-	// @TODO This would be the place to run some fancy sorting.  
-	//	I would like it to already be cached client-side, but that may not be feasible.
-	for(var uid in candidates) {
-		var removed = false;
-		if(count >= limit){
-			delete candidates[uid];
-		}
-		else if($.inArray(uid, currentUsers) != -1) {
-			delete candidates[uid];
-			removed = true;
-		}
-		else{
-			var matched = new Array();
-			for (var i=0; i<parts.length; i++){
-				var pattern = new RegExp(parts[i], 'i');
-				matched.push((pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail'])) ? 'yes' : 'no');
-			}
-			if ($.inArray('no', matched) != -1){
-				delete candidates[uid];
-				removed = true;
-			}
-		}
-		if(!removed){
-			count++;
-		}
-	}
-	return candidates;
-}
-
-
 }(jQuery));
 
 /** 

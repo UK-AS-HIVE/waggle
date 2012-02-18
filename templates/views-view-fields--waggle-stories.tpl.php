@@ -126,6 +126,7 @@ $add_users .= '</div><div class="add-user-search"><input type="text" class="node
       <div class="story-current-user"><?php print $user_picture;?></div>
       <div class="new-note-form-wrapper">
         <form name="new-note-form-<?php print $fields['nid']->content;?>" class="new-note-form">
+          <div class="autocomplete"></div>
           <div class="expandingArea new-note-text">
             <pre><span></span><br/></pre>
             <textarea id="note-text-<?php print $fields['nid']->content;?>" onkeypress="microsyntaxCheck(event);"></textarea>
