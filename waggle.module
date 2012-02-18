@@ -220,6 +220,7 @@ function waggle_add_note(){
   node_save($new_note);
   if ($new_note) {
     $node->field_actions['und'][] = array('nid' => $new_note->nid);
+    $node->revision = TRUE;
 	  node_save($node);
   }
   drupal_json_output(views_embed_view('waggle_story_actions', 'block', $get['nid']));
