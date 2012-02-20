@@ -80,32 +80,103 @@ function waggle_stories()
 function waggle_block_info(){
   $blocks['waggle_sidebar'] = array(
     'info' => 'Waggle Sidebar',
-	'cache' => DRUPAL_NO_CACHE,
-	'status' => 1,
-	'region' => 'sidebar_second',
+  	'cache' => DRUPAL_NO_CACHE,
+  	'status' => 1,
+  	'region' => 'sidebar_second',
+  );
+  $blocks['waggle_top_menu'] = array(
+    'info' => 'Waggle Top Menu',
+    'status' => 1,
+    'region' => 'content',
+    'cache' => DRUPAL_CACHE_PER_USER,
   );
   return $blocks;
 }
 
 /**
  * Implements hook_block_view()
+ * @TODO - make these themed and move the html into template files.
  */
 function waggle_block_view($delta = ''){
   switch ($delta) {
     case 'waggle_sidebar':
-	  $block['subject'] = NULL;
-	  $block['content'] = array(
-	    '#type' => 'markup',
-		'#markup' =>
-			'<div id="waggle-sidebar">
-			  <form id="waggle-sidebar-search">
-				<input type="textfield"/>
-				<div class="autocomplete"></div>
-			  </form>
-			  <div class="waggle-search-messages"></div>
-			</div>',
-	  );
-	  break;
+  	  $block['subject'] = NULL;
+  	  $block['content'] = array(
+  	    '#type' => 'markup',
+    		'#markup' =>
+    			'<div id="waggle-sidebar">
+    			  <form id="waggle-sidebar-search">
+      				<input type="textfield"/>
+      				<div class="autocomplete"></div>
+    			  </form>
+    			  <div class="waggle-search-messages"></div>
+    			</div>',
+  	  );
+  	  break;
+
+    case 'waggle_top_menu':
+      global $user;
+      $account = user_load($user->uid);
+      $picture = '<img src="' . (empty($account->picture) ? drupal_get_path('module', 'waggle') . '/default_user.png' : file_create_url($account->picture->uri)) . '" alt="' . $account->name . '"/>';
+      $name = array();
+      if(!empty($account->field_name)){
+        foreach($account->field_name['und']['0'] as $part){
+          if(!empty($part)){
+            $name[] = $part;
+          }
+        }
+      }
+      $name = implode(' ', $name);
+
+      $block['subject'] = NULL;
+      $block['content'] = array(
+        '#type' => 'markup',
+        '#markup' =>
+          '<div id="waggle-top-menu">
+            <ul>
+              <li><a class="start-story">+ Start Story</a></li>
+            </ul>
+          </div>
+          <div id="waggle-top-add">
+            <form id="waggle-top-add-form" class="clearfix">
+              <div id="start-story-textarea-wrapper" class="start-story-field field-wrapper">
+                <div style="margin: 0; padding: 0; font-size: 0.8em;">Don\'t get too excited.  Submitting does not work yet.</div>
+                <div class="expandingArea new-story-text">
+                  <pre><span></span><br/></pre>
+                  <textarea name="text" id="waggle-start-story-text" onkeypress="microsyntaxCheck(event);"></textarea>
+                </div>
+                <div class="autocomplete"></div>
+              </div>
+              <div id="start-story-secondary-fields">
+                <div id="start-story-submitted-by-wrapper" class="start-story-field field-wrapper">
+                  <h4>Submitted by:</h4>
+                  <div id="start-story-submitting-user" class="clearfix">
+                    <div class="picture">' . $picture . '</div>
+                    <div class="name">' . $name . '</div>
+                    <div class="linkblue">' . $user->name . '</div>
+                  </div>
+                  <div class="change-wrapper" >
+                    <input type="textfield" name="submit"/>
+                    <div class="autocomplete"></div>
+                  </div>
+                  <div class="controls"><a>change</a></div>
+                </div>
+                <div id="start-story-due-date-wrapper" class="start-story-field field-wrapper">
+                  <label for="due-date">Due Date:</label>
+                  <input type="textfield" name="due-date"/>
+                  <div class="field-description">Format: mm/dd/yyyy</div>
+                </div>
+              </div>
+              <div id="start-story-expander">
+                <a>more options</a>
+              </div>
+              <div id="start-story-buttons-wrapper" class="start-story-field field-wrapper">
+                <a>cancel</a>
+                <input type="button" name="submit" value="Submit"/>
+              </div>
+            </form>
+          </div>',
+      );
   }
   
   return $block;
@@ -266,9 +337,9 @@ function waggle_add_user($node, $uid){
   $name = array();
   if(!empty($account->field_name)){
     foreach($account->field_name['und']['0'] as $part){
-	  if(!empty($part)){
-	    $name[] = $part;
-	  }
+      if(!empty($part)){
+        $name[] = $part;
+  	  }
     }
   }
   $name = implode(' ', $name);

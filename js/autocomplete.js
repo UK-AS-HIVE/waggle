@@ -135,7 +135,8 @@ UserCandidates = function(parts, limit, currentUsers){
 				var matched = new Array();
 				for (var i=0; i<parts.length; i++){
 					var pattern = new RegExp(parts[i], 'i');
-					matched.push((pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail'])) ? 'yes' : 'no');
+					// Can match the Users name, mail, or linkblue.
+					matched.push((pattern.test(candidates[uid]['name']) || pattern.test(candidates[uid]['mail']) || pattern.test(candidates[uid]['linkblue'])) ? 'yes' : 'no');
 				}
 				if ($.inArray('no', matched) != -1){
 					delete candidates[uid];
@@ -313,6 +314,59 @@ function NoteAutocompleteBindings(selector){
 
 			$('#' + storyID + ' .new-note-form .autocomplete').html('');
 			$('#' + storyID + ' .new-note-form textarea').keypress();
+		    return false;
+		});
+	}(jQuery));
+}
+
+
+/**
+ * Handler for the submitted by field on new stories
+ * 	Vars:
+ *		myInput 	 		- The jQuery variable for the textfield/textarea
+ */
+function StartStorySubmittedByHandler(myInput){
+	(function($){
+		if($(myInput).val() != ''){
+			parts = $(myInput).val().split(' ');
+			var candidates = UserCandidates(parts, 5, []);
+			var newHTML = '';
+			for (var i in candidates) {
+				newHTML += '' +
+				  '<a class="user-candidate user-' + i + '">' +
+					'<span class="picture">' + candidates[i]['picture'] + '</span>' +
+					'<span class="name">' + candidates[i]['name'] + '</span>' + 
+					'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
+				  '</a>';
+			}
+			$('#start-story-submitted-by-wrapper .autocomplete').html(newHTML);
+			if(newHTML == ''){
+				waggleAutocompleteOngoing = false;
+				return;
+			}
+			StartStorySubmittedByBindings('#start-story-submitted-by-wrapper .autocomplete a');
+			AutocompleteHover('#start-story-submitted-by-wrapper .autocomplete'); 
+		}
+		else{
+			waggleAutocompleteOngoing = false;
+			$('#start-story-submitted-by-wrapper .autocomplete').html('');
+		}
+	}(jQuery));
+}
+
+function StartStorySubmittedByBindings(selector){
+	(function($){
+		$(selector).click(function(){
+			var classes = $(this).attr('class').split(' '),
+				uid = classes[1].substring(5),
+				container = $(this);
+		    
+		    $('#start-story-submitting-user').html($(selector).html());
+		    $('#start-story-submitting-user').toggle();
+			$('#start-story-submitted-by-wrapper .change-wrapper').toggle();
+			$('#start-story-submitted-by-wrapper .change-wrapper input').val(users[uid]['linkblue']);
+
+			$('#start-story-submitted-by-wrapper .autocomplete').html('');
 		    return false;
 		});
 	}(jQuery));

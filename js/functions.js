@@ -1,4 +1,3 @@
-//var CollapseAllStories;
 var PreviousStory;
 var NextStory;
 var QuickPrevious;

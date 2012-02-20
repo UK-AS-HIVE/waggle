@@ -161,17 +161,136 @@ div.badges-inner {
 }
 
 /* Main */
-#main{
+div#main{
   background: white;
   position: relative;
+  margin-top: 0;
+}
+div#content .content{
+  margin-top: 0px;
 }
 
+/* Waggle Top Bar */
+#waggle-top-menu{
+  margin-bottom: 10px;
+}
+#waggle-top-menu ul{
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#waggle-top-menu a{
+  color: #666;
+  text-transform: lowercase;
+  font-size: 1.3em;
+  cursor: pointer;
+}
+#waggle-top-menu a:hover{
+  color: #000;
+  text-decoration: none;
+  text-shadow: 3px 3px 5px #ddd;
+}
+
+/* Start Story */
+#waggle-top-add{
+  border: solid thin #ccc;
+  padding: 20px 20px 60px;
+  margin-bottom: 10px;
+  display: none;
+  position: relative;
+}
+#waggle-top-add input{
+  border: solid thin #888;
+}
+#start-story-textarea-wrapper.start-story-field{
+  margin-bottom: 20px;
+  margin-right: 0px; 
+  float: none;
+}
+#start-story-secondary-fields{
+  display: none;
+}
+#start-story-secondary-fields .start-story-field{
+  float: left;
+  margin-right: 20px; 
+}
+#start-story-expander{
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.9em;
+}
+#start-story-buttons-wrapper.start-story-field{
+  float: none;
+  margin-right: 0;
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+}
+#start-story-buttons-wrapper.start-story-field a{
+  margin-right: 10px;
+}
+#start-story-buttons-wrapper.start-story-field input{
+  font-size: 1.1em
+}
+#start-story-submitted-by-wrapper{
+  width: 200px;
+}
+#start-story-submitting-user{
+  border: solid thin #888;
+  padding: 5px;
+}
+#start-story-submitted-by-wrapper .autocomplete{
+  position: absolute;
+}
+#start-story-submitted-by-wrapper span.linkblue{
+  display: block;
+}
+#start-story-submitted-by-wrapper .autocomplete a{
+  display: block;
+  border: solid thin #888;
+  border-top: none;
+  padding: 5px;
+  background: white;
+  z-index: 30;
+  position: relative;
+  width: 188px
+}
+#start-story-submitted-by-wrapper .autocomplete a:hover{
+  text-decoration: none;
+}
+#start-story-submitted-by-wrapper .autocomplete a.highlighted{
+  background: #bbb;
+}
+#start-story-submitted-by-wrapper .autocomplete a:after{
+  content: '.';
+  visibility: hidden;
+  height: 0;
+  clear: both;
+  display: block;
+}
+#start-story-submitted-by-wrapper img{
+  width: 50px;
+  height: auto;
+  float: left;
+  margin-right: 5px;
+}
+#start-story-submitted-by-wrapper label,
+#start-story-submitted-by-wrapper h4{
+  font-weight: bold;
+  margin: 0;
+}
+#start-story-submitted-by-wrapper .change-wrapper{
+  display: none;
+}
+#start-story-submitted-by-wrapper .change-wrapper input{
+  width: 190px;
+}
 
 /* Content */
 #content{
   min-height: 600px;
-  width: 710px;
-  padding-top: 10px;
+  padding-top: 0px;
+  margin-top: 0;
 }
 
 /*Sidebar */
@@ -266,7 +385,7 @@ div.badges-inner {
 /*  Stories -default */
 .story{
   background: #e3e3e3;
-  margin: 0 10px 20px 10px;
+  margin-bottom: 20px;
   position: relative;
 }
 .story-header{
@@ -588,4 +707,3 @@ div.badges-inner {
 .sidebar-story .story-othertext{
   display: none;
 }
-
