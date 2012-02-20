@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ *
+ */
+function waggle_tracker_schema() { 
+  $schema['waggle_tracker']['description'] = 'Tracks changes on revisions.';
+  $schema['waggle_tracker']['fields'] = array(
+    //@TODO This should auto-increment.
+    'id' => array( 
+	  'type' => 'serial',
+	  'not null' => TRUE,
+    ),
+    'entity_id' => array( 
+	  'type' => 'int',
+	  'size' => 'normal', 
+	  'not null' => FALSE,
+    ),
+    'entity_vid' => array( 
+	  'type' => 'int',
+	  'size' => 'normal', 
+	  'not null' => FALSE,
+    ),
+    'entity_type' => array( 
+	  'type' => 'varchar',
+	  'length' => 255, 
+	  'not null' => FALSE,
+    ),
+    'uid' => array( 
+	  'type' => 'int',
+	  'size' => 'normal', 
+	  'not null' => FALSE,
+    ),
+    'user_vid' => array( 
+	  'type' => 'int',
+	  'size' => 'normal', 
+	  'not null' => FALSE,
+    ),
+    'field' => array( 
+	  'type' => 'varchar',
+	  'length' => 255, 
+	  'not null' => FALSE,
+    ),
+    'old_value' => array( 
+	  'type' => 'text',
+	  'size' => 'big', 
+	  'not null' => FALSE,
+    ),
+    'new_value' => array( 
+	  'type' => 'text',
+	  'size' => 'big', 
+	  'not null' => FALSE,
+    ),
+    'timestamp' => array( 
+      'type' => 'int',
+      'size' => 'normal',
+	  'not null' => FALSE,
+    ),
+  );
+
+  $schema['waggle_tracker']['unique keys'] = array('id' => array('id'),);
+  $schema['waggle_tracker']['primary key'] = array('id');
+  
+ 
+  return $schema;
+}
