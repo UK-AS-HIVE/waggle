@@ -42,14 +42,19 @@ function waggle_menu()
       'page arguments' => array(3, 4),
       'access arguments' => array('access content'),
     );
-	$items['waggle/api/add-user/%node/%'] = array(
+    $items['waggle/api/add-user/%node/%'] = array(
       'page callback' => 'waggle_add_user',  
       'type' => MENU_CALLBACK,
       'page arguments' => array(3, 4),
       'access arguments' => array('access content'),
     );
-	$items['waggle/api/search'] = array(
+    $items['waggle/api/search'] = array(
       'page callback' => 'waggle_search',  
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
+    );
+    $items['waggle/api/start-story'] = array(
+      'page callback' => 'waggle_start_story',  
       'type' => MENU_CALLBACK,
       'access arguments' => array('access content'),
     );
@@ -172,7 +177,7 @@ function waggle_block_view($delta = ''){
               </div>
               <div id="start-story-buttons-wrapper" class="start-story-field field-wrapper">
                 <a>cancel</a>
-                <input type="button" name="submit" value="Submit"/>
+                <input type="submit" name="submit" value="Submit"/>
               </div>
             </form>
           </div>',
@@ -382,7 +387,7 @@ function waggle_load_users(){
 	  'mail' => $fields->mail,
 	  'linkblue' => $fields->name,
 	  'picture' => '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>',
-	);
+  );
   }
   drupal_json_output($accounts);
   //return '';
@@ -390,9 +395,16 @@ function waggle_load_users(){
 
 function waggle_search(){
   if(!isset($_GET['s'])){
-	return;
+    return;
   }
   $keys = $_GET['s'];
+  drupal_json_output(_waggle_search($keys));
+}
+
+/**
+ * Helper search function that can be employed by other calls that just need the nid array.
+ */
+function _waggle_search($keys){
   $index = search_api_index_load(1); 
   $offset = 0; 
   $limit = 10; 
@@ -441,8 +453,93 @@ function waggle_search(){
 
   $nids = array();
   foreach($result['results'] as $nid => $fields){
-	$nids[] = $nid;
+    $nids[] = $nid;
+  }
+  return $nids;
+}
+
+/**
+ * Function to add a note to a given story nid.
+ */
+function waggle_start_story(){
+  $get = $_GET;
+  global $user;
+  
+  $new_story = (object) array('type' => 'story');
+  node_object_prepare($new_story);
+
+  // Look for @users and #tags in the body
+  // @TODO Generalize this bit as its own function to avoid code duplication with waggle_add_note
+  $body_parts = explode(' ', $get['note']);
+  $add_users = array();
+  foreach($body_parts as $delta => $part){
+    switch(substr($part, 0, 1) == '@'){
+      case '@':
+        $linkblue = substr($part, 1);
+        $account = user_load_by_name($linkblue);
+        if($account && $account->uid){
+          if(!empty($account->field_name)){
+            $name_parts = array();
+            foreach(array('first', 'middle', 'last') as $name_part){
+              if(!empty($account->field_name['und'][0][$name_part])){
+                $name_parts[] = $account->field_name['und'][0][$name_part];
+              }
+            }
+            $full_name = implode(' ', $name_parts);
+          }
+          else{
+            $full_name = $account->name;
+          }
+          $body_parts[$delta] = '<span class="tagged-user user-' . $account->uid . '">' . $full_name . '</span>';
+          $add_users[] = $account->uid;
+        }
+        
+        break;
+
+      case '#':
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  foreach($add_users as $add_uid){
+    $new_story->field_associated_users['und'][] = array('uid' => $add_uid);
   }
   
-  drupal_json_output($nids);
+  $new_story->title = 'story-' . time();
+  $new_story->body['und'][0]['value'] = implode(' ', $body_parts);
+  $new_story->body['und'][0]['format'] = 'filtered_html';
+
+  if(isset($_GET['behalfof'])){
+    $account = user_load_by_name($_GET['behalfof']);
+    if($account){
+      $new_story->uid = $account->uid;
+      $new_story->field_submitted_by['und'][0]['uid'] = $user->uid;
+    }
+  }
+  if(isset($_GET['due'])){
+    $timestamp = strtotime($_GET['due']);
+    if($timestamp){
+      $new_story->field_due_date['und'][0]['value'] = date('Y/m/d H:i:s', $timestamp);
+    }
+  }
+/*
+  dpm($new_story);
+  dpm($_GET);
+  return '';
+*/
+  node_save($new_story);
+
+  if($new_story){
+    if(isset($_GET['s'])){
+      drupal_json_output(waggle_load_stories(_waggle_search($_GET['s'])));
+    }
+    else{
+      drupal_json_output(waggle_load_stories_default());
+    }
+  }
+  drupal_json_output(FALSE);
+  //return 'yes';
 }

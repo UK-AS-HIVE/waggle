@@ -357,11 +357,12 @@ function StartStorySubmittedByHandler(myInput){
 function StartStorySubmittedByBindings(selector){
 	(function($){
 		$(selector).click(function(){
+			console.log(this);
 			var classes = $(this).attr('class').split(' '),
 				uid = classes[1].substring(5),
 				container = $(this);
 		    
-		    $('#start-story-submitting-user').html($(selector).html());
+		    $('#start-story-submitting-user').html($(this).html());
 		    $('#start-story-submitting-user').toggle();
 			$('#start-story-submitted-by-wrapper .change-wrapper').toggle();
 			$('#start-story-submitted-by-wrapper .change-wrapper input').val(users[uid]['linkblue']);

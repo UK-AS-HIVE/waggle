@@ -40,7 +40,8 @@ $(document).ready(function () {
 	/****************************************************
 						  Waggle Top Menu
 	*****************************************************/
-
+	
+	// Start Story button
 	$('#waggle-top-menu a.start-story').click(function(){
 		$('#waggle-top-add').toggle();
 		if($('#waggle-top-add').is(':visible')){
@@ -55,25 +56,65 @@ $(document).ready(function () {
 			sidebar.css('position', 'absolute')
 		}
 	});
+	// Change submitted by user button
 	$('#start-story-submitted-by-wrapper .controls a').click(function(){
 		$('#start-story-submitted-by-wrapper .change-wrapper').toggle();
 		$('#start-story-submitted-by-wrapper .change-wrapper input').focus();
 		$('#start-story-submitting-user').toggle();
 	});
+	// More Options button
 	$('#start-story-expander a').click(function(){
 		$('#start-story-secondary-fields').toggle();
 		$('#start-story-expander a').html($('#start-story-expander a').html() == 'more options' ? 'fewer options' : 'more options')
 	});
+	// Cancel button
 	$('#start-story-buttons-wrapper a').click(function(){
 		$('#waggle-top-add').toggle();
 	});
 
+	// Change submitting user input
 	$('#start-story-submitted-by-wrapper input').blur(function(){
-	    $('#start-story-submitting-user').show();
-		$('#start-story-submitted-by-wrapper .change-wrapper').hide();
+		// Short timeout in case the blur is when the user clicks on an autocomplete <a> option.
+		setTimeout(function(){
+		    $('#start-story-submitting-user').show();
+			$('#start-story-submitted-by-wrapper .change-wrapper').hide();
+		}, 200);
 	});
 
 	WaggleAutocomplete('#start-story-submitted-by-wrapper .autocomplete', $('#start-story-submitted-by-wrapper input'), 'StartStorySubmittedByHandler'); 
+
+	// Submit
+	$('#waggle-top-add-form').submit(function(){
+		var form = $('#waggle-top-add-form'),
+		    note = form.find('textarea'),
+		    submitFor = form.find('.change-wrapper input'),
+		    dueDate = form.find('#start-story-due-date-wrapper input'),
+		    submitButton = form.find('#start-story-buttons-wrapper input');
+		if(note.val() != ''){
+			submitButton.attr('disabled', 'disabled');
+			var args = ['note=' + encodeURIComponent(note.val())];
+			if(submitFor.val() != ''){
+				args.push('behalfof=' + encodeURIComponent(submitFor.val()));
+			}
+			if(dueDate.val() != ''){
+				//@TODO validate date before submission?
+				args.push('due=' + encodeURIComponent(dueDate.val()));
+			}
+
+			$.getJSON('waggle/api/start-story?' + args.join('&'),function(json) {
+				console.log(json);
+				if(json !== false){
+					console.log('success');
+					$('#block-system-main').html(json);
+				}
+				else{
+					console.log('Problem saving new story.')
+				}
+				submitButton.attr('disabled', '');
+			});
+		}
+		return false;
+	});
 
 
 	
