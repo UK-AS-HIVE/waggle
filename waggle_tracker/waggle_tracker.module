@@ -1,7 +1,130 @@
 <?php
 
+/**
+ * Implements hook_node_update().
+ */
+function waggle_tracker_node_update($node){
+  //Make sure a new version is being created, otherwise return
+  if(!isset($node->old_vid)){
+    return;
+  }
 
+  $fields = field_info_instances('node', $node->type);
+  $old_node = node_load($node->nid, $node->old_vid);
+  global $user;
 
+  foreach($fields as $label => $field_info){
+    $old_values = array();
+    $new_values = array();
+    $reference = TRUE;
 
+    // Get any old values
+    if(!empty($old_node->$label)){
+      $temp = $old_node->$label;
+      foreach($temp['und'] as $delta => $values){
+        if(isset($values['value'])){
+          $old_values[] = $values['value'];
+          $reference = FALSE;
+        }
+        else if(isset($values['nid'])){
+          $old_values[] = $values['nid'];
+        }
+        else if(isset($values['tid'])){
+          $old_values[] = $values['tid'];
+        }
+        else if(isset($values['uid'])){
+          $old_values[] = $values['uid'];
+        }
+      }
+    }
 
-?>
+    // Get any new values
+    if(!empty($node->$label)){
+      $temp = $node->$label;
+      foreach($temp['und'] as $delta => $values){
+        if(isset($values['value'])){
+          $new_values[] = $values['value'];
+          $reference = FALSE;
+        }
+        else if(isset($values['nid'])){
+          $new_values[] = $values['nid'];
+        }
+        else if(isset($values['tid'])){
+          $new_values[] = $values['tid'];
+        }
+        else if(isset($values['uid'])){
+          $new_values[] = $values['uid'];
+        }
+      }
+    }
+
+    if($old_values != $new_values){
+      if(!$reference){
+        db_insert('waggle_tracker')
+          ->fields(array(
+            'entity_id' => $node->nid,
+            'entity_vid' => $node->vid,
+            'entity_type' => 'node',
+            'uid' => $user->uid,
+            'user_vid' => $user->vid,
+            'field' => $label,
+            'summary' => '%u edited %f on %n.',
+            'timestamp' => time(),
+          ))
+          ->execute();
+      }
+      else{
+        $in_common = array_intersect($old_values, $new_values);
+        $removed = array_diff($old_values, $in_common);
+        $added = array_diff($new_values, $in_common);
+        foreach($removed as $id){
+          db_insert('waggle_tracker')
+            ->fields(array(
+              'entity_id' => $node->nid,
+              'entity_vid' => $node->vid,
+              'entity_type' => 'node',
+              'uid' => $user->uid,
+              'user_vid' => $user->vid,
+              'field' => $label,
+              'summary' => '%u removed %' . $id . ' to %f on %n.',
+              'timestamp' => time(),
+            ))
+            ->execute();
+        }
+        foreach($added as $id){
+          db_insert('waggle_tracker')
+            ->fields(array(
+              'entity_id' => $node->nid,
+              'entity_vid' => $node->vid,
+              'entity_type' => 'node',
+              'uid' => $user->uid,
+              'user_vid' => $user->vid,
+              'field' => $label,
+              'summary' => '%u added %' . $id . ' to %f on %n.',
+              'timestamp' => time(),
+            ))
+            ->execute();
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function waggle_tracker_node_insert($node){
+  global $user;
+  db_insert('waggle_tracker')
+    ->fields(array(
+      'entity_id' => $node->nid,
+      'entity_vid' => $node->vid,
+      'entity_type' => 'node',
+      'uid' => $user->uid,
+      'user_vid' => $user->vid,
+      'field' => '',
+      'summary' => '%u created new %et, %' . $node->nid,
+      'timestamp' => time(),
+    ))
+    ->execute();
+}
