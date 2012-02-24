@@ -9,6 +9,10 @@ function waggle_menu()
       'page callback' => 'waggle_stories',
       'access arguments' => array('access content'),
     );
+    $items['calendar'] = array(
+      'page callback' => 'waggle_calendar',
+      'access arguments' => array('access content'),
+    );
     // API
     $items['waggle/api/load-user'] = array(
       'page callback' => 'waggle_load_user',  
@@ -20,14 +24,15 @@ function waggle_menu()
       'type' => MENU_CALLBACK,
       'access arguments' => array('access content'),
     );
-    $items['waggle/api/get-stories'] = array(
-      'page callback' => 'waggle_load_stories_default',  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
     $items['waggle/api/get-stories/%'] = array(
       'page callback' => 'waggle_load_stories',  
       'page arguments' => array(3),
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
+    );
+    $items['waggle/api/get-stories/%/%'] = array(
+      'page callback' => 'waggle_load_stories',
+      'page arguments' => array(3,4),  
       'type' => MENU_CALLBACK,
       'access arguments' => array('access content'),
     );
@@ -64,18 +69,24 @@ function waggle_menu()
 
 function waggle_stories()
 {
-    drupal_add_css(drupal_get_path('module', 'waggle') . '/css/waggle.css');
-    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
-    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
-    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
-    drupal_add_js(drupal_get_path('module', 'waggle') . '/js/autocomplete.js');
     drupal_add_js('
       jQuery(document).ready(function() {
-	    WaggleStoriesPage();   
+	    WagglePage(\'accordion\');   
       });
     ', 'inline');
 
-    return 'Loading Stories...';
+    return 'Loading...';
+}
+
+function waggle_calendar()
+{
+    drupal_add_js('
+      jQuery(document).ready(function() {
+      WagglePage(\'calendar\');   
+      });
+    ', 'inline');
+
+    return views_embed_view('waggle_calendar', 'block');
 }
 
 
@@ -105,6 +116,11 @@ function waggle_block_info(){
 function waggle_block_view($delta = ''){
   switch ($delta) {
     case 'waggle_sidebar':
+      drupal_add_css(drupal_get_path('module', 'waggle') . '/css/waggle.css');
+      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
+      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
+      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
+      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/autocomplete.js');
   	  $block['subject'] = NULL;
   	  $block['content'] = array(
   	    '#type' => 'markup',
@@ -214,17 +230,19 @@ function waggle_load_user(){
 }
 
 /**
- *  function to load default stories, pass them through the appropriate view, and return the rendered html
+ * This function loads a view based on the $display sent.  Used to refresh the content region based on searches and page viewed.
+ * $display -- this should match a view named 'waggle_' . $display
+ * $nids (optional) - a string of nids to be displayed separated by +
  */
-function waggle_load_stories_default(){
-  drupal_json_output(views_embed_view('waggle_stories', 'block'));
-}
-
-/**
- *  function to load stories of given nids, pass them through the appropriate view, and return the rendered html
- */
-function waggle_load_stories($stories_arg){
-  drupal_json_output(views_embed_view('waggle_stories', 'block', $stories_arg));
+function waggle_load_stories($display){
+  $args = func_get_args();
+  array_shift($args);
+  if(count($args)){
+    drupal_json_output(views_embed_view('waggle_' . $display, 'block', $args[0]));
+  }
+  else{
+    drupal_json_output(views_embed_view('waggle_' . $display, 'block'));
+  }
 }
 
 /**
@@ -534,10 +552,12 @@ function waggle_start_story(){
 
   if($new_story){
     if(isset($_GET['s'])){
-      drupal_json_output(waggle_load_stories(_waggle_search($_GET['s'])));
+      waggle_load_stories(_waggle_search($_GET['s']));
+      return;
     }
     else{
-      drupal_json_output(waggle_load_stories_default());
+      waggle_load_stories_default();
+      return;
     }
   }
   drupal_json_output(FALSE);

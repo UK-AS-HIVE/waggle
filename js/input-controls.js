@@ -100,10 +100,10 @@ $(document).ready(function () {
 				//@TODO validate date before submission?
 				args.push('due=' + encodeURIComponent(dueDate.val()));
 			}
-
+console.log('waggle/api/start-story?' + args.join('&'));
 			$.getJSON('waggle/api/start-story?' + args.join('&'),function(json) {
 				console.log(json);
-				if(json !== false){
+				if(json){
 					console.log('success');
 					$('#block-system-main').html(json);
 				}
@@ -147,6 +147,7 @@ $(document).ready(function () {
 		    input = form.children('input');
 		if(input.val() != ''){
 			input.attr('disabled', 'disabled');
+			console.log('waggle/api/search?s=' + encodeURIComponent(input.val()));
 			$.getJSON('waggle/api/search?s=' + encodeURIComponent(input.val()),function(json) {
 				if(json.length){
 					GetTickets(json);

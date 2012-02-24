@@ -1,8 +1,15 @@
-function WaggleStoriesPage() {
+function WagglePage(page) {
 	LoadUsers();
 	LoadCurrentUser();
-	GetTickets();
-	PrepareInterface();	
+	switch(page){
+		case 'accordion':
+			GetAccordion();
+			break;
+		case 'calendar':
+			GetCalendar();
+			break;
+	}
+	
 }
 
 var users = null;
@@ -23,9 +30,10 @@ function LoadCurrentUser() {
     }(jQuery));
 }
 
-function GetTickets(nids) {
+function GetAccordion(nids) {
     (function ($,undefined){
-		var url = (nids === undefined) ? '/waggle/api/get-stories' : ('/waggle/api/get-stories/' + nids.join('+'));
+		var url = (nids === undefined) ? '/waggle/api/get-stories/stories' : ('/waggle/api/get-stories/stories/' + nids.join('+'));
+		console.log(url);
         $.getJSON(url, function (json) {
 			$('#block-system-main').html(json);
 			SetUpStoryInterface();
@@ -42,14 +50,25 @@ function GetTickets(nids) {
 	}(jQuery));
 }
 
+function GetCalendar(nids) {
+    (function ($,undefined){
+		var url = (nids === undefined) ? '/waggle/api/get-stories/calendar' : ('/waggle/api/get-stories/calendar/' + nids.join('+'));
+		console.log(url);
+        $.getJSON(url, function (json) {
+			$('#block-system-main').html(json);
+			/*
+			SetUpStoryInterface();
+        
+			CollapseAllStories();
+			
+			var areas = document.querySelectorAll('.expandingArea');
+			var l = areas.length;
 
-function PrepareInterface(){
-(function ($,undefined){
-$('#sidebar-search-form').submit(function(){
-  console.log($(this).children('.search-box').val());
-  return false;
-});
-}(jQuery));
+			while (l--) {
+				  makeExpandingArea(areas[l]);
+			}
+			*/
+		});
+	}(jQuery));
 }
-
 
