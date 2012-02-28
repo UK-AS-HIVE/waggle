@@ -87,54 +87,64 @@ function waggle_email_collect_imap_messages()
   foreach ($search as $index => $uid)
   {
     // get message body. this marks it SEEN as well
-    $body = imap_body($imap, $uid, FT_UID + FT_PEEK); // TODO: remove FT_PEEK to mark messages SEEN
+    $body = imap_body($imap, $uid, FT_UID); // TODO: remove FT_PEEK to mark messages SEEN
     $header = imap_headerinfo($imap, $index, FT_PEEK);
     $structure = imap_fetchstructure($imap, $uid, FT_UID);
 
-    if ($structure->type === 0)
-    {
-      // text
-      $text = $body;
-    }
-    else if ($structure->type === 1)
-    {
-      // multipart -- this has attachments
-      $parts = explode($structure->parameters[0]->value,$body);
-      $text = $parts[0];
-    }
-
-    // base-64 encoded
-    if ($structure->encoding === 3)
-    {
-      $text = base64_decode($text);
-    }
-    elseif ($structure->encoding === 4)
-    {
-      $text = quoted_printable_decode($text);
-    }
-
-    drupal_set_message('<pre>' . print_r(array($header, $structure, $text),true) . '</pre>');
-
-    // TODO: is this a note on a story, or a new story?
-
-    // TODO: map to users -- from, to, cc, bcc, sender
-    $recipients = array();
-    foreach(array('to','cc','bcc') as $recipient_type)
-      if (isset($header->$recipient_type))
-        $recipients = array_merge($recipients, $header->$recipient_type);
-      
-    foreach ($recipients as $recipient)
-    {
-      if ($recipient->host === 'uky.edu')
-      {
-        // mailbox name is LinkBlue name
-        $associates[] = $recipient->mailbox;
-      }
-    }
-
+    waggle_email_process_message($header, $structure, $body);
   }
 
   imap_close($imap);
 
+}
+
+function waggle_email_process_message($header, $structure, $body)
+{
+  if ($structure->type === 0)
+  {
+    // text
+    $text = $body;
+  }
+  else if ($structure->type === 1)
+  {
+    // multipart -- this has attachments
+    $parts = explode($structure->parameters[0]->value,$body);
+    $text = $parts[0];
+  }
+
+  // base-64 encoded
+  if ($structure->encoding === 3)
+  {
+    $text = base64_decode($text);
+  }
+  elseif ($structure->encoding === 4)
+  {
+    $text = quoted_printable_decode($text);
+  }
+
+  //drupal_set_message('<pre>' . print_r(array($header, $structure, $text),true) . '</pre>');
+  //drupal_set_message("serialization:\n" . serialize(array($header, $structure, $body)));
+
+  // TODO: is this a note on a story, or a new story?
+  drupal_set_message("body:\n" . $text);
+  drupal_set_message("header:\n" . print_r($header, True));
+  drupal_set_message("message_id:\n" . $header->$message_id);
+  drupal_set_message("references:\n" . $header->$references);
+
+
+  // TODO: map to users -- from, to, cc, bcc, sender
+  $recipients = array();
+  foreach(array('to','cc','bcc') as $recipient_type)
+    if (isset($header->$recipient_type))
+      $recipients = array_merge($recipients, $header->$recipient_type);
+    
+  foreach ($recipients as $recipient)
+  {
+    if ($recipient->host === 'uky.edu')
+    {
+      // mailbox name is LinkBlue name
+      $associates[] = $recipient->mailbox;
+    }
+  }
 }
 
