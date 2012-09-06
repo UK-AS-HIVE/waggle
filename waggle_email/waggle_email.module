@@ -6,7 +6,7 @@
 function waggle_email_help($path, $arg) {
   switch ($path) {
     case 'admin/help#waggle_email':
-      return '<p>' . t("Waggle email.") . '</p>';
+      return '<p>' . t('Waggle email.') . '</p>';
   }
 }
 
@@ -73,25 +73,39 @@ function waggle_email_collect_imap_messages()
   $imap = imap_open('{' . $server . ($use_secure?':993/imap/ssl}':':143/imap}'), $imap_user, $imap_pass, NULL, 1, array('DISABLE_AUTHENTICATOR' => 'GSSAPI') );
 
   $folders = imap_listmailbox($imap, '{' . $server . ':' . ($use_secure?'993':'143') . '}', '*');
-  drupal_set_message('folders: ' . print_r($folders,true));
+  //drupal_set_message('folders: ' . print_r($folders,true));
 
   // TODO: store last date checked, and check against that
-  $search = imap_search($imap, 'SINCE "7 February 2012" UNSEEN', SE_UID);
+  //$search = imap_search($imap, 'SINCE "7 February 2012" UNSEEN', SE_UID);
+  $search = imap_search($imap, 'SINCE "7 February 2012" SEEN', SE_UID);
+
+  watchdog('waggle_email', 'Checking IMAP email', WATCHDOG_INFO); 
+  drupal_set_message('Checking IMAP email');
 
   if (!$search)
   {
+    watchdog('waggle_email', 'No new messages', WATCHDOG_INFO);
+    drupal_set_message('No new messages');
     // no new messages
     return;
   }
 
+  watchdog('waggle_email', 'Retrieved ' . sizeof($search) . ' messages.' , WATCHDOG_INFO);
+  drupal_set_message('Retrieved ' . sizeof($search) . ' messages.');
+
   foreach ($search as $index => $uid)
   {
     // get message body. this marks it SEEN as well
-    $body = imap_body($imap, $uid, FT_UID); // TODO: remove FT_PEEK to mark messages SEEN
+    $body = imap_body($imap, $uid, FT_UID + FT_PEEK); // TODO: remove FT_PEEK to mark messages SEEN
     $header = imap_headerinfo($imap, $index, FT_PEEK);
     $structure = imap_fetchstructure($imap, $uid, FT_UID);
+    $filename = "tests2/" . $index . ".txt";
 
-    waggle_email_process_message($header, $structure, $body);
+    $handle = fopen($filename, 'w');
+    fwrite($handle, serialize(array($header, $structure, $body)));
+    fclose($handle);
+
+    //waggle_email_process_message($header, $structure, $body);
   }
 
   imap_close($imap);
@@ -123,13 +137,13 @@ function waggle_email_process_message($header, $structure, $body)
   }
 
   //drupal_set_message('<pre>' . print_r(array($header, $structure, $text),true) . '</pre>');
-  //drupal_set_message("serialization:\n" . serialize(array($header, $structure, $body)));
+  //drupal_set_message('serialization:\n' . serialize(array($header, $structure, $body)));
 
   // TODO: is this a note on a story, or a new story?
-  drupal_set_message("body:\n" . $text);
-  drupal_set_message("header:\n" . print_r($header, True));
-  drupal_set_message("message_id:\n" . $header->$message_id);
-  drupal_set_message("references:\n" . $header->$references);
+  //drupal_set_message('body:\n' . $text);
+  //drupal_set_message('header:\n' . print_r($header, True));
+  //drupal_set_message('message_id:\n' . $header->$message_id);
+  //drupal_set_message('references:\n' . $header->$references);
 
 
   // TODO: map to users -- from, to, cc, bcc, sender

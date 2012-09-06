@@ -1,6 +1,12 @@
+
 name = Waggle Email
 description = Implements integration of a shared email address and mapping those emails to Waggle stories
-package = Waggle
+dependencies[] = waggle
 core = 7.x
-configure = admin/config/waggle/waggle_email
+package = Waggle
+
 files[] = waggle_email.module
+files[] = waggle_email.admin.inc
+files[] = includes/exception.inc
+
+configure = admin/config/waggle/waggle_email

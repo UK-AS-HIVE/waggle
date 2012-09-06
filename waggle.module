@@ -1,392 +1,421 @@
 <?php
 
 /**
- *  Implements hook_menu()
+ * Implements hook_menu().
+ * @TODO Create a waggle api permission and make all api calls require it
+ * @TODO Make the paths more RESTful, including returning the correct data when not POSTed
  */
-function waggle_menu()
-{
-    $items['stories'] = array(
-      'page callback' => 'waggle_stories',
-      'access arguments' => array('access content'),
-    );
-    $items['calendar'] = array(
-      'page callback' => 'waggle_calendar',
-      'access arguments' => array('access content'),
-    );
-    // API
-    $items['waggle/api/load-user'] = array(
-      'page callback' => 'waggle_load_user',  
-      'type' => MENU_CALLBACK,
-      'access callback' => TRUE,
-    );
-	$items['waggle/api/load-all-users'] = array(
-      'page callback' => 'waggle_load_users',  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/get-stories/%'] = array(
-      'page callback' => 'waggle_load_stories',  
-      'page arguments' => array(3),
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/get-stories/%/%'] = array(
-      'page callback' => 'waggle_load_stories',
-      'page arguments' => array(3,4),  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/add-note'] = array(
-      'page callback' => 'waggle_add_note',  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/remove-user/%node/%'] = array(
-      'page callback' => 'waggle_remove_user',  
-      'type' => MENU_CALLBACK,
-      'page arguments' => array(3, 4),
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/add-user/%node/%'] = array(
-      'page callback' => 'waggle_add_user',  
-      'type' => MENU_CALLBACK,
-      'page arguments' => array(3, 4),
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/search'] = array(
-      'page callback' => 'waggle_search',  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-    $items['waggle/api/start-story'] = array(
-      'page callback' => 'waggle_start_story',  
-      'type' => MENU_CALLBACK,
-      'access arguments' => array('access content'),
-    );
-	
-    return $items;
+function waggle_menu() {
+  $items['waggle/api/staff-autocomplete-list'] = array(
+    'page callback' => 'waggle_staff_autocomplete_list',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/add-user/%node'] = array(
+    'page callback' => 'waggle_add_user',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/remove-user/%node'] = array(
+    'page callback' => 'waggle_remove_user',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/status/%node'] = array(
+    'page callback' => 'waggle_story_status',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
 }
 
-function waggle_stories()
-{
-    drupal_add_js('
-      jQuery(document).ready(function() {
-	    WagglePage(\'accordion\');   
-      });
-    ', 'inline');
-
-    return 'Loading...';
-}
-
-function waggle_calendar()
-{
-    drupal_add_js('
-      jQuery(document).ready(function() {
-      WagglePage(\'calendar\');   
-      });
-    ', 'inline');
-
-    return views_embed_view('waggle_calendar', 'block');
-}
 
 
 /**
- * Implements hook_block_info()
+ * Implements hook_entity_info_alter().
  */
-function waggle_block_info(){
-  $blocks['waggle_sidebar'] = array(
-    'info' => 'Waggle Sidebar',
-  	'cache' => DRUPAL_NO_CACHE,
-  	'status' => 1,
-  	'region' => 'sidebar_second',
+function waggle_entity_info_alter(&$entity_info) {
+  $entity_info['user']['view modes']['waggle_association'] = array(
+    'label' => t('Waggle Association'),
+    'custom settings' => TRUE,
   );
-  $blocks['waggle_top_menu'] = array(
-    'info' => 'Waggle Top Menu',
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function waggle_theme_registry_alter(&$theme_registry) {
+  $mod_path = drupal_get_path('module', 'waggle') . '/templates';
+
+  $theme_registry_copy = $theme_registry;       // munge on a copy
+  _theme_process_registry($theme_registry_copy, 'phptemplate', 'theme_engine', 'pow', $mod_path);
+  $theme_registry += array_diff_key($theme_registry_copy, $theme_registry);
+
+  // Additional hooks can be added to this array to add other template suggestions.
+  $hooks = array('user_profile', 'user_picture');
+  foreach ($hooks as $h) {
+    if (!isset($theme_registry[$h]['theme paths'])) { 
+      $theme_registry[$h]['theme paths'] = array(); 
+    } 
+    _waggle_insert_after_first_element($theme_registry[$h]['theme paths'], $mod_path);
+  }
+}
+
+function _waggle_insert_after_first_element(&$a, $element) {
+  if(is_array($a)) { 
+    $first_element = array_shift($a); 
+    if ($first_element) { 
+      array_unshift($a, $first_element, $element); 
+    } 
+    else { 
+      array_unshift($a, $element); 
+    }
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function waggle_block_info() {
+  $blocks['waggle_story_sidebar'] = array(
+    'info' => 'Waggle Story Sidebar',
+    'cache' => DRUPAL_NO_CACHE,
+    'weight' => -1,
+    'status' => 1,
+    'region' => 'sidebar_second',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'accordion',
+  );
+  $blocks['waggle_add_story'] = array(
+    'info' => 'Waggle Add Story',
+    'weight' => -1,
     'status' => 1,
     'region' => 'content',
-    'cache' => DRUPAL_CACHE_PER_USER,
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'accordion',
   );
   return $blocks;
 }
 
 /**
- * Implements hook_block_view()
- * @TODO - make these themed and move the html into template files.
+ * Implements hook_block_view().
  */
-function waggle_block_view($delta = ''){
+function waggle_block_view($delta = '') {
   switch ($delta) {
-    case 'waggle_sidebar':
-      drupal_add_css(drupal_get_path('module', 'waggle') . '/css/waggle.css');
-      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/input-controls.js');
-      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/page-calls.js');
-      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/functions.js');
-      drupal_add_js(drupal_get_path('module', 'waggle') . '/js/autocomplete.js');
-  	  $block['subject'] = NULL;
-  	  $block['content'] = array(
-  	    '#type' => 'markup',
-    		'#markup' =>
-    			'<div id="waggle-sidebar">
-    			  <form id="waggle-sidebar-search">
-      				<input type="textfield"/>
-      				<div class="autocomplete"></div>
-    			  </form>
-    			  <div class="waggle-search-messages"></div>
-    			</div>',
-  	  );
-  	  break;
-
-    case 'waggle_top_menu':
-      global $user;
-      $account = user_load($user->uid);
-      $picture = '<img src="' . (empty($account->picture) ? drupal_get_path('module', 'waggle') . '/default_user.png' : file_create_url($account->picture->uri)) . '" alt="' . $account->name . '"/>';
-      $name = array();
-      if(!empty($account->field_name)){
-        foreach($account->field_name['und']['0'] as $part){
-          if(!empty($part)){
-            $name[] = $part;
-          }
-        }
-      }
-      $name = implode(' ', $name);
-
-      $block['subject'] = NULL;
-      $block['content'] = array(
-        '#type' => 'markup',
-        '#markup' =>
-          '<div id="waggle-top-menu">
-            <ul>
-              <li><a class="start-story">+ Start Story</a></li>
-            </ul>
-          </div>
-          <div id="waggle-top-add">
-            <form id="waggle-top-add-form" class="clearfix">
-              <div id="start-story-textarea-wrapper" class="start-story-field field-wrapper">
-                <div style="margin: 0; padding: 0; font-size: 0.8em;">Don\'t get too excited.  Submitting does not work yet.</div>
-                <div class="expandingArea new-story-text">
-                  <pre><span></span><br/></pre>
-                  <textarea name="text" id="waggle-start-story-text" onkeypress="microsyntaxCheck(event);"></textarea>
-                </div>
-                <div class="autocomplete"></div>
-              </div>
-              <div id="start-story-secondary-fields">
-                <div id="start-story-submitted-by-wrapper" class="start-story-field field-wrapper">
-                  <h4>Submitted by:</h4>
-                  <div id="start-story-submitting-user" class="clearfix">
-                    <div class="picture">' . $picture . '</div>
-                    <div class="name">' . $name . '</div>
-                    <div class="linkblue">' . $user->name . '</div>
-                  </div>
-                  <div class="change-wrapper" >
-                    <input type="textfield" name="submit"/>
-                    <div class="autocomplete"></div>
-                  </div>
-                  <div class="controls"><a>change</a></div>
-                </div>
-                <div id="start-story-due-date-wrapper" class="start-story-field field-wrapper">
-                  <label for="due-date">Due Date:</label>
-                  <input type="textfield" name="due-date"/>
-                  <div class="field-description">Format: mm/dd/yyyy</div>
-                </div>
-              </div>
-              <div id="start-story-expander">
-                <a>more options</a>
-              </div>
-              <div id="start-story-buttons-wrapper" class="start-story-field field-wrapper">
-                <a>cancel</a>
-                <input type="submit" name="submit" value="Submit"/>
-              </div>
-            </form>
-          </div>',
+    case 'waggle_story_sidebar' :
+      return array(
+        'subject' => NULL,
+        'content' => drupal_get_form('waggle_story_sidebar'),
       );
+      break;
+    case 'waggle_add_story' :
+      return array(
+        'subject' => NULL,
+        'content' => waggle_add_story(),
+      );
+      break;
   }
-  
-  return $block;
 }
 
-
-/*****   VIEWS HOOKS  ********/
-function waggle_theme($existing) {
-  return array(
-    'views_view_fields__waggle_stories' => array (
-      'arguments' => array('view' => NULL, 'options' => NULL, 'row' => NULL, 'field_alias' => NULL),
-      'template' => 'views-view-fields--waggle-stories',
-      'base hook' => 'views_view_fields',
-      'path' => drupal_get_path('module', 'waggle') . '/templates',
-    ),
+/**
+ * Renders the sidebar for Waggle pages dealing with story display
+ *    Current possible $_GET data:
+ *        ?s = Search string for the body_value.  Currently set to 'contains all words'.
+ *        ?status = Tid for the story status (1 for open, 2 for closed).
+ *        ?staff = Uid(s) for associated users, multiples joined with +.
+ *        ?author = Uid for author.
+ */
+function waggle_story_sidebar($form, &$form_state) {
+  global $user;
+  $current_filters = array();
+  $status = isset($_GET['status']) ? $_GET['status'] : 1; //current default in views
+  switch ($status) {
+    case 1:
+      $label = 'open tickets';
+      break;
+    case 2:
+      $label = 'closed tickets';
+      break;
+    case '1+2':
+      $label = 'all tickets';
+      break;
+  }
+  $status_options = array(
+    '1' => 'open',
+    '2' => 'closed',
+    '1+2' => 'all',
   );
+
+  if (isset($_GET['s'])) {
+    $current_filters[] = array(
+      'code' => 's=' . $_GET['s'],
+      'label' => 'keywords: ' . $_GET['s'],
+    );
+  }
+  if (isset($_GET['author'])) {
+    $current_filters[] = array(
+      'code' => 'author=' . $_GET['author'],
+      'label' => 'author: ' . $_GET['author'],
+    );
+  }
+  $i = 0;
+  if (isset($_GET["staff"])) {
+    foreach ($_GET["staff"] as $i => $uid) {
+      $account = user_load($uid);
+      $label = $account ? 'staff: ' . $account->name : 'bad user id - '. $uid;
+      $current_filters[] = array(
+        'code' => "staff[$i]=" . $uid,
+        'label' => $label,
+      );
+    }
+  }
+  $current_filters_text = '<div id="current-filters"><ul>';
+  foreach ($current_filters as $filter) {
+    $current_filters_text .= '<li><a>' . $filter['label'] . '</a></li>';
+  }
+  $current_filters_text .= '</ul></div>';
+
+  $filters_text = '<div id="current-filters"><ul>';
+  $filters_text .= '<li><a href="/?author=' . $user->name . '">my submissions</a></li>';
+  $filters_text .= '<li><a href="/?staff[0]=' . $user->uid . '">my stories</a></li>';
+  $filters_text .= '</ul></div>';
+
+  $form['search'] = array(
+    '#type' =>'textfield',
+    '#size' => 20,
+    '#default_value' => empty($form_state['input']['search']) ? '' : $form_state['input']['search'],
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'search',
+    '#prefix' => '<div style="display: none">',
+    '#suffix' => '</div>',
+  );
+  $form['current_filters'] = array(
+    '#type' => 'markup',
+    '#markup' => $current_filters_text,
+    '#prefix' => '<div class="sidebar-section-label">Current Filters</div>',
+  );
+  $form['filters'] = array(
+    '#type' => 'markup',
+    '#markup' => $filters_text,
+    '#prefix' => '<div class="sidebar-section-label">Apply Filters</div>',
+  );
+  return $form;
 }
 
+/**
+ * Generates the add story form for the accordion view.
+ * Modled off node_add($type).
+ */
+function waggle_add_story() {
+  global $user;
+  if (!$user->uid) {
+    return '';
+  }
+
+  module_load_include('inc', 'node', 'node.pages');
+  $type = 'story';
+
+  $types = node_type_get_types();
+  $node = (object) array(
+    'uid' => $user->uid,
+    'name' => (isset($user->name) ? $user->name : ''),
+    'type' => $type,
+    'language' => LANGUAGE_NONE,
+  );
+
+  $output = drupal_get_form($type . '_node_form', $node);
+
+  $name = $user->name;
+  $account = user_load($user->uid);
+  if (!empty($account->field_name)) {
+    $name = implode(' ', array_filter($account->field_name['und'][0])) . ' (' . $name . ')';
+  }
+  $output['story_head']= array(
+    '#type' => 'markup',
+    '#markup' => '
+      <div class="story-head clearfix">
+        <div class="meta submitted">
+          ' . theme('user_picture', array('account' => $user)) . '
+          <div class="submitted"><div class="author-name">' . $name . '</div></div>
+          <div class="time-ago">new story</div>
+          <div class="details waggle-secondary"><a>edit details</a></div>
+        </div>
+      </div>',
+    '#weight' => 1,
+  );
+
+  $output['story_extra_info'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => 'story-extra-info',
+      'style' => 'display:none;',
+    ),
+    '#weight' => 2,
+  );
+  foreach ($output as $label => $item) {
+    if (is_array($item) && preg_match('/field_/', $label)) {
+      $output['story_extra_info'][$label] = $item;
+      unset($output[$label]);
+    }
+  }
+
+  $output['body']['#weight'] = 3;
+
+  $output['story_foot'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => 'story-info-footer',
+    ),
+    '#weight' => 10,
+  );
+  foreach(array('actions') as $key){
+    $output['story_foot'][$key] = $output[$key];
+    unset($output[$key]);
+  }
+
+  return $output;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * Form ID: Comment Form.
+ */
+function waggle_form_comment_form_alter(&$form, &$form_state, $form_id) {
+  //dpm($form);
+  if ($form['#node']->type == 'story') {
+    global $user;
+    $picture = theme('user_picture', array('account' => $user));
+
+    $form['comment_body']['und'][0]['#title'] = '';
+    $form['#prefix'] = '<div class="new-comment-wrapper" id="new-comment-wrapper-' . $form['#node']->nid 
+      . '"><div class="attribution">' . $picture . '</div><div class="comment-text"><div class="comment-arrow"></div>';
+    $form['#suffix'] = '</div></div>';
+  }
+}
+
+/**
+ * Implements hook_preprocess_user_profile().
+ */
+function waggle_preprocess_user_profile(&$vars) {
+  if ($vars['elements']['#view_mode'] == 'waggle_association') {
+    $vars['theme_hook_suggestions'][] = 'user_profile__waggle_association';
+  }
+}
 
 
 
 /*****   API CALLS  ********/
 
 /**
- *   function to load and return the current user
+ * Function to add a given user from a given node.
  */
-function waggle_load_user(){
-  global $user;
-  return drupal_json_encode($user);
-}
-
-/**
- * This function loads a view based on the $display sent.  Used to refresh the content region based on searches and page viewed.
- * $display -- this should match a view named 'waggle_' . $display
- * $nids (optional) - a string of nids to be displayed separated by +
- */
-function waggle_load_stories($display){
-  $args = func_get_args();
-  array_shift($args);
-  if(count($args)){
-    drupal_json_output(views_embed_view('waggle_' . $display, 'block', $args[0]));
+function waggle_add_user($node){
+  if(isset($_POST['uid']) && $account = user_load($_POST['uid'])) {
+    $uid = $account->uid;
   }
-  else{
-    drupal_json_output(views_embed_view('waggle_' . $display, 'block'));
+  else {
+    drupal_json_output(FALSE);
+    druapl_exit();
   }
-}
 
-/**
- * Function to add a note to a given story nid.
- */
-function waggle_add_note(){
-  $get = $_GET;
-  global $user;
-  $node = node_load($get['nid']);
-  // Return if the given nid is invalid, or belongs to a non-story node, or if the user-provided note is empty, or the user isn't logged in
-  if (!$node || $node->type != 'story' || empty($get['note']) || $user->uid == 0) {
-    return 'There was an error with your request.  If you continue to receive this message, please email ashelp@uky.edu or call 859-257-1541.';
-  }
-  
-  $new_note = (object) array('type' => 'action');
-  node_object_prepare($new_note);
-
-  // Look for @users and #tags in the body
-  $body_parts = explode(' ', $get['note']);
-  $add_users = array();
-  foreach($body_parts as $delta => $part){
-    switch(substr($part, 0, 1) == '@'){
-      case '@':
-        $linkblue = substr($part, 1);
-        $account = user_load_by_name($linkblue);
-        if($account && $account->uid){
-          if(!empty($account->field_name)){
-            $name_parts = array();
-            foreach(array('first', 'middle', 'last') as $name_part){
-              if(!empty($account->field_name['und'][0][$name_part])){
-                $name_parts[] = $account->field_name['und'][0][$name_part];
-              }
-            }
-            $full_name = implode(' ', $name_parts);
-          }
-          else{
-            $full_name = $account->name;
-          }
-          $body_parts[$delta] = '<span class="tagged-user user-' . $account->uid . '">' . $full_name . '</span>';
-          $add_users[] = $account->uid;
-        }
-        
-        break;
-
-      case '#':
-        break;
-
-      default:
-        break;
+  $found = FALSE;
+  //Make sure the user isn't already attatched to this story
+  foreach($node->field_associated_users['und'] as $delta => $data){
+    if($data['uid'] == $uid){
+      $found = TRUE;
+      break;
     }
   }
 
-  //If users were added using @linkblue, only associate them if not already associated
-  if(!empty($node->field_associated_users)){
-    foreach($node->field_associated_users['und'] as $delta => $values){
-      if(in_array($values['uid'], $add_users)){
-        unset($add_users[array_search($values['uid'], $add_users)]);
-      }
-    }
+  $json = 0;
+  if (!$found) {
+    $node->field_associated_users['und'][] = array('uid' => $uid);
+    node_save($node);   
+    $account = user_load($uid);
+    $json = drupal_render(user_view($account, 'waggle_association'));
   }
-  foreach($add_users as $add_uid){
-    $node->field_associated_users['und'][] = array('uid' => $add_uid);
-  }
-  
-  $new_note->title = $get['nid'] . '-' . time();
-  $new_note->body['und'][0]['value'] = implode(' ', $body_parts);
-  $new_note->body['und'][0]['format'] = 'filtered_html';
-  $new_note->field_story['und'][0]['nid'] = $get['nid'];
-  node_save($new_note);
-  if ($new_note) {
-    $node->field_actions['und'][] = array('nid' => $new_note->nid);
-    $node->revision = TRUE;
-	  node_save($node);
-  }
-  drupal_json_output(views_embed_view('waggle_story_actions', 'block', $get['nid']));
-  //return 'yes';
+  drupal_json_output('<div class="field-item">' . $json . '</div>');
 }
 
 /**
  * Function to remove a given user from a given node.
  */
-function waggle_remove_user($node, $uid){
+function waggle_remove_user($node){
+  if(isset($_POST['uid']) && $account = user_load($_POST['uid'])) {
+    $uid = $account->uid;
+  }
+  else {
+    drupal_json_output(FALSE);
+    druapl_exit();
+  }
+
   $found = FALSE;
+  //Make sure the user is attatched to this story
   foreach($node->field_associated_users['und'] as $delta => $data){
     if($data['uid'] == $uid){
-	  unset($node->field_associated_users['und'][$delta]);
-	  node_save($node);
-	  $found = TRUE;
-	  break;
-	}
+      $found = TRUE;
+      unset($node->field_associated_users['und'][$delta]);
+      $node->field_associated_users['und'] = array_values($node->field_associated_users['und']);
+      unset($node->vid);
+    }
+  }
+
+  if ($found) {
+    node_save($node);   
   }
   drupal_json_output($found);
 }
 
-/**
- * Function to add a given user from a given node.
+/** 
+ * Changes the status of a story
  */
-function waggle_add_user($node, $uid){
-  $found = FALSE;
-  //Make sure the user isn't already attatched to this story
-  foreach($node->field_associated_users['und'] as $delta => $data){
-    if($data['uid'] == $uid){
-	  $found = TRUE;
-	  break;
-	}
+function waggle_story_status($node) {
+  if ($node->type != 'story') {
+    drupal_json_output(FALSE);
   }
-  if(!$found){
-    $node->field_associated_users['und'][] = array('uid' => $uid);
-	node_save($node);
-  }
-  $account = user_load($uid);
-  
-  // @TODO This code mimicks the layout in views-view-fields--waggle-stories.tpl.php.  There may be a better way...
-  $picture = '<img src="' . (empty($account->picture) ? drupal_get_path('module', 'waggle') . '/default_user.png' : file_create_url($account->picture->uri)) . '" alt="' . $account->name . '"/>';
-  $name = array();
-  if(!empty($account->field_name)){
-    foreach($account->field_name['und']['0'] as $part){
-      if(!empty($part)){
-        $name[] = $part;
-  	  }
+  else if (isset($_POST['status'])) {
+    // @TODO Change vid to voc machine name
+    //drupal_json_output('first');
+    $term = taxonomy_term_load($_POST['status']);
+    if ($term && $term->vid == 3) {
+      $node->field_status['und'][0] = array('tid' => $_POST['status']);
+      node_save($node);
+      if ($node) {
+        drupal_json_output(1);
+      }
+      else {
+        drupal_json_output(0);
+      }
     }
   }
-  $name = implode(' ', $name);
-  $roll_over = 
-    '<div class="associated-user-rollover">' .
-  	  '<div class="picture">' . $picture . '</div>' . 
-	  '<div class="name">' . $name . '</div>' . 
-	  '<div class="linkblue">' . $account->name . '</div>' . 
-	  '<a class="remove-user user-' . $uid . ' node-' . $node->nid . '" href="">Unassociate</a>' .
-    '</div>';
-  $json = '<div class="associated-user user-' . $uid . '"><div class="small-picture">' . $picture . '</div>' . $roll_over . '</div>';
-  
-  drupal_json_output($json);
+  else { 
+    // If no POST status but correct node, return the current status
+    $status = 1;
+    if (!empty($node->field_status)) {
+      $tid = $node->field_status['und'][0]['tid'];
+      $status = array($tid => taxonomy_term_load($tid)->name);
+    }
+    drupal_json_output($status);
+  }
 }
 
 /**
  * Autocomplete function for Add Associated User boxes
  */
-function waggle_load_users(){  
+function waggle_staff_autocomplete_list(){  
   $query = db_select('users', 'u');
   $query->leftJoin('field_data_field_name', 'f', 'u.uid=f.entity_id');
+  $query->leftJoin('users_roles', 'r', 'r.uid=u.uid');
   $results = $query->fields('u', array('uid', 'name', 'picture', 'mail'))
     ->fields('f', array('field_name_first', 'field_name_middle', 'field_name_last'))
 	->condition('u.uid', array(0, 1), 'NOT IN')
+  ->condition('u.status', 1)
+  ->condition('r.rid', 4)
 	->execute()
 	->fetchAllAssoc('uid');
 	
@@ -408,76 +437,11 @@ function waggle_load_users(){
   );
   }
   drupal_json_output($accounts);
-  //return '';
 }
 
-function waggle_search(){
-  if(!isset($_GET['s'])){
-    return;
-  }
-  $keys = $_GET['s'];
-  drupal_json_output(_waggle_search($keys));
-}
 
 /**
- * Helper search function that can be employed by other calls that just need the nid array.
- */
-function _waggle_search($keys){
-  $index = search_api_index_load(1); 
-  $offset = 0; 
-  $limit = 10; 
-  $fields = NULL; 
-  $sort = NULL; 
-  $filters = NULL;
-  
-  // Slight "hack" for testing complex queries.
-  if ($keys == '|COMPLEX|') {
-    $keys = array(
-      '#conjunction' => 'AND',
-      'test',
-      array(
-        '#conjunction' => 'OR',
-        'baz',
-        'foobar',
-      ),
-      array(
-        '#conjunction' => 'AND',
-        '#negation' => TRUE,
-        'bar',
-      ),
-    );
-  }
-  $query = $index->query()
-    ->keys($keys)
-    ->range($offset, $limit);
-  if ($fields) {
-    $query->fields(explode(',', $fields));
-  }
-  if ($sort) {
-    $sort = explode(',', $sort);
-    $query->sort($sort[0], $sort[1]);
-  }
-  else {
-    $query->sort('search_api_id', 'ASC');
-  }
-  if ($filters) {
-    $filters = explode(',', $filters);
-    foreach ($filters as $filter) {
-      $filter = explode('=', $filter);
-      $query->condition($filter[0], $filter[1]);
-    }
-  }
-  $result = $query->execute();
-
-  $nids = array();
-  foreach($result['results'] as $nid => $fields){
-    $nids[] = $nid;
-  }
-  return $nids;
-}
-
-/**
- * Function to add a note to a given story nid.
+ * Function to create a new story.
  */
 function waggle_start_story(){
   $get = $_GET;

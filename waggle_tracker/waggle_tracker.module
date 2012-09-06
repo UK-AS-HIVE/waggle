@@ -122,7 +122,7 @@ function waggle_tracker_node_insert($node){
       'entity_type' => 'node',
       'uid' => $user->uid,
       'user_vid' => $user->vid,
-      'field' => '',
+      'field' => 'new node',
       'summary' => '%u created new %et, %' . $node->nid,
       'timestamp' => time(),
     ))

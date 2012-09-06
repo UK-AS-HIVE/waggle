@@ -150,7 +150,8 @@ console.log('waggle/api/start-story?' + args.join('&'));
 			console.log('waggle/api/search?s=' + encodeURIComponent(input.val()));
 			$.getJSON('waggle/api/search?s=' + encodeURIComponent(input.val()),function(json) {
 				if(json.length){
-					GetTickets(json);
+					//GetAccordion(json);
+					$(document).trigger('waggleSearchReturned', [json]);
 					$('#waggle-sidebar .waggle-search-messages').html('');
 				}
 				else{

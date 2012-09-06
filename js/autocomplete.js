@@ -10,6 +10,14 @@
 var waggleAutocompleteOngoing = false;
 function WaggleAutocomplete(container, input, autocompleteHandler){
 	(function($){
+
+		input.blur(function(){
+			// Placed inside short timout in case user is clicking on an autocomplete option.
+			setTimeout(function(){
+				$(container).html('');
+			}, 200);
+		});
+
 		$(input).keyup(function(e){
 			var ec = e.keyCode;
 			//console.log(ec);
@@ -169,11 +177,11 @@ UserCandidates = function(parts, limit, currentUsers){
  */
 function AddUserAutocompleteHandler(myInput){
 	(function($){
-	    var nid = $(myInput).attr('class').substring(5),
+	    var nid = $(myInput).parents('.node').attr('id').substring(5),
 			currentUsers = new Array();
-		$('#story-' + nid + ' .associated-user').each(function(i, item){
+		$('#node-' + nid + ' .field-name-field-associated-users .user-picture').each(function(i, item){
 			var classes = $(item).attr('class').split(' ');
-			currentUsers.push(classes[1].substring(5));
+			currentUsers.push(classes[1].substring(13));
 		});
 		if($(myInput).val().length > 0){
 			parts = $(myInput).val().split(' ');
@@ -187,17 +195,64 @@ function AddUserAutocompleteHandler(myInput){
 					'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
 				  '</a>';
 			}
-			$(myInput).parents('.associated-user-rollover').find('.user-list').html(newHTML);
+			$(myInput).parents('.add-user-wrapper').find('.suggestions').html(newHTML);
 			if(newHTML == ''){
 				waggleAutocompleteOngoing = false;
 				return;
 			}
-			StoryAddUserBindings('#story-' + nid + ' .add-associated-user');
-			AutocompleteHover('#story-' + nid + ' .add-associated-user'); 
+			StoryAddUserBindings('#node-' + nid + ' .add-user-wrapper .suggestions');
+			AutocompleteHover('#node-' + nid + ' .add-user-wrapper .suggestions'); 
 		}
 		else{
 			waggleAutocompleteOngoing = false;
 		}
+	}(jQuery));
+}
+
+function StoryAddUserBindings(selector){
+	(function($){
+		$(selector + ' a').click(function(){
+			var classes = $(this).attr('class').split(' '),
+			    nid = classes[2].substring(5),
+				uid = classes[1].substring(5),
+				container = $(this);
+
+			$('#node-' + nid + ' .field-name-field-associated-users').children(':first').append('<span class="waiting">saving...</span>');
+		    $.post('waggle/api/story/add-user/' + nid,{'uid' : uid}, function(json) {
+		    	if (json != 0) {
+				    container.remove();
+				    $('#node-' + nid + ' .field-name-field-associated-users').children(':first').append(json);
+				    $('#node-' + nid + ' .field-name-field-associated-users .waiting').remove();
+					StoryCurrentUserBindings('#node-' + nid + ' .field-name-field-associated-users .profile');
+				}
+			});
+			$(this).html('');
+			$(this).parents('.add-user-wrapper').find('a.add-user-link').click();
+			$(this).parents('.add-user-wrapper').find(input).val('');
+		    return false;
+		});
+	}(jQuery));
+}
+
+function StoryCurrentUserBindings(selector){
+    (function($){
+		$(selector).hover(function(){
+			$(this).find('.associated-user-info').css('display', 'block');
+		}, function(){
+			$(this).find('.associated-user-info').css('display', 'none');
+		});
+		
+		$(selector + ' a.remove-user').click(function(){
+			var classes = $(this).attr('class').split(' '),
+				nid = $(this).parents('.node').attr('id').substring(5),
+				uid = classes[1].substring(5),
+				container = $(this).parents('.profile');
+			$.post('waggle/api/story/remove-user/' + nid,{'uid' : uid}, function(json) {
+			  container.remove();
+			});
+			$(this).parents('.associated-user-info').remove();
+			return false;
+		});
 	}(jQuery));
 }
 
