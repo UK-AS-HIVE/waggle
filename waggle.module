@@ -1,5 +1,7 @@
 <?php
 
+include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'waggle') . '/waggle.permissions.inc';
+
 /**
  * Implements hook_menu().
  * @TODO Create a waggle api permission and make all api calls require it
