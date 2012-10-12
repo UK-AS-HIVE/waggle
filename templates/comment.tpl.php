@@ -63,29 +63,16 @@
 
     <?php print $picture; ?>
 
-    <div class="submitted">
-      <p class="commenter-name">
-        <?php print $author; ?>
-      </p>
-      <p class="comment-time">
-        <?php print $created; ?>
-      </p>
-      <p class="comment-permalink">
-        <?php print $permalink; ?>
-      </p>
-    </div>
   </div>
 
   <div class="comment-text">
     <div class="comment-arrow"></div>
 
-    <?php if ($new): ?>
-      <span class="new"><?php print $new; ?></span>
-    <?php endif; ?>
-
-    <?php print render($title_prefix); ?>
-    <h3<?php print $title_attributes; ?>><?php print $title; ?></h3>
-    <?php print render($title_suffix); ?>
+    <div class="comment-time"><?php print $created; ?>
+      <?php if ($new && FALSE): //not currently working with waggle ?>
+        <span class="new"><?php print $new; ?></span>
+      <?php endif; ?>
+    </div>
 
     <div class="content"<?php print $content_attributes; ?>>
       <?php
@@ -100,6 +87,6 @@
       <?php endif; ?>
     </div> <!-- /.content -->
 
-    <?php print render($content['links']); ?>
+    <?php //print render($content['links']); ?>
   </div> <!-- /.comment-text -->
 </div>

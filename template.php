@@ -1,9 +1,40 @@
 <?php
 
+drupal_add_js('https://use.typekit.com/cnl4ahn.js');
+drupal_add_js('try{Typekit.load();}catch(e){}', 'inline');
+
+/**
+ * Function to convert a unix timestamp to 'time ago'.
+ * Source: http://css-tricks.com/snippets/php/time-ago-function/
+ */
+function ago($time)
+{
+   $periods = array("second", "minute", "hour", "day", "week", "month", "year", "decade");
+   $lengths = array("60","60","24","7","4.35","12","10");
+
+   $now = time();
+
+       $difference     = $now - $time;
+       $tense         = "ago";
+
+   for($j = 0; $difference >= $lengths[$j] && $j < count($lengths)-1; $j++) {
+       $difference /= $lengths[$j];
+   }
+
+   $difference = round($difference);
+
+   if($difference != 1) {
+       $periods[$j].= "s";
+   }
+
+   return "$difference $periods[$j] ago ";
+}
+
+
 /**
  * Add body classes if certain regions have content.
  */
-function waggle_preprocess_html(&$variables) {
+function waggle_theme_preprocess_html(&$variables) {
   if (!empty($variables['page']['featured'])) {
     $variables['classes_array'][] = 'featured';
   }
@@ -29,7 +60,7 @@ function waggle_preprocess_html(&$variables) {
 /**
  * Override or insert variables into the page template for HTML output.
  */
-function waggle_process_html(&$variables) {
+function waggle_theme_process_html(&$variables) {
   // Hook into color.module.
   if (module_exists('color')) {
     _color_html_alter($variables);
@@ -39,7 +70,7 @@ function waggle_process_html(&$variables) {
 /**
  * Override or insert variables into the page template.
  */
-function waggle_process_page(&$variables) {
+function waggle_theme_process_page(&$variables) {
   // Hook into color.module.
   if (module_exists('color')) {
     _color_page_alter($variables);
@@ -76,17 +107,21 @@ function waggle_process_page(&$variables) {
 /**
  * Implements hook_preprocess_maintenance_page().
  */
-function waggle_preprocess_maintenance_page(&$variables) {
+function waggle_theme_preprocess_maintenance_page(&$variables) {
+  // By default, site_name is set to Drupal if no db connection is available
+  // or during site installation. Setting site_name to an empty string makes
+  // the site and update pages look cleaner.
+  // @see template_preprocess_maintenance_page
   if (!$variables['db_is_active']) {
-    unset($variables['site_name']);
+    $variables['site_name'] = '';
   }
-  drupal_add_css(drupal_get_path('theme', 'waggle') . '/css/maintenance-page.css');
+  drupal_add_css(drupal_get_path('theme', 'waggle_theme') . '/css/maintenance-page.css');
 }
 
 /**
  * Override or insert variables into the maintenance page template.
  */
-function waggle_process_maintenance_page(&$variables) {
+function waggle_theme_process_maintenance_page(&$variables) {
   // Always print the site name and slogan, but if they are toggled off, we'll
   // just hide them visually.
   $variables['hide_site_name']   = theme_get_setting('toggle_name') ? FALSE : TRUE;
@@ -104,16 +139,27 @@ function waggle_process_maintenance_page(&$variables) {
 /**
  * Override or insert variables into the node template.
  */
-function waggle_preprocess_node(&$variables) {
+function waggle_theme_preprocess_node(&$variables) {
   if ($variables['view_mode'] == 'full' && node_is_page($variables['node'])) {
     $variables['classes_array'][] = 'node-full';
   }
+  $names = variable_get('waggle_theme_user_names', array());
+  if (!isset($names[$variables['node']->uid])) {
+    $author = user_load($variables['node']->uid);
+    $name = empty($author->field_name) ? $author->name : implode(' ', array_filter($author->field_name['und'][0]));
+    $names[$variables['node']->uid] = $name;
+    variable_set('waggle_theme_user_names', $names);
+  }
+  else {
+    $name = $names[$variables['node']->uid];
+  }
+  $variables['submitted'] = '<div class="author-name">' . $name . '</div><div class="story-submitted-time">' . $variables['date'] . '</div>';
 }
 
 /**
  * Override or insert variables into the block template.
  */
-function waggle_preprocess_block(&$variables) {
+function waggle_theme_preprocess_block(&$variables) {
   // In the header region visually hide block titles.
   if ($variables['block']->region == 'header') {
     $variables['title_attributes_array']['class'][] = 'element-invisible';
@@ -123,14 +169,14 @@ function waggle_preprocess_block(&$variables) {
 /**
  * Implements theme_menu_tree().
  */
-function waggle_menu_tree($variables) {
+function waggle_theme_menu_tree($variables) {
   return '<ul class="menu clearfix">' . $variables['tree'] . '</ul>';
 }
 
 /**
  * Implements theme_field__field_type().
  */
-function waggle_field__taxonomy_term_reference($variables) {
+function waggle_theme_field__taxonomy_term_reference($variables) {
   $output = '';
 
   // Render the label, if it's not hidden.

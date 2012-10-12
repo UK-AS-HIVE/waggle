@@ -6,7 +6,7 @@
  *
  * The doctype, html, head and body tags are not in this template. Instead they
  * can be found in the html.tpl.php template normally located in the
- * modules/system folder.
+ * modules/system directory.
  *
  * Available variables:
  *
@@ -82,9 +82,33 @@
  * @see template_preprocess_page()
  * @see template_process()
  * @see bartik_process_page()
+ * @see html.tpl.php
  */
 ?>
 <div id="page-wrapper"><div id="page">
+
+  <div id="topbar-wrapper">
+    <div id="topbar" class="set-width">
+      <div id="topbar-links">
+        <a id="ans-logo" href="//www.as.uky.edu"><img src="/sites/all/themes/waggle_theme/images/A&S_OverlapLogoWHITE_fmt.png"></a>
+      <ul>
+        <li class="first"><a href="/">Help</a></li>
+        <li><a href="http://www.uky.edu">UK</a></li>
+        <li><a class="new-story-link">New Story</a></li>
+        <?php 
+          if(user_is_anonymous()){
+            print '<li class="last">' . l('Login', 'user/login') . '</li>'; 
+            fancy_login_init();
+          }
+        ?>
+        <li><a href="/story-search-test">Facets</a></li>
+      </ul>
+      </div>
+      <?php 
+        //print render($page['topbar']); 
+      ?>
+    </div>
+  </div>
 
   <div id="header" class="<?php print $secondary_menu ? 'with-secondary-menu': 'without-secondary-menu'; ?>"><div class="section clearfix">
 
@@ -158,12 +182,6 @@
 
   </div></div> <!-- /.section, /#header -->
 
-  <?php if ($messages): ?>
-    <div id="messages"><div class="section clearfix">
-      <?php print $messages; ?>
-    </div></div> <!-- /.section, /#messages -->
-  <?php endif; ?>
-
   <?php if ($page['featured']): ?>
     <div id="featured"><div class="section clearfix">
       <?php print render($page['featured']); ?>
@@ -179,6 +197,11 @@
     <?php endif; ?>
 
     <div id="content" class="column"><div class="section">
+      <?php if ($messages): ?>
+        <div id="messages"><div class="clearfix">
+          <?php print $messages; ?>
+        </div></div> <!-- /.section, /#messages -->
+      <?php endif; ?>
       <?php if ($page['highlighted']): ?><div id="highlighted"><?php print render($page['highlighted']); ?></div><?php endif; ?>
       <a id="main-content"></a>
       <?php print render($title_prefix); ?>
