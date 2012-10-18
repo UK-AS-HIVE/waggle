@@ -1,0 +1,31 @@
+<?php
+
+/**
+ *  Implements hook_search_api_solr_query_alter().
+ *
+ *  Parse microsyntax and add proper values to fq array.
+ */
+function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQueryInterface $query) {
+  $waggle_search_string = isset($_GET['ws'])?$_GET['ws']:'';
+
+  //dpm($waggle_search_string, 'waggle search string');
+
+  $sigil_fields = array(
+    '#' => "sm_field_tags\\:name:",
+    '@' => "sm_field_associated_users\\:name:",
+  );
+  $matches = array();
+  if (preg_match_all("/(-)?(\w+:)?((.?\".*?\")|\S+)/", $waggle_search_string, $matches, PREG_SET_ORDER)) {
+    foreach ($matches as $match) {
+      if (array_key_exists($match[3][0], $sigil_fields)) {
+        $call_args['params']['fq'][] = $match[1] . $sigil_fields[$match[3][0]] . substr($match[3],1);
+      }
+      else {
+        $call_args['params']['fq'][] = "((t_title:".$match[0].") OR (t_body\:value:".$match[0].") OR (t_search_api_viewed:".$match[0]."))";
+      }
+    }
+  }
+
+  //dpm($call_args['params']['fq']);
+}
+

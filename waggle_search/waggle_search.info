@@ -1,0 +1,9 @@
+name = Waggle Search
+description = Customizations to Search API for processing Twitter-like microsyntax
+dependencies[] = waggle
+dependencies[] = search_api
+core = 7.x
+package = Waggle
+
+files[] = waggle_search.module
+
