@@ -13,6 +13,11 @@ function waggle_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['waggle/api/tags-autocomplete-list'] = array(
+    'page callback' => 'waggle_tags_autocomplete_list',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   $items['waggle/api/story/add-user/%node'] = array(
     'page callback' => 'waggle_add_user',
     'page arguments' => array(4),
@@ -68,7 +73,7 @@ function waggle_theme_registry_alter(&$theme_registry) {
 
 function _waggle_insert_after_first_element(&$a, $element) {
   if(is_array($a)) { 
-    $first_element = array_shift($a); 
+    $first_element = array_shift($a);
     if ($first_element) { 
       array_unshift($a, $first_element, $element); 
     } 
@@ -82,15 +87,6 @@ function _waggle_insert_after_first_element(&$a, $element) {
  * Implements hook_block_info().
  */
 function waggle_block_info() {
-  $blocks['waggle_story_sidebar'] = array(
-    'info' => 'Waggle Story Sidebar',
-    'cache' => DRUPAL_NO_CACHE,
-    'weight' => -1,
-    'status' => 1,
-    'region' => 'sidebar_second',
-    'visibility' => BLOCK_VISIBILITY_LISTED,
-    'pages' => 'accordion',
-  );
   $blocks['waggle_add_story'] = array(
     'info' => 'Waggle Add Story',
     'weight' => -1,
@@ -107,12 +103,6 @@ function waggle_block_info() {
  */
 function waggle_block_view($delta = '') {
   switch ($delta) {
-    case 'waggle_story_sidebar' :
-      return array(
-        'subject' => NULL,
-        'content' => drupal_get_form('waggle_story_sidebar'),
-      );
-      break;
     case 'waggle_add_story' :
       return array(
         'subject' => NULL,
@@ -120,93 +110,6 @@ function waggle_block_view($delta = '') {
       );
       break;
   }
-}
-
-/**
- * Renders the sidebar for Waggle pages dealing with story display
- *    Current possible $_GET data:
- *        ?s = Search string for the body_value.  Currently set to 'contains all words'.
- *        ?status = Tid for the story status (1 for open, 2 for closed).
- *        ?staff = Uid(s) for associated users, multiples joined with +.
- *        ?author = Uid for author.
- */
-function waggle_story_sidebar($form, &$form_state) {
-  global $user;
-  $current_filters = array();
-  $status = isset($_GET['status']) ? $_GET['status'] : 1; //current default in views
-  switch ($status) {
-    case 1:
-      $label = 'open tickets';
-      break;
-    case 2:
-      $label = 'closed tickets';
-      break;
-    case '1+2':
-      $label = 'all tickets';
-      break;
-  }
-  $status_options = array(
-    '1' => 'open',
-    '2' => 'closed',
-    '1+2' => 'all',
-  );
-
-  if (isset($_GET['s'])) {
-    $current_filters[] = array(
-      'code' => 's=' . $_GET['s'],
-      'label' => 'keywords: ' . $_GET['s'],
-    );
-  }
-  if (isset($_GET['author'])) {
-    $current_filters[] = array(
-      'code' => 'author=' . $_GET['author'],
-      'label' => 'author: ' . $_GET['author'],
-    );
-  }
-  $i = 0;
-  if (isset($_GET["staff"])) {
-    foreach ($_GET["staff"] as $i => $uid) {
-      $account = user_load($uid);
-      $label = $account ? 'staff: ' . $account->name : 'bad user id - '. $uid;
-      $current_filters[] = array(
-        'code' => "staff[$i]=" . $uid,
-        'label' => $label,
-      );
-    }
-  }
-  $current_filters_text = '<div id="current-filters"><ul>';
-  foreach ($current_filters as $filter) {
-    $current_filters_text .= '<li><a>' . $filter['label'] . '</a></li>';
-  }
-  $current_filters_text .= '</ul></div>';
-
-  $filters_text = '<div id="current-filters"><ul>';
-  $filters_text .= '<li><a href="/?author=' . $user->name . '">my submissions</a></li>';
-  $filters_text .= '<li><a href="/?staff[0]=' . $user->uid . '">my stories</a></li>';
-  $filters_text .= '</ul></div>';
-
-  $form['search'] = array(
-    '#type' =>'textfield',
-    '#size' => 20,
-    '#default_value' => empty($form_state['input']['search']) ? '' : $form_state['input']['search'],
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => 'search',
-    '#prefix' => '<div style="display: none">',
-    '#suffix' => '</div>',
-  );
-  $form['current_filters'] = array(
-    '#type' => 'markup',
-    '#markup' => $current_filters_text,
-    '#prefix' => '<div class="sidebar-section-label">Current Filters</div>',
-  );
-  $form['filters'] = array(
-    '#type' => 'markup',
-    '#markup' => $filters_text,
-    '#prefix' => '<div class="sidebar-section-label">Apply Filters</div>',
-  );
-  return $form;
 }
 
 /**
@@ -327,10 +230,12 @@ function waggle_add_user($node){
 
   $found = FALSE;
   //Make sure the user isn't already attatched to this story
-  foreach($node->field_associated_users['und'] as $delta => $data){
-    if($data['uid'] == $uid){
-      $found = TRUE;
-      break;
+  if (!empty($node->field_associated_users)) {
+    foreach($node->field_associated_users['und'] as $delta => $data){
+      if($data['uid'] == $uid){
+        $found = TRUE;
+        break;
+      }
     }
   }
 
@@ -440,6 +345,30 @@ function waggle_staff_autocomplete_list(){
   }
   drupal_json_output($accounts);
 }
+
+/**
+ * Autocomplete function for Add Associated User boxes
+ */
+function waggle_tags_autocomplete_list(){  
+  $results = db_select('taxonomy_term_data', 't')
+    ->fields('t', array('tid', 'name'))
+    ->condition('t.vid', 1)
+    ->orderBy('t.name', 'ASC')
+    ->execute()
+    ->fetchAllAssoc('tid');
+  
+  $terms = array();
+  foreach($results as $tid => $fields){
+    $terms['by_tid'][$tid] = array(
+      'name' => $fields->name,
+    );
+    $terms['by_name'][$fields->name] = array(
+      'tid' => $tid,
+    );
+  }
+  drupal_json_output($terms);
+}
+
 
 
 /**

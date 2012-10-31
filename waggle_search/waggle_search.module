@@ -20,7 +20,7 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
   if (preg_match_all("/\(|\)|\<AND\>|\<OR\>|(-)?(\w+:)?((.?\".*?\")|[^\s()]+)/", $waggle_search_string, $matches, PREG_SET_ORDER)) {
     foreach ($matches as $match_index => $match) {
       if ($match[0] === 'AND' || $match[0] === 'OR') {
-        $built_query .= ' ' . $match[0] . ' ';
+        $built_query .= ' ' . $match[0];
       } elseif ($match[0] === '(') {
         $built_query .= '(';
         $nest_level++;
@@ -32,6 +32,7 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
       } else {
 	$built_query .= "((t_title:".$match[0].") OR (t_body\:value:".$match[0].") OR (t_search_api_viewed:".$match[0]."))";
       }
+      $built_query .= ' ';
     }
     while ($nest_level-- > 0) {
       $built_query .= ')';
@@ -41,4 +42,71 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
   //dpm($built_query);
   $call_args['params']['fq'][] = $built_query;
 }
+
+/**
+ * Implements hook_block_info().
+ */
+function waggle_search_block_info() {
+  $blocks['waggle_story_sidebar'] = array(
+    'info' => 'Waggle Story Sidebar',
+    'cache' => DRUPAL_NO_CACHE,
+    'weight' => -1,
+    'status' => 1,
+    'region' => 'sidebar_second',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function waggle_search_block_view($delta = '') {
+  switch ($delta) {
+    case 'waggle_story_sidebar' :
+      return array(
+        'subject' => NULL,
+        'content' => drupal_get_form('waggle_story_sidebar'),
+      );
+      break;
+  }
+}
+
+/**
+ * Renders the sidebar for Waggle pages dealing with story display
+ *    Current possible $_GET data:
+ *        ?s = Search string for the body_value.  Currently set to 'contains all words'.
+ *        ?status = Tid for the story status (1 for open, 2 for closed).
+ *        ?staff = Uid(s) for associated users, multiples joined with +.
+ *        ?author = Uid for author.
+ */
+function waggle_story_sidebar($form, &$form_state) {
+  $form['search'] = array(
+    '#title' => 'Search',
+    '#type' =>'textfield',
+    '#size' => 20,
+    '#maxlength' => 1024,
+    '#default_value' => isset($_GET['ws']) ? $_GET['ws'] : '',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'search',
+    '#prefix' => '<div style="display: none">',
+    '#suffix' => '</div>',
+  );
+  return $form;
+}
+
+function waggle_story_sidebar_submit($form, $form_state) {
+  //dpm($form_state['values']);
+  //dpm($_GET);
+  $path = $_GET['q'];
+  $options = array();
+  if (!empty($form_state['values']['search'])) {
+    $options = array('query' => array('ws' => $form_state['values']['search']));
+  }
+  drupal_goto($path, $options);
+  return '';
+}
+
 
