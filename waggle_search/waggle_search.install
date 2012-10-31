@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * Implement hook_schema().
+ */
+function waggle_search_schema() {
+  $schema['waggle_saved_searches'] = array(
+    'description' => 'Saved per-user searches across stories.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The user who entered this search.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'search_string' => array(
+        'description' => 'Saved search string, in waggle microsyntax.',
+        'type' => 'varchar',
+       	'length' => 1024,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'Friendly name for the saved search.',
+        'type' => 'varchar',
+        'length' => 80,
+        'not null' => TRUE,
+      ),
+    ),
+    'unique keys' => array(
+      'uid_title' => array('uid', 'title'),
+    ),
+    'foreign keys' => array(
+      'author' => array(
+        'table' => 'user',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
