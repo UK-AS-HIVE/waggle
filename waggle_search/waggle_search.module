@@ -13,6 +13,11 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
     '@' => "sm_field_associated_users\\:name",
   );
 
+  $field_transforms = array(
+    'status:' => 'is_field_status:',
+    'office:' => 't_author\\:field_office:',
+  );
+
   $built_query = '';
   $nest_level = 0;
   $matches = array();
@@ -27,10 +32,12 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
       } elseif ($match[0] === ')') {
         if ($nest_level-- > 0)
           $built_query .= ')';
+      } elseif (array_key_exists($match[2], $field_transforms)) {
+        $built_query .= $match[1] . $field_transforms[$match[2]] . $match[3];
       } elseif (array_key_exists($match[3][0], $sigil_fields)) {
-	$built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
+  $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
       } else {
-	$built_query .= "((t_title:".$match[0].") OR (t_body\:value:".$match[0].") OR (t_search_api_viewed:".$match[0]."))";
+  $built_query .= "((t_title:".$match[0].") OR (t_body\:value:".$match[0].") OR (t_search_api_viewed:".$match[0]."))";
       }
       $built_query .= ' ';
     }
@@ -39,7 +46,6 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
     }
   }
 
-  //dpm($built_query);
   $call_args['params']['fq'][] = $built_query;
 }
 
@@ -48,7 +54,7 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
  */
 function waggle_search_block_info() {
   $blocks['waggle_story_sidebar'] = array(
-    'info' => 'Waggle Story Sidebar',
+    'info' => 'Waggle Story Search',
     'cache' => DRUPAL_NO_CACHE,
     'weight' => -1,
     'status' => 1,
@@ -66,47 +72,127 @@ function waggle_search_block_view($delta = '') {
     case 'waggle_story_sidebar' :
       return array(
         'subject' => NULL,
-        'content' => drupal_get_form('waggle_story_sidebar'),
+        'content' => drupal_render(drupal_get_form('waggle_story_sidebar')) . drupal_render(drupal_get_form('waggle_saved_searches_sidebar')),
       );
       break;
   }
 }
 
 /**
- * Renders the sidebar for Waggle pages dealing with story display
+ * Renders the sidebar for Waggle pages dealing with story search
  *    Current possible $_GET data:
- *        ?s = Search string for the body_value.  Currently set to 'contains all words'.
- *        ?status = Tid for the story status (1 for open, 2 for closed).
- *        ?staff = Uid(s) for associated users, multiples joined with +.
- *        ?author = Uid for author.
+ *        ?ws = Microsyntax search string.
  */
 function waggle_story_sidebar($form, &$form_state) {
-  $form['search'] = array(
+  drupal_add_js(drupal_get_path('module', 'waggle_search') . '/waggle_search.js');
+
+  $form['search_container'] = array(
+    '#type' => 'container',
+  );
+
+  $form['search_container']['search'] = array(
     '#title' => 'Search',
     '#type' =>'textfield',
     '#size' => 20,
     '#maxlength' => 1024,
     '#default_value' => isset($_GET['ws']) ? $_GET['ws'] : '',
   );
-  $form['submit'] = array(
+
+  /*$form['search_container']['submit'] = array(
     '#type' => 'submit',
     '#value' => 'search',
-    '#prefix' => '<div style="display: none">',
-    '#suffix' => '</div>',
+    //'#prefix' => '<div style="display: none">',
+    //'#suffix' => '</div>',
+  );*/
+
+  $form['saved_searches'] = array(
+    '#markup' => '',
   );
+
+  global $user;
+  $query = db_select('waggle_saved_searches','w')
+    ->fields('w')
+    ->condition('w.uid', $user->uid);
+  $result = $query->execute();
+
+  while ($record = $result->fetchAssoc()) {
+    $form['saved_searches']['#markup'] .=
+      //l($record['title'], $record['search_string']);
+      '<a href="?ws=' . urlencode($record['search_string']) . '">' . $record['title'] . '</a><br/>';
+  }
+
+  $form['prompt'] = array(
+    '#markup' => '<a id="waggle-story-sidebar-save-expand"><i>' . t('save') . '...</i></a>',
+  );
+
+  $form['saved_searches_container'] = array(
+    '#type' => 'container',
+  );
+
+  $form['saved_searches_container']['save_new_search'] = array(
+    '#type' => 'container',
+    '#title' => 'Save new search',
+
+    'save_name_textbox' => array(
+      '#title' => 'Save current search as',
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#maxlength' => 80,
+      //'#required' => TRUE,
+    ),
+    'save_submit' => array(
+      '#type' => 'submit',
+      '#value' => 'Save',
+      //'#submit' => array('waggle_story_sidebar_submit_save_search'),
+    ),
+  );
+
+
+
   return $form;
 }
 
+function waggle_saved_searches_sidebar($form, &$form_state) {
+  return $form;
+}
+
+
+
 function waggle_story_sidebar_submit($form, $form_state) {
-  //dpm($form_state['values']);
-  //dpm($_GET);
   $path = $_GET['q'];
   $options = array();
+  global $user;
+  if (!empty($form_state['values']['save_name_textbox'])) {
+    if (!empty($form_state['values']['search'])) {
+      $result = db_select('waggle_saved_searches','w')
+        ->fields('w')
+        ->condition('uid', $user->uid)
+        ->condition('title', trim($form_state['values']['save_name_textbox']))
+        ->execute()
+        ->rowCount();
+      if ($result == 0) {
+        db_insert('waggle_saved_searches')
+          ->fields(array(
+            'uid' => $user->uid,
+            'title' => $form_state['values']['save_name_textbox'],
+            'search_string' => $form_state['values']['search'],
+          ))
+          ->execute();
+      }
+      else {
+        db_update('waggle_saved_searches')
+          ->fields(array('search_string' => $form_state['values']['search']))
+          ->condition('uid', $user->uid)
+          ->condition('title', $form_state['values']['save_name_textbox'])
+          ->execute();
+      }
+        
+    }
+  }
   if (!empty($form_state['values']['search'])) {
     $options = array('query' => array('ws' => $form_state['values']['search']));
   }
   drupal_goto($path, $options);
   return '';
 }
-
 
