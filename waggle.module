@@ -490,12 +490,27 @@ function waggle_tags_autocomplete_list(){
   drupal_json_output($terms);
 }
 
-
 /**
  * Implement hook_node_presave().
  */
 function waggle_node_presave($node) {
-  $text = $node->body['und'][0]['value'];
+  waggle_process_added_text($node, $node->body['und'][0]['value']);
+}
+
+/**
+ * Implement hook_comment_presave().
+ */
+function waggle_comment_presave($comment) {
+  $node = node_load($comment->nid);
+  waggle_process_added_text($node, $comment->comment_body['und'][0]['value']);
+  // TODO: This triggers hook_node_presave again, which we probably don't want.
+  node_save($node);
+}
+
+/**
+ * Looks for @user and #tag and adds the relevant data to the node.
+ */
+function waggle_process_added_text($node, $text) {
   
   $usernames = array();
   $hashtags = array();
@@ -512,11 +527,18 @@ function waggle_node_presave($node) {
   $uids = array();
   foreach($usernames as $username) {
     if ($account = user_load_by_name($username)) {
-      $uids[] = array('uid' => $account->uid);
-      //$node->field_associated_users['und'][] = array('uid' => $add_uid);
+      $uids[] = $account->uid;
     }
   }
-  $node->field_associated_users['und'] = array_unique(array_merge($node->field_associated_users['und'], $uids));
+  // Probably not the most efficient, but gets unique set of uids into the right array format.
+  $node->field_associated_users['und'] = array_map(function($i) { return array('uid' => $i); },
+    array_unique(
+      array_merge(
+	array_map(function($i) { return $i['uid']; }, $node->field_associated_users['und']),
+	$uids
+      )
+    )
+  );
 
   $vocab = taxonomy_vocabulary_machine_name_load('tags');
   if (!$vocab) {
