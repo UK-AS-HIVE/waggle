@@ -30,8 +30,26 @@ function waggle_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['waggle/api/story/add-tag/%node'] = array(
+    'page callback' => 'waggle_add_tag',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/remove-tag/%node'] = array(
+    'page callback' => 'waggle_remove_tag',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   $items['waggle/api/story/status/%node'] = array(
     'page callback' => 'waggle_story_status',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/due-date/%node'] = array(
+    'page callback' => 'waggle_story_duedate',
     'page arguments' => array(4),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -116,31 +134,30 @@ function waggle_block_view($delta = '') {
  * Generates the add story form for the accordion view.
  * Modled off node_add($type).
  */
-function waggle_add_story() {
+function waggle_add_story($form, &$form_state) {
   global $user;
   if (!$user->uid) {
     return '';
   }
-
   module_load_include('inc', 'node', 'node.pages');
   $type = 'story';
 
-  $types = node_type_get_types();
   $node = (object) array(
     'uid' => $user->uid,
     'name' => (isset($user->name) ? $user->name : ''),
     'type' => $type,
     'language' => LANGUAGE_NONE,
+    'title' => NULL
   );
 
-  $output = drupal_get_form($type . '_node_form', $node);
+  $node_form = drupal_get_form($type . '_node_form', $node);
 
   $name = $user->name;
   $account = user_load($user->uid);
   if (!empty($account->field_name)) {
     $name = implode(' ', array_filter($account->field_name['und'][0])) . ' (' . $name . ')';
   }
-  $output['story_head']= array(
+  $node_form['story_head']= array(
     '#type' => 'markup',
     '#markup' => '
       <div class="story-head clearfix">
@@ -154,7 +171,7 @@ function waggle_add_story() {
     '#weight' => 1,
   );
 
-  $output['story_extra_info'] = array(
+  $node_form['story_extra_info'] = array(
     '#type' => 'container',
     '#attributes' => array(
       'class' => 'story-extra-info',
@@ -162,16 +179,16 @@ function waggle_add_story() {
     ),
     '#weight' => 2,
   );
-  foreach ($output as $label => $item) {
+  foreach ($node_form as $label => $item) {
     if (is_array($item) && preg_match('/field_/', $label)) {
-      $output['story_extra_info'][$label] = $item;
-      unset($output[$label]);
+      $node_form['story_extra_info'][$label] = $item;
+      unset($node_form[$label]);
     }
   }
 
-  $output['body']['#weight'] = 3;
+  $node_form['body']['#weight'] = 3;
 
-  $output['story_foot'] = array(
+  $node_form['story_foot'] = array(
     '#type' => 'container',
     '#attributes' => array(
       'class' => 'story-info-footer',
@@ -179,11 +196,35 @@ function waggle_add_story() {
     '#weight' => 10,
   );
   foreach(array('actions') as $key){
-    $output['story_foot'][$key] = $output[$key];
-    unset($output[$key]);
+    $node_form['story_foot'][$key] = $node_form[$key];
+    unset($node_form[$key]);
   }
+  return $node_form;
+}
 
-  return $output;
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * Form ID: story_node_form
+ */
+function waggle_form_story_node_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'waggle_story_node_validate';
+  $form['#submit'][] = 'waggle_story_node_submit';
+}
+
+/**
+ * Used to add IP and Hostname values before saving to the database.
+ */
+function waggle_story_node_validate(&$form, &$form_state) {
+  if (isset($_SERVER['REMOTE_ADDR'])) {
+    $value = $form_state['values'];
+    $value['field_ip_address']['und'][0]['value'] = $_SERVER['REMOTE_ADDR'];
+    form_set_value($form, $value, $form_state);
+  }
+}
+
+function waggle_story_node_submit(&$form, &$form_state){
+  $form_state['redirect'] = '';
+  dpm($form_state);
 }
 
 /**
@@ -278,6 +319,67 @@ function waggle_remove_user($node){
   drupal_json_output($found);
 }
 
+/**
+ * Function to add a given tag to a given node.
+ */
+function waggle_add_tag($node){
+  if(isset($_POST['tid']) && $term = taxonomy_term_load($_POST['tid'])) {
+    $tid = $term->tid;
+  }
+  else {
+    drupal_json_output(FALSE);
+    druapl_exit();
+  }
+
+  $found = FALSE;
+  //Make sure the user isn't already attatched to this story
+  if (!empty($node->field_tags)) {
+    foreach($node->field_tags['und'] as $delta => $data){
+      if($data['tid'] == $tid){
+        $found = TRUE;
+        break;
+      }
+    }
+  }
+
+  $json = 0;
+  if (!$found) {
+    $node->field_tags['und'][] = array('tid' => $tid);
+    node_save($node);
+    $json = '<li>' . l($term->name, 'taxonomy/term/' . $tid) . '</li>';
+  }
+  drupal_json_output($json);
+}
+
+/**
+ * Function to remove a given tag from a given node.
+ */
+function waggle_remove_tag($node){
+  if(isset($_POST['uid']) && $account = user_load($_POST['uid'])) {
+    $uid = $account->uid;
+  }
+  else {
+    drupal_json_output(FALSE);
+    druapl_exit();
+  }
+
+  $found = FALSE;
+  //Make sure the user is attatched to this story
+  foreach($node->field_associated_users['und'] as $delta => $data){
+    if($data['uid'] == $uid){
+      $found = TRUE;
+      unset($node->field_associated_users['und'][$delta]);
+      $node->field_associated_users['und'] = array_values($node->field_associated_users['und']);
+      unset($node->vid);
+    }
+  }
+
+  if ($found) {
+    node_save($node);   
+  }
+  drupal_json_output($found);
+}
+
 /** 
  * Changes the status of a story
  */
@@ -312,6 +414,25 @@ function waggle_story_status($node) {
 }
 
 /**
+ * Changes the due date of a story
+ */
+function waggle_story_duedate($node) {
+  if ($node->type != 'story') {
+    drupal_json_output(FALSE);
+  }
+  else if (isset($_POST['duedate'])) {
+    $node->field_due_date = array(
+      'und' => array(
+        0 => array(
+          'value' => date('Y-m-d', strtotime($_POST['duedate'])),
+        ),
+      ),
+    );
+    node_save($node);
+  }
+}
+
+/**
  * Autocomplete function for Add Associated User boxes
  */
 function waggle_staff_autocomplete_list(){  
@@ -320,27 +441,27 @@ function waggle_staff_autocomplete_list(){
   $query->leftJoin('users_roles', 'r', 'r.uid=u.uid');
   $results = $query->fields('u', array('uid', 'name', 'picture', 'mail'))
     ->fields('f', array('field_name_first', 'field_name_middle', 'field_name_last'))
-	->condition('u.uid', array(0, 1), 'NOT IN')
+  ->condition('u.uid', array(0, 1), 'NOT IN')
   ->condition('u.status', 1)
   ->condition('r.rid', 4)
-	->execute()
-	->fetchAllAssoc('uid');
-	
+  ->execute()
+  ->fetchAllAssoc('uid');
+  
   $accounts = array();
   foreach($results as $uid => $fields){
     $name_parts = array();
-	foreach(array('field_name_first', 'field_name_middle', 'field_name_last') as $part){
-	  if(!empty($fields->$part)){
-	    $name_parts[] = $fields->$part;
-	  }
-	}
+  foreach(array('field_name_first', 'field_name_middle', 'field_name_last') as $part){
+    if(!empty($fields->$part)){
+      $name_parts[] = $fields->$part;
+    }
+  }
     $accounts[$uid] = array(
-	  'name' => implode(' ', $name_parts),
-	  'last_name' => $fields->field_name_last,
-	  'first_name' => implode(' ', array($fields->field_name_first, $fields->field_name_middle)),
-	  'mail' => $fields->mail,
-	  'linkblue' => $fields->name,
-	  'picture' => '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>',
+    'name' => implode(' ', $name_parts),
+    'last_name' => $fields->field_name_last,
+    'first_name' => implode(' ', array($fields->field_name_first, $fields->field_name_middle)),
+    'mail' => $fields->mail,
+    'linkblue' => $fields->name,
+    'picture' => '<img src="' . ($fields->picture ? file_create_url(file_load($fields->picture)->uri) : drupal_get_path('module', 'waggle') . '/default_user.png') . '"/>',
   );
   }
   drupal_json_output($accounts);
@@ -370,6 +491,46 @@ function waggle_tags_autocomplete_list(){
 }
 
 
+/**
+ * Implement hook_node_presave().
+ */
+function waggle_node_presave($node) {
+  $text = $node->body['und'][0]['value'];
+  
+  $usernames = array();
+  $hashtags = array();
+  if (preg_match_all('/(?<!\w)[@#]\w+\b/', $text, $matches, PREG_SET_ORDER)) {
+    foreach ($matches as $match_index => $match) {
+      if ($match[0][0] == '@') {
+        $usernames[] = substr($match[0],1);
+      } else if ($match[0][0] == '#') {
+        $hashtags[] = substr($match[0],1);
+      }
+    }
+  }
+
+  $uids = array();
+  foreach($usernames as $username) {
+    if ($account = user_load_by_name($username)) {
+      $uids[] = array('uid' => $account->uid);
+      //$node->field_associated_users['und'][] = array('uid' => $add_uid);
+    }
+  }
+  dpm($node);
+  dpm($uids);
+  $node->field_associated_users['und'] = array_unique(array_merge($node->field_associated_users['und'], $uids));
+
+  $tags = array();
+  foreach($hashtags as $hashtag) {
+    if ($matched_tag = taxonomy_get_term_by_name($hashtag, 'tags')) {
+      dpm($matched_tag, $hashtag);
+      foreach ($matched_tag as $tid => $tag) {
+        $tags[] = $tag;
+      }
+    }
+  }
+  $node->field_tags['und'] = array_unique(array_merge($node->field_tags['und'], $tags));
+}
 
 /**
  * Function to create a new story.
