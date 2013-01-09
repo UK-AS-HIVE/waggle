@@ -516,20 +516,45 @@ function waggle_node_presave($node) {
       //$node->field_associated_users['und'][] = array('uid' => $add_uid);
     }
   }
-  dpm($node);
-  dpm($uids);
   $node->field_associated_users['und'] = array_unique(array_merge($node->field_associated_users['und'], $uids));
 
+  $vocab = taxonomy_vocabulary_machine_name_load('tags');
+  if (!$vocab) {
+    drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
+    return;
+  }
+  $vid = $vocab->vid;
   $tags = array();
+
   foreach($hashtags as $hashtag) {
     if ($matched_tag = taxonomy_get_term_by_name($hashtag, 'tags')) {
-      dpm($matched_tag, $hashtag);
       foreach ($matched_tag as $tid => $tag) {
         $tags[] = $tag;
       }
+    } else {
+      $newTag = new stdClass();
+      $term->name = $hashtag;
+      $term->vid = $vid;
+      taxonomy_term_save($term);
+      $tags[] = $term;
     }
   }
-  $node->field_tags['und'] = array_unique(array_merge($node->field_tags['und'], $tags));
+
+  if (!isset($node->field_tags['und']))
+    $node->field_tags['und'] = array();
+
+  foreach ($tags as $tag) {
+    $already_tagged = FALSE;
+    foreach ($node->field_tags['und'] as $existing_tag) {
+      if ($tag->tid == $existing_tag['tid']) {
+        $already_tagged = TRUE;
+        continue;
+      }
+    }
+    if (!$already_tagged) {
+      $node->field_tags['und'][] = array('tid' => $tag->tid);
+    }
+  }
 }
 
 /**
