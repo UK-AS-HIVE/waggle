@@ -55,16 +55,18 @@ function waggle_node_grants($account, $op) {
  */
 function waggle_node_access_records($node) {
   if ($node->type == 'story') {
-    foreach ($node->field_associated_users['und'] as $delta => $account) {
-      if (isset($account['uid'])) {
-        $grants[] = array(
-          'realm' => 'waggle_story',
-          'gid' => $account['uid'],
-          'grant_view' => $node->status,
-          'grant_update' => 1,
-          'grant_delete' => 0,
-          'priority' => 1,
-        );
+    if (isset($node->field_associated_users)) {
+      foreach ($node->field_associated_users['und'] as $delta => $account) {
+	if (isset($account['uid'])) {
+	  $grants[] = array(
+	    'realm' => 'waggle_story',
+	    'gid' => $account['uid'],
+	    'grant_view' => $node->status,
+	    'grant_update' => 1,
+	    'grant_delete' => 0,
+	    'priority' => 1,
+	  );
+	}
       }
     }
     $grants[] = array(
