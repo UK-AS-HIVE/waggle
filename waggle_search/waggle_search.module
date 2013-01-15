@@ -14,8 +14,9 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
   );
 
   $field_transforms = array(
+    'author:' => 'tm_author\\:name:',
     'status:' => 'is_field_status:',
-    'office:' => 't_author\\:field_office:',
+    'office:' => 'tm_author\\:field_office:',
   );
 
   // If status is not explicitly mentioned anywhere, exclude 'done' (tid:2) tasks.
@@ -48,7 +49,8 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
       } elseif (array_key_exists($match[3][0], $sigil_fields)) {
         $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
       } else {
-        $built_query .= "((t_title:".$match[0].") OR (t_body\:value:".$match[0].") OR (t_search_api_viewed:".$match[0]."))";
+        //$built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0].") OR (tm_search_api_viewed:".$match[0]."))";
+        $built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0]."))";
       }
       $built_query .= ' ';
     }
