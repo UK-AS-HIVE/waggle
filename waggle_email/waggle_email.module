@@ -162,3 +162,71 @@ function waggle_email_process_message($header, $structure, $body)
   }
 }
 
+function waggle_email_node_insert($node) {
+  if ($node->type === 'story') {
+    global $user;
+    $user = user_load($user->uid);
+    $uids = array_unique(array_merge(
+      array($node->uid),
+      array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und'])
+    ));
+    $recipients = user_load_multiple($uids);
+    $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+    drupal_mail('waggle_email', 'new_story', $address_list, $node->language,
+      array(
+        '!nid' => $node->nid,
+        '!author' => $recipients[$node->uid]->name,
+        '!body' => $node->body['und'][0]['value'],
+      ),
+      $recipients[$node->uid]->mail, TRUE);
+  }  
+}
+
+
+function waggle_email_comment_insert($comment) {
+  $node = node_load($comment->nid);
+  if ($node->type === 'story') {
+    global $user;
+    $user = user_load($user->uid);
+    $uids = array_unique(array_merge(
+      array($node->uid),
+      array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und'])
+    ));
+    $recipients = user_load_multiple($uids);
+    $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+    drupal_mail('waggle_email', 'new_note', $address_list, $node->language,
+      array(
+        '!nid' => $node->nid,
+        '!author' => $user->name,
+        '!body' => $comment->comment_body['und'][0]['value'],
+        '!original_body' => $node->body['und'][0]['value'],
+        '!original_author' => $recipients[$node->uid]->name,
+      ),
+      $user->mail, TRUE);
+  }  
+ 
+}
+
+/**
+ * Implements hook_mail().
+ *
+ * Defines the actual subjects and messages to be delivered.
+ */
+function waggle_email_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'new_story':
+      $message['subject'] = t('Story# !nid', $params);
+      $message['body'][] = t('<b>A new story has been opened by !author:</b><br/>!body<br/>', $params);
+      break;
+    case 'new_note':
+      $message['subject'] = t('Re: Story# !nid', $params);
+      $message['body'][] = t(
+        '<b>!author left a new note on your story:</b><br/>!body<br/><br/>'
+        . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
+        . '<br/>Visit <a href="https://help.as.uky.edu/story-search?ws=id:!nid+status:any">'
+	. 'the story</a> to respond.',
+        $params);
+      break;
+  }
+}
+
