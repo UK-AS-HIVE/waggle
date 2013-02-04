@@ -1,6 +1,30 @@
 <?php
 
 /**
+ * Implements hook_menu().
+ */
+function waggle_search_menu() {
+  $items['waggle/api/saved-search-count'] = array(
+    'page callback' => 'waggle_search_ajax_search_count',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function waggle_search_ajax_search_count() {
+  //$index = search_api_index_load_multiple(array('Default node index'));
+  $query = search_api_query('default_node_index',
+    array(
+      'limit' => 0,
+    )
+  );
+  $result = $query->execute();
+  drupal_json_output($result);
+  drupal_exit();
+}
+
+/**
  *  Implements hook_search_api_solr_query_alter().
  *
  *  Rewrite waggle's microsyntax (e.g., @user and #tag) for processing by Solr's dismax parser.
@@ -110,7 +134,22 @@ function waggle_story_sidebar($form, &$form_state) {
     '#size' => 20,
     '#maxlength' => 1024,
     '#default_value' => isset($_GET['ws']) ? $_GET['ws'] : '',
+    '#suffix' => '<a id="waggle-story-sidebar-save-help-expand"><i>' . t('help') . '</i></a>',
   );
+
+  $form['search_container']['help'] = array(
+    '#markup' => '<div id="waggle-story-sidebar-save-help-container">Use search to locate stories you\'re interested in! ' .
+      'Here are some examples: ' .
+      '<ul>' .
+      '<li>@user</li>' .
+      '<li>#tag</li>' .
+      '<li>@user OR #tag</li>' .
+      '<li>free AND (speech OR beer)</li>' .
+      '<li>status:any</li>' .
+      '<li>author:user</li>' .
+      '</ul></div>',
+  );
+
 
   /*$form['search_container']['submit'] = array(
     '#type' => 'submit',
@@ -129,10 +168,20 @@ function waggle_story_sidebar($form, &$form_state) {
     ->condition('w.uid', $user->uid);
   $result = $query->execute();
 
+  $search_api_query = search_api_query('default_node_index', array('limit' => 0));
+
   while ($record = $result->fetchAssoc()) {
     $form['saved_searches']['#markup'] .=
       //l($record['title'], $record['search_string']);
-      '<a href="?ws=' . urlencode($record['search_string']) . '">' . $record['title'] . '</a><br/>';
+      '<a href="?ws=' . urlencode($record['search_string']) . '">' . $record['title'];
+    global $_GET;
+    $original_ws = $_GET['ws'];
+    $_GET['ws'] = $record['search_string'];
+    $saved_search_count = $search_api_query->execute();
+    $form['saved_searches']['#markup'] .= ' (' . $saved_search_count['result count'] . ')';
+    $_GET['ws'] = $original_ws;
+
+    $form['saved_searches']['#markup'] .= '</a><br/>';
   }
 
   $form['prompt'] = array(

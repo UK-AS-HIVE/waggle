@@ -1,5 +1,9 @@
 (function($) {
   $(document).ready(function() {
+    $('#waggle-story-sidebar-save-help-expand').click(function() {
+      $('#waggle-story-sidebar-save-help-container').slideToggle();
+    });
+
     $('#waggle-story-sidebar-save-expand').click(function() {
       $(this).toggle();
       $('#edit-saved-searches-container').slideToggle();
