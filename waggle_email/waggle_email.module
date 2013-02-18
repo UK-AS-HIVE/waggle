@@ -216,7 +216,10 @@ function waggle_email_mail($key, &$message, $params) {
   switch ($key) {
     case 'new_story':
       $message['subject'] = t('Story# !nid', $params);
-      $message['body'][] = t('<b>A new story has been opened by !author:</b><br/>!body<br/>', $params);
+      $message['body'][] = t('<b>A new story has been opened by !author:</b><br/>!body<br/>'
+        . '<br/>Visit <a href="https://help.as.uky.edu/story-search?ws=id:!nid+status:any">'
+	. 'the story</a> to respond.',
+        $params);
       break;
     case 'new_note':
       $message['subject'] = t('Re: Story# !nid', $params);
