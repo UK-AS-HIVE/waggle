@@ -511,10 +511,9 @@ function waggle_comment_presave($comment) {
  * Looks for @user and #tag and adds the relevant data to the node.
  */
 function waggle_process_added_text($node, $text) {
-  
   $usernames = array();
   $hashtags = array();
-  if (preg_match_all('/(?<!\w)[@#]\w+\b/', $text, $matches, PREG_SET_ORDER)) {
+  if (preg_match_all('/(?<!\w)[@#][a-zA-Z][\w\/\-]*\b/', $text, $matches, PREG_SET_ORDER)) {
     foreach ($matches as $match_index => $match) {
       if ($match[0][0] == '@') {
         $usernames[] = substr($match[0],1);
@@ -554,7 +553,7 @@ function waggle_process_added_text($node, $text) {
         $tags[] = $tag;
       }
     } else {
-      $newTag = new stdClass();
+      $term = new stdClass();
       $term->name = $hashtag;
       $term->vid = $vid;
       taxonomy_term_save($term);
