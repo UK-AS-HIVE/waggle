@@ -69,14 +69,16 @@ function waggle_node_access_records($node) {
 	}
       }
     }
-    $grants[] = array(
-      'realm' => 'waggle_own_story',
-      'gid' => $node->uid,
-      'grant_view' => $node->status,
-      'grant_update' => 1,
-      'grant_delete' => 0,
-      'priority' => 1,
-    );
+    if ($node->uid != 0) {
+      $grants[] = array(
+	'realm' => 'waggle_own_story',
+	'gid' => $node->uid,
+	'grant_view' => $node->status,
+	'grant_update' => 1,
+	'grant_delete' => 0,
+	'priority' => 1,
+      );
+    }
     $grants[] = array(
       'realm' => 'waggle_all_stories',
       'gid' => 0,
