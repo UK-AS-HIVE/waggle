@@ -72,6 +72,7 @@ div.badges-inner {
 #search-wrapper .search-box{
   width: 300px;
   height: 15px;
+  display: inline;
 }
 #search-wrapper .search-button{
   border-radius: 0;
@@ -81,6 +82,9 @@ div.badges-inner {
   text-transform: uppercase;
   font-size: 0.75em;
 } 
+#search-wrapper .waggle-story-sidebar-save-help-expand {
+  display: inline;
+}
 
 /* Expanding Textareas */
 .expandingArea {
@@ -707,3 +711,8 @@ div#content .content{
 .sidebar-story .story-othertext{
   display: none;
 }
+
+#waggle-story-sidebar-save-help-container {
+  display: none;
+}
+

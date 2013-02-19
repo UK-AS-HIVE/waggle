@@ -18,7 +18,8 @@ function waggle_email_cron()
   // TODO: eventually check the imap server for incoming messages, but
   // first make sure it _works_ and second make sure hook_cron is the right place
   // for this... sometimes the process is long-running, so it may not be
-  waggle_email_collect_imap_messages();
+
+  //waggle_email_collect_imap_messages();
 }
 
 /*
@@ -70,10 +71,18 @@ function waggle_email_collect_imap_messages()
   $imap_pass = variable_get('waggle_email_imap_pass');
   $use_secure = variable_get('waggle_email_imap_secure', 1);
 
+  if (function_exists('drush_print')) {
+    drush_print("Connecting to " . $server . " to get e-mail for user " . $imap_user . "\n");
+  }
+
   $imap = imap_open('{' . $server . ($use_secure?':993/imap/ssl}':':143/imap}'), $imap_user, $imap_pass, NULL, 1, array('DISABLE_AUTHENTICATOR' => 'GSSAPI') );
+  if (!$imap) {
+    watchdog('waggle_email', 'Failed to open IMAP connection for reading shared email', array(), WATCHDOG_ERROR);
+    return;
+  }
 
   $folders = imap_listmailbox($imap, '{' . $server . ':' . ($use_secure?'993':'143') . '}', '*');
-  //drupal_set_message('folders: ' . print_r($folders,true));
+  drupal_set_message('folders: ' . print_r($folders,true));
 
   // TODO: store last date checked, and check against that
   //$search = imap_search($imap, 'SINCE "7 February 2012" UNSEEN', SE_UID);
@@ -99,10 +108,12 @@ function waggle_email_collect_imap_messages()
     $body = imap_body($imap, $uid, FT_UID + FT_PEEK); // TODO: remove FT_PEEK to mark messages SEEN
     $header = imap_headerinfo($imap, $index, FT_PEEK);
     $structure = imap_fetchstructure($imap, $uid, FT_UID);
-    $filename = "tests2/" . $index . ".txt";
+    $filename = drupal_get_path('module', 'waggle_email') . "/tests2/" . $index . ".txt";
 
     $handle = fopen($filename, 'w');
     fwrite($handle, serialize(array($header, $structure, $body)));
+    fwrite($handle, "\n==========BEGIN_PRETTY_PRINT==========\n");
+    fwrite($handle, print_r(array('header'=>$header, 'structure'=>$structure, 'body'=>$body),true));
     fclose($handle);
 
     //waggle_email_process_message($header, $structure, $body);
@@ -141,7 +152,7 @@ function waggle_email_process_message($header, $structure, $body)
 
   // TODO: is this a note on a story, or a new story?
   //drupal_set_message('body:\n' . $text);
-  //drupal_set_message('header:\n' . print_r($header, True));
+  drupal_set_message('header:\n' . print_r($header, True));
   //drupal_set_message('message_id:\n' . $header->$message_id);
   //drupal_set_message('references:\n' . $header->$references);
 
@@ -161,6 +172,10 @@ function waggle_email_process_message($header, $structure, $body)
     }
   }
 }
+
+/*if (function_exists('drush_print')) {
+  waggle_email_collect_imap_messages();
+}*/
 
 function waggle_email_node_insert($node) {
   if ($node->type === 'story') {
@@ -187,22 +202,34 @@ function waggle_email_comment_insert($comment) {
   $node = node_load($comment->nid);
   if ($node->type === 'story') {
     global $user;
-    $user = user_load($user->uid);
+    $account = user_load($user->uid);
     $uids = array_unique(array_merge(
       array($node->uid),
       array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und'])
     ));
+
+    // Remove the user submitting the comment from the recipient array if needed.
+    // TODO: can't remove him if it's the story submitter, or we need a new way to get the story submitter's name for !original_author below
+    /*if (in_array($user->uid, $uids)) {
+      unset($uids[array_search($user->uid, $uids)]);
+    }*/
+
+
     $recipients = user_load_multiple($uids);
-    $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+    $address_list = implode(',', array_map(function ($r) {
+      $mail = $r->field_mail['und'][0]['value'];
+      if (empty($mail)) $mail = $r->mail;
+      return $r->name . ' <' . $mail . '>';
+    }, $recipients));
     drupal_mail('waggle_email', 'new_note', $address_list, $node->language,
       array(
         '!nid' => $node->nid,
-        '!author' => $user->name,
+        '!author' => $account->name,
         '!body' => $comment->comment_body['und'][0]['value'],
         '!original_body' => $node->body['und'][0]['value'],
         '!original_author' => $recipients[$node->uid]->name,
       ),
-      $user->mail, TRUE);
+      $account->mail, TRUE);
   }  
  
 }

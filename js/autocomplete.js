@@ -4,24 +4,50 @@
  *		container 			- The css selector that defines the autocomplete option container.
  *		input 				- The jQuery object for the input [already put through $()].
  *		autocompleteHandler	- The function called when the input changes.
+ *		bindingsFunction	- The function that should be called when autocomplete options are put into the container
  *	Ex: 
  *		WaggleAutocomplete('#input-wrapper .autocomplete-options', $('#input-wrapper input'), 'MyOptionGenerator')
+ *
  */
 var waggleAutocompleteOngoing = false;
-function WaggleAutocomplete(container, input, autocompleteHandler){
+function WaggleAutocomplete(container, input, autocompleteHandler, bindingsFunction){
 	(function($){
+		$(container).hide();
+		input.attr('autocomplete', 'off');
 
 		input.blur(function(){
 			// Placed inside short timout in case user is clicking on an autocomplete option.
 			setTimeout(function(){
 				$(container).html('');
+				$(container).hide();
 			}, 200);
 		});
 
-		$(input).keyup(function(e){
+		// If autocompleting and selecting an object, don't allow enter to submit the form
+		input.keydown(function(e){
+			var ec = e.keyCode;
+			if(ec == 13 && ($(container + ' a.highlighted').length || $(container + ' a').length == 1)) {  // Enter
+				e.preventDefault();
+				var current = $(container + ' a.highlighted');
+				if(current.length){
+					current.click();
+					waggleAutocompleteOngoing = false;
+				}
+				else{
+					$(container + ' a').click();
+				}
+				return false;
+			}
+		});
+
+		input.keyup(function(e){
 			var ec = e.keyCode;
 			//console.log(ec);
-			if(ec == 40){ // Up
+			if(ec == 27) { // Escape
+				waggleAutocompleteOngoing = false;
+				$(container).hide();
+			}
+			else if(ec == 40){ // Up
 			    e.preventDefault();
 				var current = $(container + ' a.highlighted');
 				if(current.length){
@@ -68,22 +94,44 @@ function WaggleAutocomplete(container, input, autocompleteHandler){
 				}
 			}
 			else if(ec == 13) {  // Enter
-				e.preventDefault();
-				var current = $(container + ' a.highlighted');
-				if(current.length){
-					current.click();
-					waggleAutocompleteOngoing = false;
-				}
-				return false;
 			}
 			else{
 				var fn = window[autocompleteHandler];
 				if(typeof fn === 'function'){
-					waggleAutocompleteOngoing = true;
-					fn(this);
+					if ( input.val().length > 0 || input.is('textarea')) {
+						waggleAutocompleteOngoing = true;
+						// Pass variables to  
+						waggleAutocompleteOngoing = fn(this, container, bindingsFunction);
+					}
+					else {
+						waggleAutocompleteOngoing = false;
+						$(container).html('');
+						$(container).hide();
+					}
 				}
 			}
 		});
+	}(jQuery));
+}
+
+
+function WaggleSetBindings(container, input, bindingsFunction) {
+	(function($){
+		$(container).show();
+		AutocompleteHover(container);
+		var fn = window[bindingsFunction];
+		if(typeof fn === 'function') {
+			fn(container, input);
+		}
+		else {
+			console.log(bindingsFunction + ' does not appear to be a valid function in this scope.');
+		}
+	}(jQuery));
+}
+
+function WaggleNoResults(container) {
+	(function($){
+		$(container).hide();
 	}(jQuery));
 }
 
@@ -160,6 +208,54 @@ UserCandidates = function(parts, limit, currentUsers){
 }(jQuery));
 
 
+/**
+ * Uses cached users variable to generate autocomplete candidates
+ * 	Vars:
+ *		parts 	 			- An array of search strings that must be satisfied (AND only).
+ *		limit 				- The amount of candidates that should be returned.
+ *		currentTags 		- (Optional) An array of users that should be excluded.	
+ */
+(function($){
+TagCandidates = function(parts, limit, currentTags){
+		// This check and declaration may be unnecessary.  Variable is needed to exclude certain users from autocomplete.
+		if(currentTags === undefined){
+			currentTags = new Array();
+		}
+
+		// Need to copy object instead of its pointer
+		var candidates = $.extend({}, tags),
+		    count = 0;
+		// @TODO This would be the place to run some fancy sorting.  
+		//	I would like it to already be cached client-side, but that may not be feasible.
+		for(var tid in candidates) {
+			var removed = false;
+			if(count >= limit){
+				delete candidates[tid];
+			}
+			else if($.inArray(tid, currentTags) != -1) {
+				delete candidates[tid];
+				removed = true;
+			}
+			else{
+				var matched = new Array();
+				for (var i=0; i<parts.length; i++){
+					var pattern = new RegExp(parts[i], 'i');
+					matched.push((pattern.test(candidates[tid]['name'])) ? 'yes' : 'no');
+				}
+				if ($.inArray('no', matched) != -1){
+					delete candidates[tid];
+					removed = true;
+				}
+			}
+			if(!removed){
+				count++;
+			}
+		}
+		return candidates;
+}
+}(jQuery));
+
+
 /************************************************************************************
 
 								Specific field callbacks
@@ -174,8 +270,9 @@ UserCandidates = function(parts, limit, currentUsers){
  * Handler for the add associated user field on stories
  * 	Vars:
  *		myInput 	 		- The jQuery variable for the textfield/textarea
+ *	    container			- The identifier for the suggestion container
  */
-function AddUserAutocompleteHandler(myInput){
+function AddUserAutocompleteHandler(myInput, container, bindingsFunction){
 	(function($){
 	    var nid = $(myInput).parents('.node').attr('id').substring(5),
 			currentUsers = new Array();
@@ -195,64 +292,58 @@ function AddUserAutocompleteHandler(myInput){
 					'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
 				  '</a>';
 			}
-			$(myInput).parents('.add-user-wrapper').find('.suggestions').html(newHTML);
+			$(container).html(newHTML);
 			if(newHTML == ''){
-				waggleAutocompleteOngoing = false;
-				return;
+				WaggleNoResults(container);
+				return false;
 			}
-			StoryAddUserBindings('#node-' + nid + ' .add-user-wrapper .suggestions');
-			AutocompleteHover('#node-' + nid + ' .add-user-wrapper .suggestions'); 
+			else {
+				WaggleSetBindings(container, myInput, bindingsFunction);
+				return true;
+			}
 		}
 		else{
-			waggleAutocompleteOngoing = false;
+			return false;
 		}
 	}(jQuery));
 }
 
-function StoryAddUserBindings(selector){
+/**
+ * Handler for the add associated user field on stories
+ * 	Vars:
+ *		myInput 	 		- The jQuery variable for the textfield/textarea
+ *	    container			- The identifier for the suggestion container
+ */
+function AddTagAutocompleteHandler(myInput, container, bindingsFunction){
 	(function($){
-		$(selector + ' a').click(function(){
-			var classes = $(this).attr('class').split(' '),
-			    nid = classes[2].substring(5),
-				uid = classes[1].substring(5),
-				container = $(this);
-
-			$('#node-' + nid + ' .field-name-field-associated-users').children(':first').append('<span class="waiting">saving...</span>');
-		    $.post('waggle/api/story/add-user/' + nid,{'uid' : uid}, function(json) {
-		    	if (json != 0) {
-				    container.remove();
-				    $('#node-' + nid + ' .field-name-field-associated-users').children(':first').append(json);
-				    $('#node-' + nid + ' .field-name-field-associated-users .waiting').remove();
-					StoryCurrentUserBindings('#node-' + nid + ' .field-name-field-associated-users .profile');
-				}
-			});
-			$(this).html('');
-			$(this).parents('.add-user-wrapper').find('a.add-user-link').click();
-			$(this).parents('.add-user-wrapper').find(input).val('');
-		    return false;
+	    var nid = $(myInput).parents('.node').attr('id').substring(5),
+			currentTags = new Array();
+		$('#node-' + nid + ' .story-tags-wrapper li a').each(function(i, item){
+			currentTags.push(tagsByName[$(item).text()]['tid']);
 		});
-	}(jQuery));
-}
-
-function StoryCurrentUserBindings(selector){
-    (function($){
-		$(selector).hover(function(){
-			$(this).find('.associated-user-info').css('display', 'block');
-		}, function(){
-			$(this).find('.associated-user-info').css('display', 'none');
-		});
-		
-		$(selector + ' a.remove-user').click(function(){
-			var classes = $(this).attr('class').split(' '),
-				nid = $(this).parents('.node').attr('id').substring(5),
-				uid = classes[1].substring(5),
-				container = $(this).parents('.profile');
-			$.post('waggle/api/story/remove-user/' + nid,{'uid' : uid}, function(json) {
-			  container.remove();
-			});
-			$(this).parents('.associated-user-info').remove();
+		if($(myInput).val().length > 0){
+			parts = $(myInput).val().split(' ');
+			var candidates = TagCandidates(parts, 6, currentTags);
+			var newHTML = '';
+			for (var i in candidates) {
+				newHTML += '' +
+				  '<a class="tag-candidate tag-' + i + ' node-' + nid + '">' +
+					candidates[i]['name'] + 
+				  '</a>';
+			}
+			$(container).html(newHTML);
+			if(newHTML == ''){
+				WaggleNoResults(container);
+				return false;
+			}
+			else {
+				WaggleSetBindings(container, myInput, bindingsFunction);
+				return true;
+			}
+		}
+		else{
 			return false;
-		});
+		}
 	}(jQuery));
 }
 
@@ -260,13 +351,16 @@ function StoryCurrentUserBindings(selector){
  * Handler for the sidebar search box
  * 	Vars:
  *		myInput 	 		- The jQuery variable for the textfield/textarea
+ *	    container			- The identifier for the suggestion container
  */
-function SidebarAutcompleteHandler(input){
+function SidebarAutocompleteHandler(input, container, bindingsFunction){
 	(function($){
 		var value = $(input).val();
 		if(value != ''){
 			var parts = value.split(' '),
 			    last = parts[parts.length - 1];
+
+			// @ User searching
 			if(last.charAt(0) == '@' && last.length > 1){
 				var search_string = last.substring(1),
 				    candidates = UserCandidates([search_string], 8, []);
@@ -279,38 +373,42 @@ function SidebarAutcompleteHandler(input){
 						'<span class="linkblue">' + candidates[i]['linkblue'] + '</span>' + 
 					  '</a>';
 				}
-				$('#waggle-sidebar-search .autocomplete').html(newHTML);
+				$(container).html(newHTML);
 				if(newHTML == ''){
-					waggleAutocompleteOngoing = false;
-					return;
+					WaggleNoResults(container);
+					return false;
 				}
-				AutocompleteHover('#waggle-sidebar-search .autocomplete');
-				SidebarAutocompleteBindings('#waggle-sidebar-search .autocomplete a');
+				else {
+					WaggleSetBindings(container, input, bindingsFunction);
+					return true;
+				}
+			}
+
+			// # Tag searching
+			else if (last.charAt(0) == '#' && last.length > 1) {
+				var search_string = last.substring(1),
+				    candidates = TagCandidates([search_string], 8, []);
+				var newHTML = '';
+				for (var i in candidates) {
+					newHTML += '' +
+					  '<a class="tag-candidate tag-' + i + '">' +
+						'<span class="name">' + candidates[i]['name'] + '</span>' + 
+					  '</a>';
+				}
+				$(container).html(newHTML);
+				if(newHTML == ''){
+					WaggleNoResults(container);
+					return false;
+				}
+				else {
+					WaggleSetBindings(container, input, bindingsFunction);
+					return true;
+				}
 			}
 		}
 		else {
 			sideSearchAutocomplete = false;
 		}
-	}(jQuery));
-}
-
-function SidebarAutocompleteBindings(selector){
-	(function($){
-		$(selector).click(function(){
-			var classes = $(this).attr('class').split(' '),
-				uid = classes[1].substring(5),
-				container = $(this);
-		    
-		    var value = $('#waggle-sidebar-search input').val(),
-		    	parts = value.split(' ');
-
-		    parts[parts.length - 1] = '@' + users[uid]['linkblue'] + ' ';
-		    $('#waggle-sidebar-search input').val(parts.join(' '));
-		    $('#waggle-sidebar-search input').focus();
-
-			$('#waggle-sidebar-search .autocomplete').html('');
-		    return false;
-		});
 	}(jQuery));
 }
 

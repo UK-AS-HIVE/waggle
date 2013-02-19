@@ -7,61 +7,67 @@ function waggle_users_menu(){
   $items['waggle/api/user-push'] = array(
     'page callback' => 'waggle_user_push',  
     //'type' => MENU_NORMAL_ITEM,
-	'type' => MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
     'access callback' => TRUE,
   );
   return $items;
 }
 
 function waggle_user_push(){
-  if(substr($_SERVER['REMOTE_ADDR'], 0, 7) != '128.163')
+  if(substr($_SERVER['REMOTE_ADDR'], 0, 7) != '128.163') {
+    watchdog('waggle', 'User push attempted from non-UK IP: ' . $_SERVER['REMOTE_ADDR'], WATCHDOG_ALERT);
     return;
-  $get = $_GET;
-  $account = user_load_by_name($get['name']);
-  if(!$account){
-    if(empty($get['name'])){
-      watchdog('waggle_users', 'Tried to save information for \'' . $get['name'] . '\', but no user with that login is in the system.');
-      return FALSE;
-	}
-	$account = drupal_anonymous_user();
-	$account->name = $get['name'];
-	$account->status = 1;
-	unset($account->uid);
-	unset($account->roles);
   }
-    
+  $post = $_POST;
+  $account = user_load_by_name($post['name']);
+  if(!$account){
+    if(empty($post['name'])){
+      watchdog('waggle_users', 'Tried to save information for \'' . $post['name'] . '\', but no user with that login is in the system.');
+      drupal_json_output(FALSE);
+      return;
+    }
+    $account = drupal_anonymous_user();
+    $account->name = $post['name'];
+    $account->status = 1;
+    unset($account->uid);
+    unset($account->roles);
+  }
+
   $edit = (array)$account;
   foreach(array('authorid', 'theme', 'timezone', 'language', 'data', 'ip', 'uid', 'pass', 'created', 'access', 'login', 'init', 'revision_timestamp', 'revision_uid') as $field)
     unset($edit[$field]);
-  if(isset($get['picture'])){
-    $file = file_save_data(file_get_contents(str_replace('https', 'http', $get['picture'])), 'public://' . array_pop(explode('/', $get['picture'])));
-	if($file){
-	  $image = image_load($file->uri);
-	  image_scale_and_crop($image, 100, 100);
-	  image_save($image);
-	  $edit['picture_upload'] = $file;
-	}
+    if(isset($post['picture'])){
+      watchdog('waggle_users', $post['picture']);
+      $file = file_save_data(file_get_contents(str_replace('https', 'http', $post['picture'])), 'public://' . array_pop(explode('/', $post['picture'])));
+    if($file){
+  watchdog('waggle', '<pre>' . print_r($file, 1) . print_r($edit, 1) . '</pre>');
+      $image = image_load($file->uri);
+      image_scale_and_crop($image, 100, 100);
+      image_save($image);
+      $edit['picture_upload'] = $file;
+    }
   }
-	
-  if(isset($get['office']))
-    $edit['field_office']['und'][0]['value'] = $get['office'];
-  if(isset($get['phone']))
-    $edit['field_phone']['und'][0]['value'] = $get['phone'];
-  if(isset($get['mail']))
-    $edit['field_mail']['und'][0]['value'] = $get['mail'];
-  if(isset($get['affiliations'])){
+  
+  if(isset($post['office']))
+    $edit['field_office']['und'][0]['value'] = $post['office'];
+  if(isset($post['phone']))
+    $edit['field_phone']['und'][0]['value'] = $post['phone'];
+  if(isset($post['mail']))
+    $edit['field_mail']['und'][0]['value'] = $post['mail'];
+  if(isset($post['affiliations'])){
     unset($edit['field_department']);
-    foreach(explode('|', $get['affiliations']) as $dept)
-	  $edit['field_department']['und'][] = array('value' => $dept);
+    foreach(explode('|', $post['affiliations']) as $dept)
+    $edit['field_department']['und'][] = array('value' => $dept);
   }
-  if(isset($get['first']))
-    $edit['field_name']['und'][0]['first'] = $get['first'];
-  if(isset($get['middle']))
-    $edit['field_name']['und'][0]['middle'] = $get['middle'];
-  if(isset($get['last']))
-    $edit['field_name']['und'][0]['last'] = $get['last'];
-	
+  if(isset($post['first']))
+    $edit['field_name']['und'][0]['first'] = $post['first'];
+  if(isset($post['middle']))
+    $edit['field_name']['und'][0]['middle'] = $post['middle'];
+  if(isset($post['last']))
+    $edit['field_name']['und'][0]['last'] = $post['last'];
+  
   watchdog('waggle', '<pre>' . print_r($account, 1) . print_r($edit, 1) . '</pre>');
   $success = user_save($account, $edit);
+
   drupal_json_output($account);
 }

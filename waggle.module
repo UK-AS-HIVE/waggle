@@ -54,6 +54,17 @@ function waggle_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['waggle/api/remote-add'] = array(
+    'page callback' => 'waggle_remote_add',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['waggle/api/story/note/%node'] = array(
+    'page callback' => 'waggle_note_add',
+    'page arguments' => array(4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -187,6 +198,7 @@ function waggle_add_story($form, &$form_state) {
   }
 
   $node_form['body']['#weight'] = 3;
+  $node_form['body']['#suffix'] = '<div class="suggestions-wrapper clearfix"><div class="suggestions"></div></div>';
 
   $node_form['story_foot'] = array(
     '#type' => 'container',
@@ -208,7 +220,7 @@ function waggle_add_story($form, &$form_state) {
  */
 function waggle_form_story_node_form_alter(&$form, &$form_state) {
   $form['#validate'][] = 'waggle_story_node_validate';
-  $form['#submit'][] = 'waggle_story_node_submit';
+  $form['actions']['submit']['#submit'][] = 'waggle_story_node_submit';
 }
 
 /**
@@ -218,13 +230,16 @@ function waggle_story_node_validate(&$form, &$form_state) {
   if (isset($_SERVER['REMOTE_ADDR'])) {
     $value = $form_state['values'];
     $value['field_ip_address']['und'][0]['value'] = $_SERVER['REMOTE_ADDR'];
+    if (gethostbyname($_SERVER['REMOTE_ADDR'])) {
+      $value['field_hostname']['und'][0]['value'] = gethostbyname($_SERVER['REMOTE_ADDR']);
+    }
     form_set_value($form, $value, $form_state);
   }
 }
 
 function waggle_story_node_submit(&$form, &$form_state){
   $form_state['redirect'] = '';
-  dpm($form_state);
+  drupal_set_message('Your ticket was successfully submitted and will be ready within 60 seconds.');
 }
 
 /**
@@ -323,16 +338,44 @@ function waggle_remove_user($node){
  * Function to add a given tag to a given node.
  */
 function waggle_add_tag($node){
-  if(isset($_POST['tid']) && $term = taxonomy_term_load($_POST['tid'])) {
+  if (isset($_POST['tid']) && $term = taxonomy_term_load($_POST['tid'])) {
     $tid = $term->tid;
+  }
+  else if (isset($_POST['term'])) {
+    $vocab = taxonomy_vocabulary_machine_name_load('tags');
+    if (!$vocab) {
+      drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
+      drupal_json_output(FALSE);
+      drupal_exit();
+    }
+
+    // Clean the user input and make sure it doesn't already exist (case-insensitive)
+    $input = $_POST['term'];
+    // Remove prepended hashes
+    while (substr($input, 0, 1) == '#') {
+      $input = substr($input, 1);
+    }
+    $term = taxonomy_get_term_by_name($input, 'tags');
+    if (count($term)) {
+      // taxonomy_get_term_by_name returns an array of term objects.
+      $term = reset($term);
+    }
+    // If the term didn't exist after all, make it!
+    else {
+      $term = new stdClass();
+      $term->name = $_POST['term'];
+      $term->vid = $vocab->vid;
+      taxonomy_term_save($term);
+      $tid = $term->tid;
+    }
   }
   else {
     drupal_json_output(FALSE);
-    druapl_exit();
+    drupal_exit();
   }
 
   $found = FALSE;
-  //Make sure the user isn't already attatched to this story
+  //Make sure the tag isn't already attatched to this story
   if (!empty($node->field_tags)) {
     foreach($node->field_tags['und'] as $delta => $data){
       if($data['tid'] == $tid){
@@ -438,12 +481,10 @@ function waggle_story_duedate($node) {
 function waggle_staff_autocomplete_list(){  
   $query = db_select('users', 'u');
   $query->leftJoin('field_data_field_name', 'f', 'u.uid=f.entity_id');
-  $query->leftJoin('users_roles', 'r', 'r.uid=u.uid');
   $results = $query->fields('u', array('uid', 'name', 'picture', 'mail'))
     ->fields('f', array('field_name_first', 'field_name_middle', 'field_name_last'))
   ->condition('u.uid', array(0, 1), 'NOT IN')
   ->condition('u.status', 1)
-  ->condition('r.rid', 4)
   ->execute()
   ->fetchAllAssoc('uid');
   
@@ -632,24 +673,6 @@ function waggle_start_story(){
   $new_story->body['und'][0]['value'] = implode(' ', $body_parts);
   $new_story->body['und'][0]['format'] = 'filtered_html';
 
-  if(isset($_GET['behalfof'])){
-    $account = user_load_by_name($_GET['behalfof']);
-    if($account){
-      $new_story->uid = $account->uid;
-      $new_story->field_submitted_by['und'][0]['uid'] = $user->uid;
-    }
-  }
-  if(isset($_GET['due'])){
-    $timestamp = strtotime($_GET['due']);
-    if($timestamp){
-      $new_story->field_due_date['und'][0]['value'] = date('Y/m/d H:i:s', $timestamp);
-    }
-  }
-/*
-  dpm($new_story);
-  dpm($_GET);
-  return '';
-*/
   node_save($new_story);
 
   if($new_story){
@@ -665,3 +688,105 @@ function waggle_start_story(){
   drupal_json_output(FALSE);
   //return 'yes';
 }
+
+
+function waggle_remote_add() {
+  watchdog('waggle', print_r($_POST, 1));
+  $required_post_fields = array('username', 'email', 'description', 'ip_address');
+  foreach($required_post_fields as $field) {
+    if (!isset($_POST[$field])) {
+      drupal_json_output(FALSE);
+      return;
+    }
+  }
+
+  $account = user_load_by_name($_POST['username']);
+  // If there's a problem with the name, try email
+  if (!$account) {
+    $account = user_load_by_mail($_POST['email']);
+  }
+  if (!$account) {
+    drupal_json_output(FALSE);
+    return;
+  }
+
+  $new_story = (object) array('type' => 'story');
+  node_object_prepare($new_story);
+  $new_story->uid = $account->uid;
+  $new_story->title = 'story-' . time();
+  $new_story->body['und'][0]['value'] = $_POST['description'];
+  $new_story->body['und'][0]['format'] = 'filtered_html';
+  $new_story->field_ip_address['und'][0]['value'] = $_POST['ip_address'];
+
+  if(isset($_POST['submitted_by'])){
+    $submitted_by = user_load_by_name($_POST['submitted_by']);
+    if($submitted_by){
+      $new_story->field_submitted_by['und'][0]['uid'] = $submitted_by->uid;
+    }
+  }
+  if(isset($_POST['location'])){
+    $new_story->field_location['und'][0]['value'] = $_POST['location'];
+  }
+  if(isset($_POST['phone'])){
+    $new_story->field_phone['und'][0]['value'] = $_POST['phone'];
+  }
+  node_save($new_story);
+
+  if($new_story){
+    drupal_json_output(TRUE);
+  }
+  else {
+    drupal_json_output(FALSE);
+  }
+  return;
+}
+
+function waggle_note_add($node) {
+  if ($node->type != 'story') {
+    drupal_json_output(FALSE);
+    return;
+  }
+  else if (isset($_POST['note'])) {
+    global $user;
+
+    // Make sure the user has proper access to the ticket.
+    if (!node_access('update', $node, $user)) {
+      drupal_json_output(FALSE);
+      return;
+    }
+
+    // Create a new comment from the note.
+    $comment = (object) array(
+      'nid' => $node->nid,
+      'cid' => 0,
+      'pid' => 0,
+      'uid' => $user->uid,
+      'mail' => '',
+      'is_anonymous' => 0,
+      'homepage' => '',
+      'status' => COMMENT_PUBLISHED,
+      'subject' => '',
+      'language' => LANGUAGE_NONE,
+      'comment_body' => array(
+        LANGUAGE_NONE => array(
+          0 => array(
+            'value' => check_plain($_POST['note']),
+            'format' => 'filtered_html',
+          ),
+        ),
+      ),
+    );
+
+    comment_submit($comment);
+    comment_save($comment);
+
+    $comment_build = comment_view($comment, $node);
+
+    // Don't display as a preview as this is being submitted.
+    unset($comment_build['comment_body']['#object']->in_preview);
+
+    // Return the rendered comment.
+    drupal_json_output(drupal_render($comment_build));
+  }   
+}
+

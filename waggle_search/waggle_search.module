@@ -17,6 +17,7 @@ function waggle_search_ajax_search_count() {
   $query = search_api_query('default_node_index',
     array(
       'limit' => 0,
+      'search_id' => 'waggle_saved',
     )
   );
   $result = $query->execute();
@@ -75,7 +76,8 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
         $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
       } else {
         //$built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0].") OR (tm_search_api_viewed:".$match[0]."))";
-        $built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0]."))";
+        //$built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0].") OR (tm_search_api_aggregation_1:".$match[0]."))";
+        $built_query .= "(tm_search_api_aggregation_1:".$match[0].")";
       }
       $built_query .= ' ';
     }

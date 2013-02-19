@@ -171,7 +171,7 @@ console.log('waggle/api/start-story?' + args.join('&'));
 	});
 	
 
-	WaggleAutocomplete('#waggle-sidebar-search .autocomplete', $('#waggle-sidebar-search input'), 'SidebarAutcompleteHandler'); 
+	WaggleAutocomplete('#waggle-sidebar-search .autocomplete', $('#waggle-sidebar-search input'), 'SidebarAutocompleteHandler'); 
 	
 	
 });
