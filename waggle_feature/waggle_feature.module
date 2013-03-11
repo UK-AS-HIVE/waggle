@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Waggle feature.
+ */
+
+include_once 'waggle_feature.features.inc';
