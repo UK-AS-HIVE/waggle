@@ -72,6 +72,7 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
         if ($match[3] != 'any') {
           $built_query .= $match[1] . $field_transforms[$match[2]] . $match[3];
         }
+        // TODO: lookup by term name, to support, e.g. 'status:done'
       } elseif (array_key_exists($match[3][0], $sigil_fields)) {
         $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
       } else {
@@ -179,8 +180,12 @@ function waggle_story_sidebar($form, &$form_state) {
     global $_GET;
     $original_ws = $_GET['ws'];
     $_GET['ws'] = $record['search_string'];
-    $saved_search_count = $search_api_query->execute();
-    $form['saved_searches']['#markup'] .= ' (' . $saved_search_count['result count'] . ')';
+    try {
+      $saved_search_count = $search_api_query->execute();
+      $form['saved_searches']['#markup'] .= ' (' . $saved_search_count['result count'] . ')';
+    } catch (SearchApiException $sae) {
+      watchdog('waggle', 'SearchApiException in saved search "%n" on %u (%uid).', array('%n' => $record['title'], '%u' => user_load($record['uid'])->name, '%uid' => $record['uid']), WATCHDOG_ERROR);
+    }
     $_GET['ws'] = $original_ws;
 
     $form['saved_searches']['#markup'] .= '</a><br/>';
