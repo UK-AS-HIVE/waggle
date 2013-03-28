@@ -62,120 +62,6 @@ function waggle_email_admin_form_submit($form, &$form_state)
   variable_set('waggle_email_imap_secure', $secure);
 }
 
-// TODO: this is the big mamma jamma-- connect to imap, get messages,
-// create stories
-function waggle_email_collect_imap_messages()
-{
-  $server = variable_get('waggle_email_imap_server');
-  $imap_user = variable_get('waggle_email_imap_user');
-  $imap_pass = variable_get('waggle_email_imap_pass');
-  $use_secure = variable_get('waggle_email_imap_secure', 1);
-
-  if (function_exists('drush_print')) {
-    drush_print("Connecting to " . $server . " to get e-mail for user " . $imap_user . "\n");
-  }
-
-  $imap = imap_open('{' . $server . ($use_secure?':993/imap/ssl}':':143/imap}'), $imap_user, $imap_pass, NULL, 1, array('DISABLE_AUTHENTICATOR' => 'GSSAPI') );
-  if (!$imap) {
-    watchdog('waggle_email', 'Failed to open IMAP connection for reading shared email', array(), WATCHDOG_ERROR);
-    return;
-  }
-
-  $folders = imap_listmailbox($imap, '{' . $server . ':' . ($use_secure?'993':'143') . '}', '*');
-  drupal_set_message('folders: ' . print_r($folders,true));
-
-  // TODO: store last date checked, and check against that
-  //$search = imap_search($imap, 'SINCE "7 February 2012" UNSEEN', SE_UID);
-  $search = imap_search($imap, 'SINCE "7 February 2012" SEEN', SE_UID);
-
-  watchdog('waggle_email', 'Checking IMAP email', WATCHDOG_INFO); 
-  drupal_set_message('Checking IMAP email');
-
-  if (!$search)
-  {
-    watchdog('waggle_email', 'No new messages', WATCHDOG_INFO);
-    drupal_set_message('No new messages');
-    // no new messages
-    return;
-  }
-
-  watchdog('waggle_email', 'Retrieved ' . sizeof($search) . ' messages.' , WATCHDOG_INFO);
-  drupal_set_message('Retrieved ' . sizeof($search) . ' messages.');
-
-  foreach ($search as $index => $uid)
-  {
-    // get message body. this marks it SEEN as well
-    $body = imap_body($imap, $uid, FT_UID + FT_PEEK); // TODO: remove FT_PEEK to mark messages SEEN
-    $header = imap_headerinfo($imap, $index, FT_PEEK);
-    $structure = imap_fetchstructure($imap, $uid, FT_UID);
-    $filename = drupal_get_path('module', 'waggle_email') . "/tests2/" . $index . ".txt";
-
-    $handle = fopen($filename, 'w');
-    fwrite($handle, serialize(array($header, $structure, $body)));
-    fwrite($handle, "\n==========BEGIN_PRETTY_PRINT==========\n");
-    fwrite($handle, print_r(array('header'=>$header, 'structure'=>$structure, 'body'=>$body),true));
-    fclose($handle);
-
-    //waggle_email_process_message($header, $structure, $body);
-  }
-
-  imap_close($imap);
-
-}
-
-function waggle_email_process_message($header, $structure, $body)
-{
-  if ($structure->type === 0)
-  {
-    // text
-    $text = $body;
-  }
-  else if ($structure->type === 1)
-  {
-    // multipart -- this has attachments
-    $parts = explode($structure->parameters[0]->value,$body);
-    $text = $parts[0];
-  }
-
-  // base-64 encoded
-  if ($structure->encoding === 3)
-  {
-    $text = base64_decode($text);
-  }
-  elseif ($structure->encoding === 4)
-  {
-    $text = quoted_printable_decode($text);
-  }
-
-  //drupal_set_message('<pre>' . print_r(array($header, $structure, $text),true) . '</pre>');
-  //drupal_set_message('serialization:\n' . serialize(array($header, $structure, $body)));
-
-  // TODO: is this a note on a story, or a new story?
-  //drupal_set_message('body:\n' . $text);
-  drupal_set_message('header:\n' . print_r($header, True));
-  //drupal_set_message('message_id:\n' . $header->$message_id);
-  //drupal_set_message('references:\n' . $header->$references);
-
-
-  // TODO: map to users -- from, to, cc, bcc, sender
-  $recipients = array();
-  foreach(array('to','cc','bcc') as $recipient_type)
-    if (isset($header->$recipient_type))
-      $recipients = array_merge($recipients, $header->$recipient_type);
-    
-  foreach ($recipients as $recipient)
-  {
-    if ($recipient->host === 'uky.edu')
-    {
-      // mailbox name is LinkBlue name
-      $associates[] = $recipient->mailbox;
-    }
-  }
-}
-
-/*if (function_exists('drush_print')) {
-  waggle_email_collect_imap_messages();
-}*/
 
 function waggle_email_node_insert($node) {
   if ($node->type === 'story') {
@@ -192,6 +78,7 @@ function waggle_email_node_insert($node) {
         '!nid' => $node->nid,
         '!author' => $recipients[$node->uid]->name,
         '!body' => $node->body['und'][0]['value'],
+        '!from_story' => true,
       ),
       $recipients[$node->uid]->mail, TRUE);
   }  
@@ -228,6 +115,7 @@ function waggle_email_comment_insert($comment) {
         '!body' => $comment->comment_body['und'][0]['value'],
         '!original_body' => $node->body['und'][0]['value'],
         '!original_author' => $recipients[$node->uid]->name,
+        '!from_story' => true,
       ),
       $account->mail, TRUE);
   }  
@@ -259,4 +147,22 @@ function waggle_email_mail($key, &$message, $params) {
       break;
   }
 }
+
+/**
+ * Implements hook_mail_alter()
+ *
+ * sets the sender and reply-to address as story-#######@domain.com
+ *
+ */
+function waggle_email_mail_alter(&$message) {
+  if ($message['params']['!from_story'] == true){
+    global $base_root;
+    $fromNode = $message['params']['!nid'];
+    $thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
+    $replyTo = 'story-' . $fromNode . "@" . $thisDomain;
+    $message['headers']['Reply-To'] = $replyTo;
+    $message['headers']['Sender'] = $replyTo;
+  }
+}
+
 
