@@ -19,5 +19,51 @@ function waggle_feature_user_default_permissions() {
     'module' => 'waggle',
   );
 
+  // Exported permission: create field_groups.
+  $permissions['create field_groups'] = array(
+    'name' => 'create field_groups',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'anonymous user' => 'anonymous user',
+    ),
+    'module' => 'field_permissions',
+  );
+
+  // Exported permission: edit field_groups.
+  $permissions['edit field_groups'] = array(
+    'name' => 'edit field_groups',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'field_permissions',
+  );
+
+  // Exported permission: edit own field_groups.
+  $permissions['edit own field_groups'] = array(
+    'name' => 'edit own field_groups',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'field_permissions',
+  );
+
+  // Exported permission: view field_groups.
+  $permissions['view field_groups'] = array(
+    'name' => 'view field_groups',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'field_permissions',
+  );
+
+  // Exported permission: view own field_groups.
+  $permissions['view own field_groups'] = array(
+    'name' => 'view own field_groups',
+    'roles' => array(
+      'administrator' => 'administrator',
+    ),
+    'module' => 'field_permissions',
+  );
+
   return $permissions;
 }

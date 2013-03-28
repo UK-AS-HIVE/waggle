@@ -23,11 +23,21 @@ function waggle_node_access($node, $op, $account) {
     return NODE_ACCESS_IGNORE;
   }
 
-  // grant access only to associated users
+  // Grant access only to associated users.
   foreach ($node->field_associated_users as $lang => $user_map) {
     foreach ($user_map as $associated_user) {
       if ($associated_user['uid'] == $account->uid)
         return NODE_ACCESS_ALLOW;
+    }
+  }
+
+  // Grant also to associated groups.
+  $account = user_load($account->uid);
+  foreach ($node->field_associated_groups as $lang => $group) {
+    foreach ($account->field_groups as $lang => $user_group) {
+      if ($user_group == $group) {
+        return NODE_ACCESS_ALLOW;
+      }
     }
   }
 
@@ -45,6 +55,12 @@ function waggle_node_grants($account, $op) {
     } else {
       $grants['waggle_story'] = array($account->uid);
       $grants['waggle_own_story'] = array($account->uid);
+      $grants['waggle_group_story'] = array();
+      $account = user_load($account->uid);
+      foreach ($account->field_groups['und'] as $index => $group) {
+        $grants['waggle_group_story'][] = $group['tid'];
+      }
+      //watchdog('noah', '<pre>' . print_r($grants,true) . '</pre>');
     }
   }
   return $grants;
@@ -57,26 +73,40 @@ function waggle_node_access_records($node) {
   if ($node->type == 'story') {
     if (isset($node->field_associated_users)) {
       foreach ($node->field_associated_users['und'] as $delta => $account) {
-	if (isset($account['uid'])) {
-	  $grants[] = array(
-	    'realm' => 'waggle_story',
-	    'gid' => $account['uid'],
-	    'grant_view' => $node->status,
-	    'grant_update' => 1,
-	    'grant_delete' => 0,
-	    'priority' => 1,
-	  );
-	}
+        if (isset($account['uid'])) {
+          $grants[] = array(
+            'realm' => 'waggle_story',
+            'gid' => $account['uid'],
+            'grant_view' => $node->status,
+            'grant_update' => 1,
+            'grant_delete' => 0,
+            'priority' => 1,
+          );
+        }
+      }
+    }
+    if (isset($node->field_associated_groups)) {
+      foreach ($node->field_associated_groups['und'] as $delta => $group) {
+        if (isset($group['tid'])) {
+          $grants[] = array(
+            'realm' => 'waggle_group_story',
+            'gid' => $group['tid'],
+            'grant_view' => $node->status,
+            'grant_update' => 1,
+            'grant_delete' => 0,
+            'priority' => 1,
+          );
+        }
       }
     }
     if ($node->uid != 0) {
       $grants[] = array(
-	'realm' => 'waggle_own_story',
-	'gid' => $node->uid,
-	'grant_view' => $node->status,
-	'grant_update' => 1,
-	'grant_delete' => 0,
-	'priority' => 1,
+        'realm' => 'waggle_own_story',
+        'gid' => $node->uid,
+        'grant_view' => $node->status,
+        'grant_update' => 1,
+        'grant_delete' => 0,
+        'priority' => 1,
       );
     }
     $grants[] = array(
