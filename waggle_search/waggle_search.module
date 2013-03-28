@@ -74,7 +74,12 @@ function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQ
         }
         // TODO: lookup by term name, to support, e.g. 'status:done'
       } elseif (array_key_exists($match[3][0], $sigil_fields)) {
-        $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
+        // TODO: more general way to do this, rather than manually lowercasing usernames
+        if ($match[3][0] == '@') {
+          $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . strtolower(substr($match[3],1));
+        } else {
+          $built_query .= $match[1] . $sigil_fields[$match[3][0]] . ':' . substr($match[3],1);
+        }
       } else {
         //$built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0].") OR (tm_search_api_viewed:".$match[0]."))";
         //$built_query .= "((tm_title:".$match[0].") OR (tm_body\:value:".$match[0].") OR (tm_search_api_aggregation_1:".$match[0]."))";
