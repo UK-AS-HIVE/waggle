@@ -25,11 +25,6 @@
   }
   fclose($fd);
 
-  //debug
-  $fh = fopen('/tmp/postfixtest_Andy', 'a');
-  fwrite($fh, $email);
-  fclose($fh);
-  
   //create a new Zend_Mail object $message to manipulate the incoming email
   $message = new Zend_Mail_Message(array('raw' => $email));
 
