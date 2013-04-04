@@ -5,12 +5,12 @@
  */
 function waggle_tracker_node_update($node){
   //Make sure a new version is being created, otherwise return
-  if(!isset($node->old_vid)){
+  if (!isset($node->original)){
     return;
   }
 
   $fields = field_info_instances('node', $node->type);
-  $old_node = node_load($node->nid, $node->old_vid);
+  $old_node = $node->original;
   global $user;
 
   foreach($fields as $label => $field_info){
