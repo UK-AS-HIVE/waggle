@@ -54,21 +54,23 @@
 
 	$toArray = explode('" <', $toWhole);
 
-	$toAddress = $toArray[1];
+	$nodeID = $toArray[1];
 
 	//grab the story number (nid)
-	$nodeID = substr($toAddress, 6, -19);
-
-		//get the uid from drupal via the from email address
-
-		//grab the user object
+	//use preg_replace to turn story-XXXXXX@YYYY.com to just XXXXXX
+	
+	$nodeID = preg_replace('/^.+-/', '', $nodeID);
+	$nodeID = preg_replace('/@.+$/', '', $nodeID);
+	
+	//get the uid from drupal via the from email address
+	//grab the user object
 	$drupalUserObject = user_load_by_mail($fromAddress);
 
 	$drupalUID = $drupalUserObject->uid;
 
 	// NMA: This might be a good spot for permissions checks, like:
 	if (!node_access('update', $node = node_load($nodeID), $drupalUserObject)) { 
-    	watchdog('waggle', 'User with user ID ' . $drupalUID . ' attempted to add a comment and failed the node_access test');
+    	watchdog('waggle', 'User with user ID ' . $drupalUID . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
 		return;
 	}else{
 		watchdog('waggle', 'User with user ID ' . $drupalUID . ' attempted to add a comment and passed the node_access test');
@@ -79,7 +81,7 @@
 	if($message->isMultipart()) {
 
 		// look for plain text part
-		$hasBody = false; //we set this so we can iterate through all parts without overwriting the body if anothe text/plain part exists
+		$hasBody = false; //we set this so we can iterate through all parts without overwriting the body if another text/plain part exists
 		foreach (new RecursiveIteratorIterator($message) as $part) {
 	    	try {
 
