@@ -18,10 +18,10 @@
 
   //read the incoming email from stdin - put it in the variable $email
   $fd = fopen("php://stdin", "r");
-  $email = "";
-  while (!feof($fd)) {
-  $line = fread($fd, 8192);
-  $email .= $line;
+	$email = "";
+	while (!feof($fd)) {
+	  $line = fread($fd, 8192);
+	  $email .= $line;
   }
   fclose($fd);
 
@@ -99,11 +99,11 @@
 		      preg_match('/charset="(.+)"$/', $part->contentType, $matches);
 		      switch($charset = $matches[1]){
 		        case 'Windows-1252':
-		        $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
-		        break;
+		          $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
+		          break;
 		        case 'iso-8859-1':
-		        $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
-		        break;
+		          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
+		          break;
 		      }
 	      }
 
@@ -178,11 +178,11 @@
         0 => array(
         'value' => check_plain($body),
         'format' => 'filtered_html',
-      ),
-    ),
-  ),
-);
+      	),
+    	),
+  	),
+	);
 
-comment_submit($comment);
-comment_save($comment);
+	comment_submit($comment);
+	comment_save($comment);
 ?>
