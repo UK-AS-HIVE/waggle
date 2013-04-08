@@ -13,6 +13,10 @@ function waggle_tracker_node_update($node){
   $old_node = $node->original;
   global $user;
 
+  //dpm($fields, 'fields');
+  //dpm($node->original, 'old node');
+  //dpm($node, 'new node');
+
   foreach($fields as $label => $field_info){
     $old_values = array();
     $new_values = array();
@@ -35,6 +39,9 @@ function waggle_tracker_node_update($node){
         else if(isset($values['uid'])){
           $old_values[] = $values['uid'];
         }
+        else if(isset($values['fid'])){
+          $old_values[] = $values['fid'];
+        }
       }
     }
 
@@ -54,6 +61,9 @@ function waggle_tracker_node_update($node){
         }
         else if(isset($values['uid'])){
           $new_values[] = $values['uid'];
+        }
+        else if(isset($values['fid'])){
+          $new_values[] = $values['fid'];
         }
       }
     }
@@ -77,7 +87,10 @@ function waggle_tracker_node_update($node){
         $in_common = array_intersect($old_values, $new_values);
         $removed = array_diff($old_values, $in_common);
         $added = array_diff($new_values, $in_common);
+        $details_data = '';
         foreach($removed as $id){
+          $details_data = waggle_tracker_get_data($label, $id);
+
           db_insert('waggle_tracker')
             ->fields(array(
               'entity_id' => $node->nid,
@@ -86,12 +99,17 @@ function waggle_tracker_node_update($node){
               'uid' => $user->uid,
               'user_vid' => $user->vid,
               'field' => $label,
-              'summary' => '%u removed %' . $id . ' to %f on %n.',
+              'field_id' => $id,
+              'field_details' => $details_data,
+              'summary' => '%u removed %d from %f on %n.',
               'timestamp' => time(),
             ))
             ->execute();
         }
+
         foreach($added as $id){
+          $details_data = waggle_tracker_get_data($label, $id);
+
           db_insert('waggle_tracker')
             ->fields(array(
               'entity_id' => $node->nid,
@@ -100,7 +118,9 @@ function waggle_tracker_node_update($node){
               'uid' => $user->uid,
               'user_vid' => $user->vid,
               'field' => $label,
-              'summary' => '%u added %' . $id . ' to %f on %n.',
+              'field_id' => $id,
+              'field_details' => $details_data,
+              'summary' => '%u added %d to %f on %n.',
               'timestamp' => time(),
             ))
             ->execute();
@@ -108,6 +128,35 @@ function waggle_tracker_node_update($node){
       }
     }
   }
+}
+/*
+For each label get the details from the respective table.
+*/
+function waggle_tracker_get_data($label, $id) {
+  $data = '';
+  if ($label == 'field_status') {
+    $field_details = db_select('taxonomy_term_data', 'ttd')
+      ->fields('ttd', array('name'))
+      ->condition('ttd.tid', $id, '=')
+      ->execute();
+            
+    $details = $field_details->fetchAssoc();
+    $data = $details[name];
+  } else if (($label == 'field_associated_users') ||
+             ($label == 'field_waiting') ||
+             ($label == 'field_submitted_by)) {
+    $associated = user_load($id);
+    $data = $associated->name;
+  } else if ($label == 'field_attachments') {
+    $field_details = db_select('file_managed', 'fm')
+      ->fields('fm', array('filename'))
+      ->condition('fm.fid', $id, '=')
+      ->execute();
+              
+    $details = $field_details->fetchAssoc();
+    $data = $details[filename];
+  }
+  return $data;
 }
 
 /**
@@ -123,8 +172,41 @@ function waggle_tracker_node_insert($node){
       'uid' => $user->uid,
       'user_vid' => $user->vid,
       'field' => 'new node',
-      'summary' => '%u created new %et, %' . $node->nid,
+      'summary' => '%u created new %et, %n',
       'timestamp' => time(),
     ))
     ->execute();
 }
+
+/**
+ * Creates renderable history of a node, similar to comment_node_page_additions().
+ */
+function waggle_tracker_node_page_additions($node) {
+  global $user;
+  
+  // TODO: check that user has access to this node
+
+  $additions = array();
+  $results = db_select('waggle_tracker', 'wt')
+    ->fields('wt', array('uid','field','field_details','summary','timestamp'))
+    ->condition('entity_id', $node->nid)
+    ->execute();
+
+  foreach ($results as $result) {
+    $additions[] = array(
+      '#type' => 'markup',
+      '#markup' => '<p>' . format_date($result->timestamp) . ': '
+        . t($result->summary,
+            array(
+              '%u' => '@' . format_username(user_load($result->uid)),
+              '%f' => $result->field,
+              '%d' => $result->field_details,
+              '%n' => $node->nid,
+            )) . '</p>',
+    );
+    //dpm($result, 'waggle_tracker node ' . $node->nid);
+  }
+
+  return $additions;
+}
+
