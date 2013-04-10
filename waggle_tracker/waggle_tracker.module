@@ -21,6 +21,9 @@ function waggle_tracker_node_update($node){
     $old_values = array();
     $new_values = array();
     $reference = TRUE;
+    //$field_info = field_info_field($label);
+    //$field_index = array_shift(array_shift($field_info['indexes']));
+    //dpm($label . ' uses index ' . $field_index);
 
     // Get any old values
     if(!empty($old_node->$label)){
@@ -36,11 +39,11 @@ function waggle_tracker_node_update($node){
         else if(isset($values['tid'])){
           $old_values[] = $values['tid'];
         }
-        else if(isset($values['uid'])){
-          $old_values[] = $values['uid'];
-        }
         else if(isset($values['fid'])){
           $old_values[] = $values['fid'];
+        }
+        else if(isset($values['uid'])){
+          $old_values[] = $values['uid'];
         }
       }
     }
@@ -59,38 +62,51 @@ function waggle_tracker_node_update($node){
         else if(isset($values['tid'])){
           $new_values[] = $values['tid'];
         }
-        else if(isset($values['uid'])){
-          $new_values[] = $values['uid'];
-        }
         else if(isset($values['fid'])){
           $new_values[] = $values['fid'];
+        }
+        else if(isset($values['uid'])){
+          $new_values[] = $values['uid'];
         }
       }
     }
 
     if($old_values != $new_values){
+        //dpm(field_info_field($label), $label . ' field info');
+	//dpm($old_values, $label . ' old values');
+	//dpm($new_values, $label . ' new values');
+
       if(!$reference){
-        db_insert('waggle_tracker')
-          ->fields(array(
-            'entity_id' => $node->nid,
-            'entity_vid' => $node->vid,
-            'entity_type' => 'node',
-            'uid' => $user->uid,
-            'user_vid' => $user->vid,
-            'field' => $label,
-            'summary' => '%u edited %f on %n.',
-            'timestamp' => time(),
-          ))
-          ->execute();
+        if (count($old_values) < count($new_values)) {
+          $count = count($new_values); }
+        else $count = count($old_values);
+        for($i=0; $i<$count; $i++) {
+          db_insert('waggle_tracker')
+            ->fields(array(
+              'entity_id' => $node->nid,
+              'entity_vid' => $node->vid,
+              'entity_type' => 'node',
+              'uid' => $user->uid,
+              'user_vid' => $user->vid,
+              'field' => $label,
+              'field_id' => 0,
+              'field_details' => ' from '.$old_values[$i].' to '.
+                                 $new_values[$i],
+              'summary' => '%u edited %f %d on %n.',
+              'timestamp' => time(),
+            ))
+            ->execute();
+        }
       }
       else{
         $in_common = array_intersect($old_values, $new_values);
         $removed = array_diff($old_values, $in_common);
         $added = array_diff($new_values, $in_common);
         $details_data = '';
+
         foreach($removed as $id){
           $details_data = waggle_tracker_get_data($label, $id);
-
+          //dpm($id, 'removed id');
           db_insert('waggle_tracker')
             ->fields(array(
               'entity_id' => $node->nid,
@@ -109,6 +125,7 @@ function waggle_tracker_node_update($node){
 
         foreach($added as $id){
           $details_data = waggle_tracker_get_data($label, $id);
+          //dpm($id, 'id');
 
           db_insert('waggle_tracker')
             ->fields(array(
@@ -129,12 +146,16 @@ function waggle_tracker_node_update($node){
     }
   }
 }
+
 /*
 For each label get the details from the respective table.
 */
 function waggle_tracker_get_data($label, $id) {
   $data = '';
-  if ($label == 'field_status') {
+  if (($label == 'field_status') ||
+      ($label == 'field_actions') ||
+      ($label == 'field_user_category') ||
+      ($label == 'field_tags')) {
     $field_details = db_select('taxonomy_term_data', 'ttd')
       ->fields('ttd', array('name'))
       ->condition('ttd.tid', $id, '=')
@@ -144,7 +165,7 @@ function waggle_tracker_get_data($label, $id) {
     $data = $details[name];
   } else if (($label == 'field_associated_users') ||
              ($label == 'field_waiting') ||
-             ($label == 'field_submitted_by)) {
+             ($label == 'field_submitted_by')) {
     $associated = user_load($id);
     $data = $associated->name;
   } else if ($label == 'field_attachments') {
@@ -155,6 +176,15 @@ function waggle_tracker_get_data($label, $id) {
               
     $details = $field_details->fetchAssoc();
     $data = $details[filename];
+    if ($data == NULL) {
+      $field_details = db_select('waggle_tracker', 'wt')
+        ->fields('wt', array('field_details'))
+        ->condition('wt.field_id', $id, '=')
+        ->execute();
+              
+      $details = $field_details->fetchAssoc();
+      $data = $details[field_details];
+    }
   }
   return $data;
 }
@@ -172,7 +202,9 @@ function waggle_tracker_node_insert($node){
       'uid' => $user->uid,
       'user_vid' => $user->vid,
       'field' => 'new node',
-      'summary' => '%u created new %et, %n',
+      'field_id' => 0,
+      'field_details' => 'new node created',
+      'summary' => '%u created new node, %n',
       'timestamp' => time(),
     ))
     ->execute();
