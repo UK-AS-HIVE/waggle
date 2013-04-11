@@ -91,7 +91,7 @@ function waggle_theme_registry_alter(&$theme_registry) {
   $theme_registry += array_diff_key($theme_registry_copy, $theme_registry);
 
   // Additional hooks can be added to this array to add other template suggestions.
-  $hooks = array('user_profile', 'user_picture');
+  $hooks = array('user_profile', 'user_picture', 'field__taxonomy_term_reference');
   foreach ($hooks as $h) {
     if (!isset($theme_registry[$h]['theme paths'])) { 
       $theme_registry[$h]['theme paths'] = array(); 
