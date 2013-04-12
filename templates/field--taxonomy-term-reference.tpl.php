@@ -12,7 +12,6 @@
       <div class="tag-term-info" data-tid="<?php print $item['#options']['entity']->tid; ?>" style="display:none;">
         <?php
           $term = taxonomy_term_load($item['#options']['entity']->tid);
-          dpm($term);
         ?>
         <strong><?php print $term->name; ?></strong>
         <div class="tag-term-description"><?php print $term->description; ?></div>
