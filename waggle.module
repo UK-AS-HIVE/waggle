@@ -398,8 +398,8 @@ function waggle_add_tag($node){
  * Function to remove a given tag from a given node.
  */
 function waggle_remove_tag($node){
-  if(isset($_POST['uid']) && $account = user_load($_POST['uid'])) {
-    $uid = $account->uid;
+  if(isset($_POST['tid']) && $term = taxonomy_term_load($_POST['tid'])) {
+    $tid = $term->tid;
   }
   else {
     drupal_json_output(FALSE);
@@ -407,12 +407,12 @@ function waggle_remove_tag($node){
   }
 
   $found = FALSE;
-  //Make sure the user is attatched to this story
-  foreach($node->field_associated_users['und'] as $delta => $data){
-    if($data['uid'] == $uid){
+  //Make sure the tag is attached to this story
+  foreach($node->field_tags['und'] as $delta => $data){
+    if($data['tid'] == $tid){
       $found = TRUE;
-      unset($node->field_associated_users['und'][$delta]);
-      $node->field_associated_users['und'] = array_values($node->field_associated_users['und']);
+      unset($node->field_tags['und'][$delta]);
+      $node->field_tags['und'] = array_values($node->field_tags['und']);
       unset($node->vid);
     }
   }
