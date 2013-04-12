@@ -22,6 +22,12 @@ function waggle_tracker_node_update($node){
     $new_values = array();
     $reference = TRUE;
     //$field_info = field_info_field($label);
+    //Individual field label
+    //$field_label = field_info_instance('node',$label,$node->type);
+    //dpm($field_label, 'field label');
+    //dpm($field_label['label'], 'individual field label');
+    //dpm($field_info, 'field_info');
+    //dpm($field_info['field_name'], 'field_name');
     //$field_index = array_shift(array_shift($field_info['indexes']));
     //dpm($label . ' uses index ' . $field_index);
 
@@ -225,13 +231,15 @@ function waggle_tracker_node_page_additions($node) {
     ->execute();
 
   foreach ($results as $result) {
+    $field_label = field_info_instance('node',$result->field,$node->type);
+    //dpm($field_label, 'field label');
     $additions[] = array(
       '#type' => 'markup',
       '#markup' => '<p>' . format_date($result->timestamp) . ': '
         . t($result->summary,
             array(
               '%u' => '@' . format_username(user_load($result->uid)),
-              '%f' => $result->field,
+              '%f' => $field_label['label'], //$result->field,
               '%d' => $result->field_details,
               '%n' => $node->nid,
             )) . '</p>',
