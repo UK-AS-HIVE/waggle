@@ -535,7 +535,9 @@ function waggle_tags_autocomplete_list(){
  * Implement hook_node_presave().
  */
 function waggle_node_presave($node) {
-  waggle_process_added_text($node, $node->body['und'][0]['value']);
+  if (isset($node->is_new) && $node->is_new == 1) {
+    waggle_process_added_text($node, $node->body['und'][0]['value']);
+  }
 }
 
 /**
