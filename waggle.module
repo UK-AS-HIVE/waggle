@@ -91,12 +91,13 @@ function waggle_theme_registry_alter(&$theme_registry) {
   $theme_registry += array_diff_key($theme_registry_copy, $theme_registry);
 
   // Additional hooks can be added to this array to add other template suggestions.
-  $hooks = array('user_profile', 'user_picture', 'field__field_tags__story');
+  $hooks = array('user_profile', 'user_picture', 'field__field_tags__story', 'comment', 'comment_wrapper');
   foreach ($hooks as $h) {
     if (!isset($theme_registry[$h]['theme paths'])) { 
       $theme_registry[$h]['theme paths'] = array(); 
     } 
     _waggle_insert_after_first_element($theme_registry[$h]['theme paths'], $mod_path);
+    $theme_registry[$h]['template'] = $mod_path . '/' . str_replace('_','-',$h);
   }
 }
 
