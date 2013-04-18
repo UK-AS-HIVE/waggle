@@ -52,7 +52,7 @@ function waggle_feature_views_default_views() {
   $handler->display->display_options['header']['area']['label'] = 'Add PHP';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<?php
-drupal_add_js(drupal_get_path(\'theme\', \'waggle_theme\') . \'/js/waggleAccordion.js\');
+drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/waggleAccordion.js\');
 drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\');
 ?>';
   $handler->display->display_options['header']['area']['format'] = 'php_code';
