@@ -64,6 +64,7 @@ function waggle_email_admin_form_submit($form, &$form_state)
 
 
 function waggle_email_node_insert($node) {
+  watchdog('waggle', 'we in node insert now');
   if ($node->type === 'story') {
     global $user;
     $user = user_load($user->uid);
@@ -89,9 +90,7 @@ function waggle_email_comment_insert($comment) {
   $node = node_load($comment->nid);
   if ($node->type === 'story') {
     global $user;
-    watchdog('waggle', 'Hook_comment_insert has the user ID: ' . $comment->uid . 'adding this note.  The UID loaded from global user is: ' . $user->uid);
-    //use $comment->ID to catch people adding comments from email.
-    $account = user_load($comment->uid);
+    $account = user_load($user->uid);
     $uids = array_unique(array_merge(
       array($node->uid),
       array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und'])
@@ -152,7 +151,8 @@ function waggle_email_mail_alter(&$message) {
   if ($message['params']['!from_story'] == true){
     global $base_root;
     $fromNode = $message['params']['!nid'];
-    $thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
+    //$thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
+    $thisDomain = 'help.as.uky.edu';
     $replyTo = 'story-' . $fromNode . "@" . $thisDomain;
     $message['headers']['Reply-To'] = $replyTo;
     $message['headers']['From'] = $replyTo;
