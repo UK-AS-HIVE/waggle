@@ -41,10 +41,10 @@ function waggle_feature_image_default_styles() {
         'module' => 'image',
         'name' => 'image_scale_and_crop',
         'data' => array(
-          'width' => '64',
-          'height' => '64',
+          'width' => 64,
+          'height' => 64,
         ),
-        'weight' => '1',
+        'weight' => 1,
       ),
     ),
   );

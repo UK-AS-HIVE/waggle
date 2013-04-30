@@ -13,7 +13,7 @@ function waggle_feature_user_default_roles() {
   // Exported role: staff.
   $roles['staff'] = array(
     'name' => 'staff',
-    'weight' => '2',
+    'weight' => 2,
   );
 
   return $roles;
