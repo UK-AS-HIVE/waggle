@@ -17,15 +17,9 @@ function waggle_email_help($path, $arg) {
 function waggle_email_menu()
 {
   $items = array();
-  $items['admin/config/waggle_email'] = array(
-    'title' => 'Waggle Email',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('waggle_email_admin_form'),
-    'access arguments' => array('administer site configuration'), 
-    'file' => 'waggle_email.admin.inc',
-  );
-  $items['admin/config/waggle_email/imap_credentials'] = array(
-    'title' => 'IMAP Credentials',
+  $items['admin/config/waggle/waggle_email'] = array(
+    'title' => 'Waggle Email Settings',
+    'description' => 'Settings page for waggle email',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('waggle_email_admin_form'),
     'access arguments' => array('administer site configuration'), 
@@ -41,14 +35,10 @@ function waggle_email_admin_form_validate($form, $form_state)
 
 function waggle_email_admin_form_submit($form, &$form_state)
 {
-  $server = $form_state['values']['server'];
-  $user = $form_state['values']['user'];
-  $pass = $form_state['values']['pass'];
-  $secure = $form_state['values']['secure'];
-  variable_set('waggle_email_imap_server', $server);
-  variable_set('waggle_email_imap_user', $user);
-  variable_set('waggle_email_imap_pass', $pass);
-  variable_set('waggle_email_imap_secure', $secure);
+  $domain = $form_state['values']['email_domain'];
+  $save_loc = $form_state['values']['attachment_save_location'];
+  variable_set('waggle_email_default_domain', $domain);
+  variable_set('waggle_email_attachment_save_location', $save_loc);
 }
 
 
@@ -122,10 +112,7 @@ function waggle_email_node_update($node) {
   drupal_mail('waggle_email', 'associated_user', $address_list, $node->language,
     array(
       '!nid' => $node->nid,
-      // '!author' => $account->name,
-      // '!body' => $comment->comment_body['und'][0]['value'],
       '!original_body' => $node->body['und'][0]['value'],
-      //'!original_author' => $recipients[$node->uid]->name,
       '!original_author' => $user->name,
       '!from_story' => true,
     ),
@@ -176,9 +163,8 @@ function waggle_email_mail_alter(&$message) {
   if ($message['params']['!from_story'] == true){
     global $base_root;
     $fromNode = $message['params']['!nid'];
-    //$thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
-    $thisDomain = 'help.as.uky.edu';
-    $replyTo = 'story-' . $fromNode . "@" . $thisDomain;
+    $thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
+    $replyTo = 'story-' . $fromNode . "@" . variable_get('waggle_email_default_domain', $thisDomain);
     $message['headers']['Reply-To'] = $replyTo;
     $message['headers']['From'] = $replyTo;
   }
