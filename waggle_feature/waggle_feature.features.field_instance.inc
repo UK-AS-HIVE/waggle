@@ -61,48 +61,6 @@ function waggle_feature_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-story-field_associated_groups'
-  $field_instances['node-story-field_associated_groups'] = array(
-    'bundle' => 'story',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '<i class="icon-eye-open"></i> Select the groups able to view this story.',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'editablefields',
-        'settings' => array(
-          'click_to_edit' => FALSE,
-          'empty_text' => '',
-          'fallback_format' => NULL,
-          'fallback_settings' => array(),
-        ),
-        'type' => 'editable',
-        'weight' => 23,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_associated_groups',
-    'label' => 'Group Visibility',
-    'required' => 1,
-    'settings' => array(
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(),
-      'type' => 'options_buttons',
-      'weight' => 21,
-    ),
-  );
-
   // Exported field_instance: 'node-story-field_associated_users'
   $field_instances['node-story-field_associated_users'] = array(
     'bundle' => 'story',
@@ -630,6 +588,48 @@ function waggle_feature_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-story-field_role_visibility'
+  $field_instances['node-story-field_role_visibility'] = array(
+    'bundle' => 'story',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '<i class="icon-eye-open"></i> Select the roles able to view this story.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'editablefields',
+        'settings' => array(
+          'click_to_edit' => 0,
+          'empty_text' => '',
+          'fallback_format' => 'role_field_formatter',
+          'fallback_settings' => array(),
+        ),
+        'type' => 'editable',
+        'weight' => 24,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_role_visibility',
+    'label' => 'Role Visibility',
+    'required' => 1,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(),
+      'type' => 'options_buttons',
+      'weight' => 22,
+    ),
+  );
+
   // Exported field_instance: 'node-story-field_status'
   $field_instances['node-story-field_status'] = array(
     'bundle' => 'story',
@@ -947,7 +947,7 @@ function waggle_feature_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('<i class="icon-eye-open"></i> Select the groups able to view this story.');
+  t('<i class="icon-eye-open"></i> Select the roles able to view this story.');
   t('Attachments');
   t('Author revision');
   t('Body');
@@ -955,7 +955,6 @@ function waggle_feature_field_default_field_instances() {
   t('Contact');
   t('Does the story submitter want to receive all story updates?');
   t('Due Date');
-  t('Group Visibility');
   t('Groups');
   t('Hostname');
   t('IP address');
@@ -964,6 +963,7 @@ function waggle_feature_field_default_field_instances() {
   t('Location');
   t('On this story');
   t('Phone');
+  t('Role Visibility');
   t('Status');
   t('Submitted by');
   t('Tags');
