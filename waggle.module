@@ -97,7 +97,7 @@ function waggle_theme_registry_alter(&$theme_registry) {
       $theme_registry[$h]['theme paths'] = array(); 
     } 
     _waggle_insert_after_first_element($theme_registry[$h]['theme paths'], $mod_path);
-    $theme_registry[$h]['template'] = $mod_path . '/' . str_replace('_','-',$h);
+    //$theme_registry[$h]['template'] = $mod_path . '/' . str_replace('_','-',$h);
   }
 }
 
@@ -222,6 +222,14 @@ function waggle_add_story($form, &$form_state) {
 function waggle_form_story_node_form_alter(&$form, &$form_state) {
   $form['#validate'][] = 'waggle_story_node_validate';
   $form['actions']['submit']['#submit'][] = 'waggle_story_node_submit';
+
+  global $user;
+  $user = user_load($user->uid);
+
+  $default_group_visibility = array_map(function($item) {
+    return $item['tid'];
+  }, $user->field_groups['und']);
+  $form['field_associated_groups']['und']['#default_value'] = $default_group_visibility;
 }
 
 /**
@@ -436,6 +444,8 @@ function waggle_story_status($node) {
     //drupal_json_output('first');
     $term = taxonomy_term_load($_POST['status']);
     if ($term && $term->vid == 3) {
+      $node->revision = TRUE;
+      dpm($node);
       $node->field_status['und'][0] = array('tid' => $_POST['status']);
       node_save($node);
       if ($node) {

@@ -23,12 +23,35 @@ function waggle_email_admin_form()
     '#required' => TRUE,
   );
 
+<<<<<<< HEAD
   $form['setup']['attachment_save_location'] = array(
     '#type' => 'textfield',
     '#title' => 'Location to save attachments',
     '#default_value' => variable_get('waggle_email_attachment_save_location', 'public://'),
     '#required' => TRUE,
   );
+=======
+  // $form['setup']['user'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => 'Account user name',
+  //   '#default_value' => variable_get('waggle_email_imap_user', ''),
+  //   '#required' => TRUE,
+  // );
+
+  // $form['setup']['pass'] = array(
+  //   '#type' => 'password',
+  //   '#title' => 'Password',
+  //   '#default_value' => variable_get('waggle_email_imap_pass', ''),
+  //   '#required' => TRUE,
+  // );
+
+  // $form['setup']['secure'] = array(
+  //   '#type' => 'checkbox',
+  //   '#title' => 'Secure connection',
+  //   '#default_value' => variable_get('waggle_email_imap_secure', 1),
+  //   '#required' => TRUE,
+  // );
+>>>>>>> 4b91bc6f70e322ede9b138d5e5a588beed9a912a
 
   $form['actions'] = array(
     '#type' => 'actions',
