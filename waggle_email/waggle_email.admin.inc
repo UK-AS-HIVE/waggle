@@ -16,31 +16,17 @@ function waggle_email_admin_form()
     '#collapsible' => TRUE,
   );
 
-  $form['setup']['server'] = array(
+  $form['setup']['email_domain'] = array(
     '#type' => 'textfield',
-    '#title' => 'Server',
-    '#default_value' => variable_get('waggle_email_imap_server', ''),
+    '#title' => 'Default Email Domain',
+    '#default_value' => variable_get('waggle_email_default_domain', ''),
     '#required' => TRUE,
   );
 
-  $form['setup']['user'] = array(
+  $form['setup']['attachment_save_location'] = array(
     '#type' => 'textfield',
-    '#title' => 'Account user name',
-    '#default_value' => variable_get('waggle_email_imap_user', ''),
-    '#required' => TRUE,
-  );
-
-  $form['setup']['pass'] = array(
-    '#type' => 'password',
-    '#title' => 'Password',
-    '#default_value' => variable_get('waggle_email_imap_pass', ''),
-    '#required' => TRUE,
-  );
-
-  $form['setup']['secure'] = array(
-    '#type' => 'checkbox',
-    '#title' => 'Secure connection',
-    '#default_value' => variable_get('waggle_email_imap_secure', 1),
+    '#title' => 'Location to save attachments',
+    '#default_value' => variable_get('waggle_email_attachment_save_location', 'public://'),
     '#required' => TRUE,
   );
 

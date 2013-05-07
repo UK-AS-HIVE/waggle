@@ -126,7 +126,7 @@
 
           $attachment = base64_decode($part->getContent());
 
-          $saveLoc = variable_get("attachment_location", "public://");
+          $saveLoc = variable_get("waggle_email_attachment_save_location", "public://");
 
           if ($file = file_save_data($attachment, $saveLoc . $filename, FILE_EXISTS_RENAME))
           {
