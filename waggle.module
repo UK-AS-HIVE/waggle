@@ -226,10 +226,7 @@ function waggle_form_story_node_form_alter(&$form, &$form_state) {
   global $user;
   $user = user_load($user->uid);
 
-  $default_group_visibility = array_map(function($item) {
-    return $item['tid'];
-  }, $user->field_groups['und']);
-  $form['field_associated_groups']['und']['#default_value'] = $default_group_visibility;
+  $form['field_role_visibility']['und']['#default_value'] = array_keys($user->roles);
 }
 
 /**

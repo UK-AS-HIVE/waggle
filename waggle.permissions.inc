@@ -31,12 +31,13 @@ function waggle_node_access($node, $op, $account) {
     }
   }
 
-  // Grant also to associated groups.
-  $account = user_load($account->uid);
-  foreach ($node->field_associated_groups as $lang => $group) {
-    foreach ($account->field_groups as $lang => $user_group) {
-      if ($user_group == $group) {
-        return NODE_ACCESS_ALLOW;
+  // Grant also to associated roles.
+  foreach ($node->field_role_visibility as $lang => $roles_granted) {
+    foreach ($roles_granted as $rgk => $role) {
+      foreach ($account->roles as $rid => $user_role) {
+        if ($rid == $role['value']) {
+          return NODE_ACCESS_ALLOW;
+        }
       }
     }
   }
@@ -55,12 +56,11 @@ function waggle_node_grants($account, $op) {
     } else {
       $grants['waggle_story'] = array($account->uid);
       $grants['waggle_own_story'] = array($account->uid);
-      $grants['waggle_group_story'] = array();
+      $grants['waggle_role_story'] = array();
       $account = user_load($account->uid);
-      foreach ($account->field_groups['und'] as $index => $group) {
-        $grants['waggle_group_story'][] = $group['tid'];
+      foreach ($account->roles as $rid => $role) {
+        $grants['waggle_role_story'][] = $rid;
       }
-      //watchdog('noah', '<pre>' . print_r($grants,true) . '</pre>');
     }
   }
   return $grants;
@@ -85,12 +85,12 @@ function waggle_node_access_records($node) {
         }
       }
     }
-    if (isset($node->field_associated_groups)) {
-      foreach ($node->field_associated_groups['und'] as $delta => $group) {
-        if (isset($group['tid'])) {
+    if (isset($node->field_role_visibility)) {
+      foreach ($node->field_role_visibility['und'] as $delta => $role) {
+        if (isset($role)) {
           $grants[] = array(
-            'realm' => 'waggle_group_story',
-            'gid' => $group['tid'],
+            'realm' => 'waggle_role_story',
+            'gid' => $role,
             'grant_view' => $node->status,
             'grant_update' => 1,
             'grant_delete' => 0,
