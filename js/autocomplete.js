@@ -318,7 +318,7 @@ function AddTagAutocompleteHandler(myInput, container, bindingsFunction){
 	(function($){
 	    var nid = $(myInput).parents('.node').attr('id').substring(5),
 			currentTags = new Array();
-		$('#node-' + nid + ' .story-tags-wrapper li a').each(function(i, item){
+		$('#node-' + nid + ' .story-tags-wrapper li a:first').each(function(i, item){
 			currentTags.push(tagsByName[$(item).text()]['tid']);
 		});
 		if($(myInput).val().length > 0){
