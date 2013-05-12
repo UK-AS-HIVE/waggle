@@ -78,7 +78,7 @@ function waggle_tracker_node_update($node){
     }
 
     if($old_values != $new_values){
-        //dpm(field_info_field($label), $label . ' field info');
+      //dpm(field_info_field($label), $label . ' field info');
 	//dpm($old_values, $label . ' old values');
 	//dpm($new_values, $label . ' new values');
 
@@ -87,6 +87,15 @@ function waggle_tracker_node_update($node){
           $count = count($new_values); }
         else $count = count($old_values);
         for($i=0; $i<$count; $i++) {
+          $details_data = '';
+          if ($label == 'field_role_visibility') {
+            $roles = user_roles();
+            $details_data = ' from '.$roles[$old_values[$i]].' to '.
+                                 $roles[$new_values[$i]];
+          } else {
+            $details_data = ' from '.$old_values[$i].' to '.
+                                 $new_values[$i];
+          }
           db_insert('waggle_tracker')
             ->fields(array(
               'entity_id' => $node->nid,
@@ -96,8 +105,7 @@ function waggle_tracker_node_update($node){
               'user_vid' => $user->vid,
               'field' => $label,
               'field_id' => 0,
-              'field_details' => ' from '.$old_values[$i].' to '.
-                                 $new_values[$i],
+              'field_details' => $details_data,
               'summary' => '%u edited %f %d on %n.',
               'timestamp' => time(),
             ))
@@ -191,7 +199,8 @@ function waggle_tracker_get_data($label, $id) {
       $details = $field_details->fetchAssoc();
       $data = $details[field_details];
     }
-  }
+  } 
+ 
   return $data;
 }
 
