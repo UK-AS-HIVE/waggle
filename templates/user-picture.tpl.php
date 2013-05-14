@@ -29,8 +29,34 @@ if ($account->picture) {
 else {
   $url = drupal_get_path('module', 'waggle') . '/default_user.png';
 }
+
+$departments = $office = $mail = '';
+
+if (!empty($account->field_department)) {
+  foreach ($account->field_department['und'] as $values) {
+    if (!empty($values['safe_value'])) {
+      $departments .= (empty($departments) ? '' : ', ') . $values['safe_value'];
+    }
+  }
+}
+if (!empty($account->field_office)) {
+  if (!empty($account->field_office['und'][0]['safe_value'])) {
+    $office = $account->field_office['und'][0]['safe_value'];
+  }
+}
+if (!empty($account->field_mail)) {
+  if (!empty($account->field_mail['und'][0]['safe_value'])) {
+    $mail = $account->field_mail['und'][0]['safe_value'];
+  }
+}
 ?>
 
 <div class="user-picture user-picture-<?php print $account->uid; ?>">
+  <div class="user-picture-hover">
+    <div class="name"><?php print $name; ?></div>
+    <div class="email"><?php print $mail; ?></div>
+    <div class="departments"><?php print $departments; ?></div>
+    <div class="office"><?php print $office; ?></div>
+  </div>
   <img src="<?php print $url; ?>" alt="<?php print $name; ?>'s photo" title="<?php print $name; ?>"/>
 </div>

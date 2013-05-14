@@ -52,6 +52,17 @@ function waggle_theme_preprocess_html(&$variables) {
     $variables['classes_array'][] = 'footer-columns';
   }
 
+  drupal_add_html_head(
+    array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'http-equiv' => 'X-UA-Compatible',
+        'content' => 'IE=9'
+      )
+    ),
+    'force_ie8_compatibility'
+  );
+
   // Add conditional stylesheets for IE
   drupal_add_css(path_to_theme() . '/css/ie.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
   drupal_add_css(path_to_theme() . '/css/ie6.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'IE 6', '!IE' => FALSE), 'preprocess' => FALSE));
@@ -143,17 +154,22 @@ function waggle_theme_preprocess_node(&$variables) {
   if ($variables['view_mode'] == 'full' && node_is_page($variables['node'])) {
     $variables['classes_array'][] = 'node-full';
   }
-  $names = variable_get('waggle_theme_user_names', array());
+  $names = array(); //variable_get('waggle_theme_user_names', array());
   if (!isset($names[$variables['node']->uid])) {
     $author = user_load($variables['node']->uid);
-    $name = empty($author->field_name) ? $author->name : implode(' ', array_filter($author->field_name['und'][0]));
+    $name = '<div class="author-name">' . (empty($author->field_name) ? $author->name : implode(' ', array_filter($author->field_name['und'][0])));
+    $departments = '';
+    if (!empty($author->field_department)) {
+      $departments = $author->field_department['und'][0]['safe_value'];
+    }
+    $name = empty($departments) ? $name . '</div>' : $name . ' <span class="departments">(' . $departments . ')</span></div>';
     $names[$variables['node']->uid] = $name;
     variable_set('waggle_theme_user_names', $names);
   }
   else {
     $name = $names[$variables['node']->uid];
   }
-  $variables['submitted'] = '<div class="author-name">' . $name . '</div><div class="story-submitted-time">' . $variables['date'] . '</div>';
+  $variables['submitted'] = $name . '<div class="story-submitted-time">' . $variables['date'] . '</div>';
 }
 
 /**

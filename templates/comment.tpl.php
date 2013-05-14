@@ -60,7 +60,7 @@
 <div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
 
   <div class="attribution">
-
+THEME
     <?php print $picture; ?>
 
   </div>

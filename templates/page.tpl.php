@@ -90,10 +90,9 @@
   <div id="topbar-wrapper">
     <div id="topbar" class="set-width">
       <div id="topbar-links">
-        <a id="ans-logo" href="//www.as.uky.edu"><img src="/sites/all/themes/waggle_theme/images/A&S_OverlapLogoWHITE_fmt.png"></a>
+        <a id="ans-logo" href="//www.as.uky.edu"><img src="/sites/all/themes/waggle_theme/images/asLogoWaggleShadow.png"></a>
       <ul>
-        <li class="first"><a href="/">Help</a></li>
-        <li><a href="http://www.uky.edu">UK</a></li>
+        <li class="first help-home"><a href="/">Help</a></li>
         <li><a class="new-story-link">New Story</a></li>
         <?php 
           if(user_is_anonymous()){
@@ -101,7 +100,6 @@
             fancy_login_init();
           }
         ?>
-        <li><a href="/story-search-test">Facets</a></li>
       </ul>
       </div>
       <?php 

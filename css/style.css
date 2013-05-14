@@ -522,8 +522,9 @@ h1#site-name {
 /* ------------------- Main ------------------- */
 
 #main {
-  margin-top: 20px;
+  padding-top: 20px;
   margin-bottom: 40px;
+  background: white;
 }
 
 /* ----------------- Featured ----------------- */
@@ -615,20 +616,12 @@ h1#page-title {
   margin-bottom: -5px;
 }
 .field-type-taxonomy-term-reference {
-  margin: 0 0 1.2em;
+  margin: 0 0 5px;
 }
 .field-type-taxonomy-term-reference .field-label {
   font-weight: normal;
   margin: 0;
   padding-right: 5px; /* LTR */
-}
-.field-type-taxonomy-term-reference .field-label,
-.field-type-taxonomy-term-reference ul.links {
-  font-size: 0.8em;
-}
-.node-teaser .field-type-taxonomy-term-reference .field-label,
-.node-teaser .field-type-taxonomy-term-reference ul.links {
-  font-size: 0.821em;
 }
 .field-type-taxonomy-term-reference ul.links {
   padding: 0;
@@ -649,7 +642,6 @@ h1#page-title {
 }
 ul.links {
   color: #68696b;
-  font-size: 0.821em;
 }
 .node-unpublished {
   margin: -20px -15px 0;
@@ -662,7 +654,8 @@ ul.links {
 
 /* ----------------- Comments ----------------- */
 
-#comments div.user-picture img {
+#comments div.user-picture img,
+.story-new-comment-form img {
   margin-left: 0; /* LTR */
   width: 50px;
 }
@@ -686,7 +679,8 @@ ul.links {
   vertical-align: top;
   overflow: hidden;
 }
-#comments .attribution img {
+#comments .attribution img,
+.story-new-comment-form img {
   margin: 0;
   border: 1px solid #999;
 }
@@ -724,6 +718,10 @@ ul.links {
   position: absolute;
   top: 5px;
   width: 20px;
+}
+
+.story-new-comment-form .user-picture{
+  float: left;
 }
 .comment .comment-time {
   font-size: 8pt;
@@ -811,7 +809,7 @@ ul.links {
   border: 1px solid;
   padding: 8px 8px;
   margin: 0 0 20px;
-  box-shadow: 8px 8px 10px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 4px 4px 10px 1px rgba(0, 0, 0, 0.25);
 }
 .sidebar h2 {
   margin: 0 0 0.5em;
@@ -1708,7 +1706,7 @@ div.admin-panel .description {
 
 /* Generic AS Topbar */
 #topbar-wrapper {
-  background: black;
+  background: #004d8f;
   color: white;
   height: 45px;
 }
@@ -1716,6 +1714,8 @@ div.admin-panel .description {
   height: 45px;
   overflow: visible;
   z-index: 10;
+  position: relative;
+  left: -20px;
 }
 #ans-logo{
   position: absolute;
@@ -1727,7 +1727,7 @@ div.admin-panel .description {
 }
 #topbar-links ul{
   margin: 0;
-  margin-left: 150px;
+  margin-left: 114px;
   padding: 0;
   padding-top: 15px;
 }
@@ -1742,6 +1742,13 @@ div.admin-panel .description {
 #topbar-links ul li.first{
   list-style: none;
   margin-left: 0px;
+}
+#topbar-links ul li.help-home {
+  font-size: 26px;
+  line-height: 1;
+  margin-left: 14px;
+  position: relative;
+  top: -2px;
 }
 #topbar-links ul li a{
   color: white;
@@ -1782,8 +1789,8 @@ div.admin-panel .description {
 .view-accordion-view .views-row {
   border: solid 1px #666;
   margin-bottom: 20px;
-  background: #d3d3d3;
-  box-shadow: 8px 8px 10px 2px rgba(0, 0, 0, 0.3);
+  background: #e0e0d8;
+  box-shadow: 4px 4px 10px 1px rgba(0, 0, 0, 0.25);
   position: relative;
 }
 .view-accordion-view .story-head {
@@ -1799,11 +1806,14 @@ div.admin-panel .description {
 .view-accordion-view .views-row a {
   cursor: pointer;
 }
-.submitted .user-picture img {
+.submitted .user-picture {
   float: left; /* LTR */
-  height: 60px;
   margin: 0px 8px 0 0; /* LTR */
+}
+.submitted .user-picture img {
+  height: 60px;
   border: solid thin #666;
+  margin-bottom: 0;
 }
 .submitted .author-name {
   font-size: 12pt;
@@ -1910,6 +1920,8 @@ div.admin-panel .description {
 .waggle-secondary-visible .waggle-secondary {
   visibility: visible;
 }
+
+/* Add user to story */
 .add-user {
   background: white;
   float: left;
@@ -1922,6 +1934,7 @@ div.admin-panel .description {
   margin-top: 5px;
   border: none;
   outline: none;
+  display: block;
 }
 a.add-user-link {
   font-size: 16pt;
@@ -1938,10 +1951,59 @@ a.add-user-link:hover {
 }
 .add-user-popup {
   display: none;
-  padding-left: 25px;
+  margin-left: 25px;
 }
 .add-user.visible .add-user-popup {
   display: block;
+}
+.add-user-popup label {
+  position: relative;
+  top: 7px;
+  left: 5px;
+}
+
+/* Add tag to story */
+.view-accordion-view .story-tags-wrapper {
+  padding: 0 8px;
+}
+.tags-label,
+.view .node-story .field-name-field-tags {
+  float: left;
+}
+.tags-label {
+  margin-right: 10px;
+}
+.story-tags-wrapper {
+  font-size: 13px;
+}
+.add-tag {
+  float: left;
+  min-width: 34px;
+}
+.add-tag input {
+  outline: none;
+  border: none;
+  outline: none;
+  display: block;
+}
+a.add-tag-link {
+}
+.add-tag-popup {
+  display: none;
+}
+.story-tags-wrapper.visible .add-tag-popup {
+  display: block;
+}
+a.add-user-link:hover {
+  color: #888;
+  text-decoration: none;
+}
+.add-user-wrapper {
+  position: relative;
+}
+.add-user-popup {
+  display: none;
+  margin-left: 25px;
 }
 .add-user-popup label {
   position: relative;
@@ -1990,12 +2052,17 @@ a.add-user-link:hover {
 }
 .suggestions img {
   height: 40px;
+  width: auto;
   display: block;
   float: left;
   margin-right: 10px;
 }
 .suggestions .picture {
   float: left;
+}
+.story-new-comment-form .suggestions {
+  top: 0;
+  left: 120px;
 }
 
 
@@ -2039,6 +2106,15 @@ select.change-status:hover {
 #block-waggle-waggle-story-sidebar li {
   margin-left: 5px;
 }
+#edit-search-container div.form-item-search {
+  display: inline;
+}
+#waggle-story-sidebar-save-help-expand {
+  display: inline;
+}
+#waggle-story-sidebar-save-help-container {
+  display: none;
+}
 #current-filters {
   margin-bottom: 14px;
 }
@@ -2065,7 +2141,7 @@ select.change-status:hover {
 #block-waggle-waggle-add-story {
   border: solid 1px #666;
   margin-bottom: 20px;
-  background: #d3d3d3;
+  background: #e0e0d8;
   box-shadow: 8px 8px 10px 2px rgba(0, 0, 0, 0.3);
 }
 #block-waggle-waggle-add-story .story-head {
@@ -2110,3 +2186,143 @@ select.change-status:hover {
   text-decoration: underline;
   color: #008ee2;
 }
+
+/* Search sidebar */
+#edit-saved-searches-container {
+  display: none;
+}
+.waggle-editable .waggle-edit-link {
+  display: none;
+  position: relative;
+  top: -7px;
+  margin-left: 8px;
+}
+.waggle-editable div.waggle-editable-field,
+.waggle-editable.waggle-visible .waggle-edit-link {
+  display:-moz-inline-stack;
+  display:inline-block;
+  zoom:1;
+  *display:inline;
+}
+
+
+/* Waggle User Hover */
+.user-picture {
+  position: relative;
+}
+.user-picture-hover {
+  display: none;
+}
+.story-head .user-picture:hover .user-picture-hover {
+  display: block;
+  position: absolute;
+  left: 95%;
+  top: 10%;
+  width: 300px;
+  background: white;
+  padding: 5px;
+  border: solid thin #999;
+  box-shadow: 2px 2px 14px 4px rgba(0, 0, 0, 0.18);
+  z-index: 10;
+}
+.user-picture-hover .name {
+  font-weight: bold;
+}
+.user-picture-hover div {
+  margin-left: 10px;
+  text-indent: -10px;
+}
+
+/* Waggle Tags Hover */
+.view-accordion-view .field-name-field-tags li {
+  position: relative;
+}
+
+.tag-term-hover {
+  display: none;
+}
+
+.tag-term-info {
+  position: absolute;
+  bottom: 16px;
+  left: 10px;
+  font-size: 10.5pt;
+  min-width: 280px;
+  padding: 8px;
+  z-index: 10;
+  background: white;
+  border: solid thin #999;
+  box-shadow: 2px 2px 14px 4px rgba(0, 0, 0, 0.18);
+}
+
+.tag-term-info {
+  white-space: normal;
+}
+
+body #secondary-menu-links li a {
+  color: #0070B3;
+  font-weight: bold;
+}
+
+ul.facetapi-facetapi-checkbox-links {
+  padding-left: 0 !important;
+}
+ul.facetapi-facetapi-checkbox-links li.leaf {
+  list-style-image: none !important;
+  list-style-type: none !important;
+}
+
+/* New comments */
+.story-new-comment-form {
+  position: relative;
+  padding-bottom: 30px;
+  padding-top: 10px;
+}
+.story-new-comment-form textarea {
+  width: 557px;
+  height: 42px;
+  margin-left: 0px;
+  padding: 6px 6px 6px 24px;
+  font-size: 14px;
+  font-family: museo-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: #eeeeee;
+  border-color: #999;
+}
+.story-new-comment-form input {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.story-new-comment-form .comment-arrow {
+  background: url(../images/triangle.png) no-repeat 0 center transparent; /* LTR */
+  border-left: none;
+  border-right: 1px solid #eee;
+  height: 40px;
+  margin-top: 8px;
+  width: 20px;
+  float: left;
+  margin-left: 9px;
+  position: relative;
+  left: 1px;
+}
+.story-new-comment-form .suggestions {
+  top: -7px;
+  left: 82px;
+  width: 200px;
+}
+#block-waggle-waggle-add-story .suggestions {
+  width: 200px;
+}
+
+.suggestions-wrapper {
+  position: relative;
+}
+
+
+.story-activity {
+  font-size: 8pt;
+  color: #666;
+  margin-left: 109px;
+}
+
