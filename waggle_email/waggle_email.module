@@ -26,6 +26,16 @@ function waggle_email_menu()
     'file' => 'waggle_email.admin.inc',
   );
 
+  $items['user/%user/waggle'] = array(
+      'title' => 'Waggle Email',
+      'description' => 'Email settings for waggle',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('waggle_email_user_form'),
+      'access arguments' => array('access user profiles'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'waggle_email.admin.inc',
+  );
+
   return $items;
 }
 
@@ -39,6 +49,10 @@ function waggle_email_admin_form_submit($form, &$form_state)
   $save_loc = $form_state['values']['attachment_save_location'];
   variable_set('waggle_email_default_domain', $domain);
   variable_set('waggle_email_attachment_save_location', $save_loc);
+}
+
+function waggle_email_user_form_submit($form, &$form_state) {
+
 }
 
 
@@ -56,7 +70,7 @@ function waggle_email_node_insert($node) {
       array(
         '!nid' => $node->nid,
         '!author' => $recipients[$node->uid]->name,
-        '!body' => $node->body['und'][0]['value'],
+        '!body' => check_markup($node->body['und'][0]['value'], 'html_email'),
         '!from_story' => true,
       ),
       $recipients[$node->uid]->mail, TRUE);
@@ -79,12 +93,13 @@ function waggle_email_comment_insert($comment) {
       if (empty($mail)) $mail = $r->mail;
       return $r->name . ' <' . $mail . '>';
     }, $recipients));
+
     drupal_mail('waggle_email', 'new_note', $address_list, $node->language,
       array(
         '!nid' => $node->nid,
         '!author' => $account->name,
-        '!body' => $comment->comment_body['und'][0]['value'],
-        '!original_body' => $node->body['und'][0]['value'],
+        '!body' => check_markup($comment->comment_body['und'][0]['value'], 'html_email'),
+        '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
         '!original_author' => $recipients[$node->uid]->name,
         '!from_story' => true,
       ),
@@ -108,11 +123,12 @@ function waggle_email_node_update($node) {
 
   $recipients = user_load_multiple($addedUsers);
   $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+
   
   drupal_mail('waggle_email', 'associated_user', $address_list, $node->language,
     array(
       '!nid' => $node->nid,
-      '!original_body' => $node->body['und'][0]['value'],
+      '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
       '!original_author' => $user->name,
       '!from_story' => true,
     ),
