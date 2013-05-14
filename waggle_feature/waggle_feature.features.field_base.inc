@@ -441,6 +441,33 @@ function waggle_feature_field_default_field_bases() {
     'type' => 'text',
   );
 
+  // Exported field_base: 'field_role_visibility'
+  $field_bases['field_role_visibility'] = array(
+    'active' => 1,
+    'cardinality' => -1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_role_visibility',
+    'field_permissions' => array(
+      'type' => 2,
+    ),
+    'foreign keys' => array(),
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'role_field',
+    'settings' => array(
+      'exclusive' => 1,
+      'roles' => array(
+        1 => 1,
+        2 => 2,
+        3 => 3,
+        4 => 4,
+      ),
+    ),
+    'translatable' => 0,
+    'type' => 'role',
+  );
+
   // Exported field_base: 'field_status'
   $field_bases['field_status'] = array(
     'active' => 1,

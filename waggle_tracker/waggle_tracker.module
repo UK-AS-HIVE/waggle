@@ -78,7 +78,7 @@ function waggle_tracker_node_update($node){
     }
 
     if($old_values != $new_values){
-        //dpm(field_info_field($label), $label . ' field info');
+      //dpm(field_info_field($label), $label . ' field info');
 	//dpm($old_values, $label . ' old values');
 	//dpm($new_values, $label . ' new values');
 
@@ -87,6 +87,15 @@ function waggle_tracker_node_update($node){
           $count = count($new_values); }
         else $count = count($old_values);
         for($i=0; $i<$count; $i++) {
+          $details_data = '';
+          if ($label == 'field_role_visibility') {
+            $roles = user_roles();
+            $details_data = ' from '.$roles[$old_values[$i]].' to '.
+                                 $roles[$new_values[$i]];
+          } else {
+            $details_data = ' from '.$old_values[$i].' to '.
+                                 $new_values[$i];
+          }
           db_insert('waggle_tracker')
             ->fields(array(
               'entity_id' => $node->nid,
@@ -96,8 +105,7 @@ function waggle_tracker_node_update($node){
               'user_vid' => $user->vid,
               'field' => $label,
               'field_id' => 0,
-              'field_details' => ' from '.$old_values[$i].' to '.
-                                 $new_values[$i],
+              'field_details' => $details_data,
               'summary' => '%u edited %f %d on %n.',
               'timestamp' => time(),
             ))
@@ -191,7 +199,8 @@ function waggle_tracker_get_data($label, $id) {
       $details = $field_details->fetchAssoc();
       $data = $details[field_details];
     }
-  }
+  } 
+ 
   return $data;
 }
 
@@ -250,3 +259,94 @@ function waggle_tracker_node_page_additions($node) {
   return $additions;
 }
 
+/*
+* This is a copy of comment_node_page_additions($node)  from drupal 7
+*/
+function waggle_tracker_comment_node_page_additions($node) {
+  $additions = array();
+  $activity = array();
+
+  // Only attempt to render comments if the node has visible comments.
+  // Unpublished comments are not included in $node->comment_count, so show
+  // comments unconditionally if the user is an administrator.
+  if (($node->comment_count && user_access('access comments')) || user_access('administer comments')) {
+    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
+    $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 50);
+    if ($cids = comment_get_thread($node, $mode, $comments_per_page)) {
+      $comments = comment_load_multiple($cids);
+      comment_prepare_thread($comments);
+      $build = comment_view_multiple($comments, $node);
+      //$build['pager']['#theme'] = 'pager';
+      $additions['comments'] = $build;
+    }
+  }
+
+
+  foreach ($additions['comments'] as &$comment) {
+    $comment['#weight'] = $comment['comment_body']['#object']->created;
+  }
+  $additions['comments']['#sorted'] = FALSE;
+
+  $results = db_select('waggle_tracker', 'wt')
+    ->fields('wt', array('uid','field','field_details','summary','timestamp'))
+    ->condition('entity_id', $node->nid)
+    ->execute();
+
+  foreach ($results as $result) {
+    $field_label = field_info_instance('node',$result->field,$node->type);
+    //dpm($field_label, 'field label');
+    /*$activity[] = array(
+      '#type' => 'markup',
+      '#markup' => '<p>' . format_date($result->timestamp) . ': '
+        . t($result->summary,
+            array(
+              '%u' => '@' . format_username(user_load($result->uid)),
+              '%f' => $field_label['label'], //$result->field,
+              '%d' => $result->field_details,
+              '%n' => $node->nid,
+            )) . '</p>',
+    );*/
+    $user_load = user_load(array('uid' => $result->uid));
+    $additions['comments'][] = array(
+      '#type' => 'markup',
+      '#markup' => '<div class="story-activity">' . /*theme('user_picture', array('account' => $user_load)) .*/ ' '
+        . format_date($result->timestamp) . ': '
+        . t($result->summary,
+            array(
+              '%u' => '@' . format_username(user_load($result->uid)),
+              '%f' => $field_label['label'], //$result->field,
+              '%d' => $result->field_details,
+              '%n' => $node->nid,
+            )) . '</div>',
+      '#weight' => $result->timestamp,
+    );
+    //dpm($result, 'waggle_tracker node ' . $node->nid);
+  }
+  //$activity['pager']['#theme'] = 'pager';
+  //$additions['activity'] = $activity;
+  //dpm($additions['activity'], 'additions activity');
+
+  //dpm($additions['comments'], 'additions comments');
+
+  // Append comment form if needed.
+  /*
+  if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN && (variable_get('comment_form_location_' . $node->type,  COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW)) {
+    $build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid));
+    $additions['comment_form'] = $build;
+  }
+  */
+  
+  if ($additions) {
+    $additions += array(
+      '#theme' => 'comment_wrapper__node_' . $node->type,
+      '#node' => $node,
+      'comments' => array(),
+      //'activity' => array(),
+      //'comment_form' => array(),
+    );
+  }
+  //dpm($additions);
+  
+
+  return $additions;
+}
