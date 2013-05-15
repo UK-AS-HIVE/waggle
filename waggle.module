@@ -409,7 +409,7 @@ function waggle_remove_tag($node){
   }
   else {
     drupal_json_output(FALSE);
-    druapl_exit();
+    drupal_exit();
   }
 
   $found = FALSE;
