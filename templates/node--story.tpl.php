@@ -79,8 +79,9 @@
  */
 
 global $user;
-$content['comments'] = comment_node_page_additions($node);
-$content['activity_stream'] = waggle_tracker_node_page_additions($node);
+//$content['comments'] = comment_node_page_additions($node);
+$content['comments'] = waggle_tracker_comment_node_page_additions($node);
+//$content['waggle_tracker'] = waggle_tracker_node_page_additions($node);
 
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
@@ -100,7 +101,7 @@ $content['activity_stream'] = waggle_tracker_node_page_additions($node);
     <?php
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);
-      hide($content['activity_stream']);
+      //hide($content['waggle_tracker']);
       hide($content['links']);
       hide($content['field_associated_users']);
       hide($content['field_status']);
@@ -170,7 +171,7 @@ $content['activity_stream'] = waggle_tracker_node_page_additions($node);
       //dpm($content['comments']);
       unset($content['comments']['comment_form']);
       print render($content['comments']); 
-      print render($content['activity_stream']);
+      //print render($content['waggle_tracker']);
     ?>
     <div class="story-new-comment-form">
       <?php print theme('user_picture', array('account' => $user)); ?>
