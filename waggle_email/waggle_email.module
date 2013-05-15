@@ -121,18 +121,22 @@ function waggle_email_node_update($node) {
     $addedUsers = _check_associated_users($node);
   }
 
-  $recipients = user_load_multiple($addedUsers);
-  $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+  if(!empty($addedUsers)){ 
 
-  
-  drupal_mail('waggle_email', 'associated_user', $address_list, $node->language,
-    array(
-      '!nid' => $node->nid,
-      '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
-      '!original_author' => $user->name,
-      '!from_story' => true,
-    ),
-    $user->mail, TRUE);
+
+    $recipients = user_load_multiple($addedUsers);
+    $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
+   
+
+    drupal_mail('waggle_email', 'associated_user', $address_list, $node->language,
+      array(
+        '!nid' => $node->nid,
+        '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
+        '!original_author' => $user->name,
+        '!from_story' => true,
+      ),
+      $user->mail, TRUE);
+  }
 }
 
 /**
@@ -195,6 +199,6 @@ function _check_associated_users($node) {
   if (isset($assoc_users)) {
     return $assoc_users;
   }else{
-    return array('');
+    return array();
   }
 }
