@@ -409,7 +409,7 @@ function waggle_remove_tag($node){
   }
   else {
     drupal_json_output(FALSE);
-    druapl_exit();
+    drupal_exit();
   }
 
   $found = FALSE;
@@ -584,7 +584,7 @@ function waggle_process_added_text($node, $text) {
   $node->field_associated_users['und'] = array_map(function($i) { return array('uid' => $i); },
     array_unique(
       array_merge(
-	array_map(function($i) { return $i['uid']; }, $node->field_associated_users['und']),
+	array_map(function($i) { return $i['uid']; }, isset($node->field_associated_users['und'])?$node->field_associated_users['und']:array()),
 	$uids
       )
     )
