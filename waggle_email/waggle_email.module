@@ -51,6 +51,84 @@ function waggle_email_admin_form_submit($form, &$form_state)
   variable_set('waggle_email_attachment_save_location', $save_loc);
 }
 
+function waggle_email_form_user_profile_form_alter(&$form, &$form_state) {
+  $account = $form['#user'];
+
+  $form['when_author'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'If I am the author of a story, email me when:',
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
+  );
+
+  $form['when_author']['as_auth_i_submit_story'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'I submit the story',
+    '#default_value' => isset($account->data['as_auth_i_submit_story']) ? $account->data['as_auth_i_submit_story'] : 1,
+    '#required' => FALSE,
+  );
+
+  $form['when_author']['as_auth_i_leave_note'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'I leave a note on the story',
+    '#default_value' => isset($account->data['as_auth_i_leave_note']) ? $account->data['as_auth_i_leave_note'] : 1,
+    '#required' => FALSE,
+  );
+
+  $form['when_author']['as_auth_other_leave_note'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Someone else leaves a note on the story',
+    '#default_value' => isset($account->data['as_auth_other_leave_note']) ? $account->data['as_auth_other_leave_note'] : 1,
+    '#required' => FALSE,
+  );
+
+  $form['when_author']['as_auth_status_change'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'The status of the story changes',
+    '#default_value' => isset($account->data['as_auth_status_change']) ? $account->data['as_auth_status_change'] : 1,
+    '#required' => FALSE,
+  );  
+
+  $form['when_assoc'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'If I am associated with a story, email me when:',
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
+  );
+
+  $form['when_assoc']['as_assoc_i_leave_note'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'I leave a note on the story',
+    '#default_value' => isset($account->data['as_assoc_i_leave_note']) ? $account->data['as_assoc_i_leave_note'] : 1,
+    '#required' => FALSE,
+  );
+
+  $form['when_assoc']['as_assoc_other_leave_note'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Someone else leaves a note on the story',
+    '#default_value' => isset($account->data['as_assoc_other_leave_note']) ? $account->data['as_assoc_other_leave_note'] : 1,
+    '#required' => FALSE,
+  );
+
+  $form['when_assoc']['as_assoc_status_change'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'The status of the story changes',
+    '#default_value' => isset($account->data['as_assoc_status_change']) ? $account->data['as_assoc_status_change'] : 1,
+    '#required' => FALSE,
+  );  
+}
+
+function waggle_email_user_presave(&$edit, $account, $category) {
+  $edit['data']['as_auth_i_submit_story'] = isset($edit['as_auth_i_submit_story']) ? $edit['as_auth_i_submit_story'] : 1;
+  $edit['data']['as_auth_i_leave_note'] = isset($edit['as_auth_i_leave_note']) ? $edit['as_auth_i_leave_note'] : 1;
+  $edit['data']['as_auth_other_leave_note'] = isset($edit['as_auth_other_leave_note']) ? $edit['as_auth_other_leave_note'] : 1;
+  $edit['data']['as_auth_status_change'] = isset($edit['as_auth_status_change']) ? $edit['as_auth_status_change'] : 1;
+  $edit['data']['as_assoc_i_leave_note'] = isset($edit['as_assoc_i_leave_note']) ? $edit['as_assoc_i_leave_note'] : 1;
+  $edit['data']['as_assoc_other_leave_note'] = isset($edit['as_assoc_other_leave_note']) ? $edit['as_assoc_other_leave_note'] : 1;
+  $edit['data']['as_assoc_status_change'] = isset($edit['as_assoc_status_change']) ? $edit['as_assoc_status_change'] : 1;
+}
+
+
 function waggle_email_user_form_submit($form, &$form_state) {
 
 }
@@ -64,6 +142,20 @@ function waggle_email_node_insert($node) {
       array($node->uid),
       array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und'])
     ));
+
+    //user email prefs check
+    foreach ($uids as $key => $value) {
+      $check_user = user_load($value);
+
+      if (isset($check_user->data['as_auth_i_submit_story'])){
+        if (($node->uid == $check_user->uid) && ($check_user->data['as_auth_i_submit_story'] == 0)){
+          unset($uids[$key]);
+        }
+      }
+    }
+
+    $uids = array_values($uids);
+
     $recipients = user_load_multiple($uids);
     $address_list = implode(',', array_map(function ($r) { return $r->name . ' <' . $r->mail . '>'; }, $recipients));
     drupal_mail('waggle_email', 'new_story', $address_list, $node->language,
@@ -87,6 +179,40 @@ function waggle_email_comment_insert($comment) {
       array($node->uid),
       _check_associated_users($node)
     ));
+
+
+    // checks for email preferences
+    foreach ($uids as $key=>$value) {
+      $check_user = user_load($value);
+
+      if(isset($check_user->data['as_auth_i_leave_note'])){
+        if(($check_user->uid == $node->uid) && ($check_user->uid == $comment->uid) && ($check_user->data['as_auth_i_leave_note'] == 0)){
+          unset($uids[$key]);
+        }
+      }
+
+      if(isset($check_user->data['as_auth_other_leave_note'])){
+        if(($check_user->uid == $node->uid) && ($check_user->uid != $comment->uid) && ($check_user->data['as_auth_other_leave_note'] == 0)){
+          unset($uids[$key]);
+        }
+      }
+
+      if(isset($check_user->data['as_assoc_i_leave_note'])){
+        if(($check_user->uid != $node->uid) && ($check_user->uid == $comment->uid) && ($check_user->data['as_assoc_i_leave_note'] == 0)){
+          unset($uids[$key]);
+        }
+      }
+
+      if(isset($check_user->data['as_assoc_other_leave_note'])){
+        if(($check_user->uid != $node->uid) && ($check_user->uid != $comment->uid) && ($check_user->data['as_assoc_other_leave_note'] == 0)){
+          unset($uids[$key]);
+        }
+      }      
+
+    }
+
+    $uids = array_values($uids);
+
     $recipients = user_load_multiple($uids);
     $address_list = implode(',', array_map(function ($r) {
       $mail = $r->field_mail['und'][0]['value'];
@@ -109,7 +235,11 @@ function waggle_email_comment_insert($comment) {
 }
 
 function waggle_email_node_update($node) {
-  $user = user_load($node->uid);
+  global $user;
+  //$user = $user_load($user->uid);
+  $author = user_load($node->uid);
+
+  /***************************** check for new associated users and email them ***********/
 
   //Associated users before the node was updated
   $originalAssocUsers = array_map(function($o) { return $o['uid']; }, $node->original->field_associated_users['und']);
@@ -132,11 +262,68 @@ function waggle_email_node_update($node) {
       array(
         '!nid' => $node->nid,
         '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
-        '!original_author' => $user->name,
+        '!original_author' => $author->name,
         '!from_story' => true,
       ),
       $user->mail, TRUE);
   }
+
+  /***************** check for updated story status *******************************/
+
+  if ($node->field_status['und'][0] != $node->original->field_status['und'][0]){
+
+    $new_status = taxonomy_term_load($node->field_status['und'][0]['tid']);
+    $old_status = taxonomy_term_load($node->original->field_status['und'][0]['tid']);
+
+
+    $uids = array_unique(array_merge(
+      array($node->uid),
+      _check_associated_users($node)
+    ));
+
+    //Email prefs check
+    foreach ($uids as $key => $value) {
+
+      $check_user = user_load($value);
+
+      if(isset($check_user->data['as_auth_status_change'])){
+
+        if(($check_user->uid == $node->uid) && ($check_user->data['as_auth_status_change'] == 0)){
+          unset($uids[$key]);
+        }
+
+        if(($check_user->uid != $node->uid) && ($check_user->data['as_assoc_status_change'] == 0)){
+          unset($uids[$key]);
+        }
+      }
+    }
+
+    $uids = array_values($uids);
+
+    $recipients = user_load_multiple($uids);
+    $address_list = implode(',', array_map(function ($r) {
+        $mail = $r->field_mail['und'][0]['value'];
+        if (empty($mail)) $mail = $r->mail;
+        return $r->name . ' <' . $mail . '>';
+    }, $recipients));
+
+
+
+    drupal_mail('waggle_email', 'status_change', $address_list, $node->language,
+        array(
+          '!nid' => $node->nid,
+          '!original_body' => check_markup($node->body['und'][0]['value'], 'html_email'),
+          '!original_author' => $author->name,
+          '!updater' => $user->name,
+          '!old_status' => $old_status->name,
+          '!new_status' => $new_status->name,
+          '!from_story' => true,
+          ),
+        $user->mail, TRUE);
+
+  }
+
+
 }
 
 /**
@@ -149,7 +336,7 @@ function waggle_email_mail($key, &$message, $params) {
     case 'new_story':
       $message['subject'] = t('Story# !nid', $params);
       $message['body'][] = t('<b>A new story has been opened by !author:</b><br/>!body<br/>'
-        . '<br/>Visit <a href="https://help.as.uky.edu/story-search?ws=id:!nid+status:any">'
+        . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
 	      . 'the story</a> or reply to this email to respond.',
         $params);
       break;
@@ -158,7 +345,7 @@ function waggle_email_mail($key, &$message, $params) {
       $message['body'][] = t(
         '<b>!author left a new note on your story:</b><br/>!body<br/><br/>'
         . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
-        . '<br/>Visit <a href="https://help.as.uky.edu/story-search?ws=id:!nid+status:any">'
+        . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
 	      . 'the story</a> or reply to this email to respond.',
         $params);
       break;
@@ -166,7 +353,15 @@ function waggle_email_mail($key, &$message, $params) {
       $message['subject'] = t('You have been associated with Story# !nid', $params);
       $message['body'] = t('You are now associated with Story #!nid'
         . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
-        . '<br/>Visit <a href="https://help.as.uky.edu/story-search?ws=id:!nid+status:any">'
+        . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
+        . 'the story</a> or reply to this email to respond.',
+        $params);
+      break;
+    case 'status_change':
+      $message['subject'] = t('The status of Story# !nid has been changed to !new_status', $params);
+      $message['body'] = t('!updater has changed the status for Story #!nid from "!old_status" to "!new_status"<br /><br />'
+        . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
+        . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
         . 'the story</a> or reply to this email to respond.',
         $params);
       break;
@@ -184,9 +379,12 @@ function waggle_email_mail_alter(&$message) {
     global $base_root;
     $fromNode = $message['params']['!nid'];
     $thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
-    $replyTo = 'story-' . $fromNode . "@" . variable_get('waggle_email_default_domain', $thisDomain);
+    //$replyTo = 'story-' . $fromNode . "@" . variable_get('waggle_email_default_domain', $thisDomain);
+    $replyTo = 'story-' . $fromNode . "@" . _get_email_domain_name();
     $message['headers']['Reply-To'] = $replyTo;
     $message['headers']['From'] = $replyTo;
+    $message['headers']['Bcc'] = $message['to'];
+    $message['to'] = "noreply-all@" . _get_email_domain_name();
   }
 }
 
@@ -201,4 +399,9 @@ function _check_associated_users($node) {
   }else{
     return array();
   }
+}
+
+function _get_email_domain_name() {
+  $thisDomain = str_replace(array('http://', 'https://'), '', $base_root);
+  return variable_get('waggle_email_default_domain', $thisDomain);
 }
