@@ -727,6 +727,7 @@ function waggle_remote_add() {
   $new_story->body['und'][0]['value'] = $_POST['description'];
   $new_story->body['und'][0]['format'] = 'filtered_html';
   $new_story->field_ip_address['und'][0]['value'] = $_POST['ip_address'];
+  $new_story->field_submitter_name['und'][0]['value'] = $_POST['submitter_name'];
 
   if(isset($_POST['submitted_by'])){
     $submitted_by = user_load_by_name($_POST['submitted_by']);
