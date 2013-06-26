@@ -242,7 +242,9 @@ function waggle_email_node_update($node) {
   /***************************** check for new associated users and email them ***********/
 
   //Associated users before the node was updated
-  $originalAssocUsers = array_map(function($o) { return $o['uid']; }, $node->original->field_associated_users['und']);
+  if (isset($node->original->field_associated_users['und'])) {
+    $originalAssocUsers = array_map(function($o) { return $o['uid']; }, $node->original->field_associated_users['und']);
+  }
 
   //if if there are users in the update node that werent there in the original node, email them.
   if(isset($originalAssocUsers)) {
@@ -393,8 +395,8 @@ function waggle_email_mail_alter(&$message) {
  *
  */
 function _check_associated_users($node) {
-  $assoc_users = array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und']);
-  if (isset($assoc_users)) {
+  if (isset($node->field_associated_users['und'])) {
+    $assoc_users = array_map(function($o) { return $o['uid']; }, $node->field_associated_users['und']);
     return $assoc_users;
   }else{
     return array();

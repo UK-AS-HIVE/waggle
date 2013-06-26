@@ -71,7 +71,7 @@ function waggle_node_grants($account, $op) {
  */
 function waggle_node_access_records($node) {
   if ($node->type == 'story') {
-    if (isset($node->field_associated_users)) {
+    if (isset($node->field_associated_users['und'])) {
       foreach ($node->field_associated_users['und'] as $delta => $account) {
         if (isset($account['uid'])) {
           $grants[] = array(
@@ -85,7 +85,7 @@ function waggle_node_access_records($node) {
         }
       }
     }
-    if (isset($node->field_role_visibility)) {
+    if (isset($node->field_role_visibility['und'])) {
       foreach ($node->field_role_visibility['und'] as $delta => $role) {
         if (isset($role)) {
           $grants[] = array(
