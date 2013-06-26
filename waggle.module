@@ -742,6 +742,35 @@ function waggle_remote_add() {
   if(isset($_POST['phone'])){
     $new_story->field_phone['und'][0]['value'] = $_POST['phone'];
   }
+  if(isset($_POST['tags'])){
+    if (!isset($new_story->field_tags['und']))
+      $new_story->field_tags['und'] = array();
+    foreach(explode(';',$_POST['tags']) as $tag) {
+      $tag = trim($tag);
+      $vocab = taxonomy_vocabulary_machine_name_load('tags');
+      if (!$vocab) {
+        drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
+        drupal_json_output(FALSE);
+        drupal_exit();
+      }
+      $term = taxonomy_get_term_by_name($tag, 'tags');
+      if (count($term)) {
+        // taxonomy_get_term_by_name returns an array of term objects.
+        $term = reset($term);
+      }
+      // If the term didn't exist after all, make it!
+      else {
+        $term = new stdClass();
+        $term->name = $_POST['term'];
+        $term->vid = $vocab->vid;
+        taxonomy_term_save($term);
+        $tid = $term->tid;
+      }
+      $new_story->field_tags['und'][] = array('tid' => $term->tid);
+    }
+  }
+  watchdog('waggle', "Received remote submission with POST data: <pre>\n" . print_r($_POST,true) . '</pre>');
+
   node_save($new_story);
 
   if($new_story){
