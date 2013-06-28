@@ -769,6 +769,17 @@ function waggle_remote_add() {
       $new_story->field_tags['und'][] = array('tid' => $term->tid);
     }
   }
+  if(isset($_POST['associate'])) {
+    if (!isset($new_story->field_associated_users['und']))
+      $new_story->field_associated_users['und'] = array();
+    foreach(explode(';',$_POST['associate']) as $username) {
+      $account = user_load_by_name(trim($username));
+      if ($account) {
+        $new_story->field_associated_users['und'][] = array('uid' => $account->uid);
+      }
+    }
+  }
+
   watchdog('waggle', "Received remote submission with POST data: <pre>\n" . print_r($_POST,true) . '</pre>');
 
   node_save($new_story);
