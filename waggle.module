@@ -701,7 +701,7 @@ function waggle_start_story(){
 
 
 function waggle_remote_add() {
-  watchdog('waggle', print_r($_POST, 1));
+  //watchdog('waggle', print_r($_POST, 1));
   $required_post_fields = array('username', 'email', 'description', 'ip_address');
   foreach($required_post_fields as $field) {
     if (!isset($_POST[$field])) {
@@ -780,7 +780,7 @@ function waggle_remote_add() {
     }
   }
 
-  watchdog('waggle', "Received remote submission with POST data: <pre>\n" . print_r($_POST,true) . '</pre>');
+  //watchdog('waggle', "Received remote submission with POST data: <pre>\n" . print_r($_POST,true) . '</pre>');
 
   foreach ($_FILES as $uploaded_filename => $uploaded_file) {
     if (!isset($new_story->field_attachments['und']))
