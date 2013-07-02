@@ -786,7 +786,7 @@ function waggle_remote_add() {
     }
     $roles = user_roles();
     foreach(explode(';',$_POST['role_visibility']) as $role_name) {
-      if ($rid = array_search($role_name,$roles)) {
+      if ($rid = array_search(trim($role_name),$roles)) {
         $new_story->field_role_visibility['und'][] = array('value' => $rid);
       }
     }
