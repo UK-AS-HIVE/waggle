@@ -136,6 +136,7 @@ function waggle_search_block_view($delta = '') {
  */
 function waggle_story_sidebar($form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'waggle_search') . '/waggle_search.js');
+  drupal_add_css(drupal_get_path('module', 'waggle_search') . '/waggle_search.css');
 
   $form['search_container'] = array(
     '#type' => 'container',
