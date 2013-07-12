@@ -256,7 +256,7 @@ function waggle_story_sidebar_submit($form, $form_state) {
         db_insert('waggle_saved_searches')
           ->fields(array(
             'uid' => $user->uid,
-            'title' => $form_state['values']['save_name_textbox'],
+            'title' => check_plain($form_state['values']['save_name_textbox']),
             'search_string' => $form_state['values']['search'],
           ))
           ->execute();
@@ -265,7 +265,7 @@ function waggle_story_sidebar_submit($form, $form_state) {
         db_update('waggle_saved_searches')
           ->fields(array('search_string' => $form_state['values']['search']))
           ->condition('uid', $user->uid)
-          ->condition('title', $form_state['values']['save_name_textbox'])
+          ->condition('title', check_plain($form_state['values']['save_name_textbox']))
           ->execute();
       }
         
