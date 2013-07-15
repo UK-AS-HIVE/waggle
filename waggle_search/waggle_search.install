@@ -41,3 +41,20 @@ function waggle_search_schema() {
   return $schema;
 }
 
+/**
+ *  Rewrite saved search titles with sanitized text.
+ */
+function waggle_search_update_7001() {
+  $q = db_select('waggle_saved_searches', 'w')
+    ->fields('w')
+    ->execute();
+
+  while ($record = $q->fetchAssoc()) {
+    db_update('waggle_saved_searches')
+      ->fields(array('title' => check_plain($record['title'])))
+      ->condition('uid', $record['uid'])
+      ->condition('title', $record['title'])
+      ->execute();
+  }
+}
+
