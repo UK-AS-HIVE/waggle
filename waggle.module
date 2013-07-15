@@ -745,7 +745,7 @@ function waggle_remote_add() {
   if(isset($_POST['tags'])){
     if (!isset($new_story->field_tags['und']))
       $new_story->field_tags['und'] = array();
-    foreach(explode(';',$_POST['tags']) as $tag) {
+    foreach(preg_split('/(;|\n)/',$_POST['tags']) as $tag) {
       $tag = trim($tag);
       $vocab = taxonomy_vocabulary_machine_name_load('tags');
       if (!$vocab) {
@@ -772,7 +772,7 @@ function waggle_remote_add() {
   if(isset($_POST['associate'])) {
     if (!isset($new_story->field_associated_users['und']))
       $new_story->field_associated_users['und'] = array();
-    foreach(explode(';',$_POST['associate']) as $username) {
+    foreach(preg_split('/(;|\n)/',$_POST['associate']) as $username) {
       $account = user_load_by_name(trim($username));
       if ($account) {
         $new_story->field_associated_users['und'][] = array('uid' => $account->uid);
@@ -785,7 +785,7 @@ function waggle_remote_add() {
       $new_story->field_role_visibility = array('und' => array());
     }
     $roles = user_roles();
-    foreach(explode(';',$_POST['role_visibility']) as $role_name) {
+    foreach(preg_split('/(;|\n)/',$_POST['role_visibility']) as $role_name) {
       if ($rid = array_search(trim($role_name),$roles)) {
         $new_story->field_role_visibility['und'][] = array('value' => $rid);
       }
