@@ -745,13 +745,16 @@ function waggle_remote_add() {
   if(isset($_POST['tags'])){
     if (!isset($new_story->field_tags['und']))
       $new_story->field_tags['und'] = array();
+    $vocab = taxonomy_vocabulary_machine_name_load('tags');
+    if (!$vocab) {
+      drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
+      drupal_json_output(FALSE);
+      drupal_exit();
+    }
     foreach(preg_split('/(;|\n)/',$_POST['tags']) as $tag) {
       $tag = trim($tag);
-      $vocab = taxonomy_vocabulary_machine_name_load('tags');
-      if (!$vocab) {
-        drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
-        drupal_json_output(FALSE);
-        drupal_exit();
+      if ($tag == '') {
+        continue;
       }
       $term = taxonomy_get_term_by_name($tag, 'tags');
       if (count($term)) {
@@ -761,7 +764,7 @@ function waggle_remote_add() {
       // If the term didn't exist after all, make it!
       else {
         $term = new stdClass();
-        $term->name = $_POST['term'];
+        $term->name = $tag;
         $term->vid = $vocab->vid;
         taxonomy_term_save($term);
         $tid = $term->tid;
