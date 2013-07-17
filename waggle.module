@@ -227,6 +227,8 @@ function waggle_form_story_node_form_alter(&$form, &$form_state) {
   $user = user_load($user->uid);
 
   $form['field_role_visibility']['und']['#default_value'] = array_keys($user->roles);
+
+  form_load_include($form_state, 'inc', 'node', 'node.pages');
 }
 
 /**
