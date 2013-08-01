@@ -55,6 +55,7 @@
 
   $nodeID = $toArray[1];
 
+
   //grab the story number (nid)
   //use preg_replace to turn story-XXXXXX@YYYY.com to just XXXXXX
   
@@ -69,11 +70,11 @@
 
   // NMA: This might be a good spot for permissions checks, like:
   if (!node_access('update', $node = node_load($nodeID), $drupalUserObject)) { 
-    watchdog('waggle', 'User with user ID ' . $drupalUID . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
+    watchdog('waggle', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
     return;
   }
   else {
-    watchdog('waggle', 'User with user ID ' . $drupalUID . ' attempted to add a comment and passed the node_access test');
+    watchdog('waggle', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment and passed the node_access test');
   }
 
   //get the message $body
