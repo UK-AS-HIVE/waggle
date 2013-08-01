@@ -227,6 +227,8 @@ function waggle_form_story_node_form_alter(&$form, &$form_state) {
   $user = user_load($user->uid);
 
   $form['field_role_visibility']['und']['#default_value'] = array_keys($user->roles);
+
+  form_load_include($form_state, 'inc', 'node', 'node.pages');
 }
 
 /**
@@ -701,7 +703,7 @@ function waggle_start_story(){
 
 
 function waggle_remote_add() {
-  watchdog('waggle', print_r($_POST, 1));
+  //watchdog('waggle', print_r($_POST, 1));
   $required_post_fields = array('username', 'email', 'description', 'ip_address');
   foreach($required_post_fields as $field) {
     if (!isset($_POST[$field])) {
@@ -727,6 +729,8 @@ function waggle_remote_add() {
   $new_story->body['und'][0]['value'] = $_POST['description'];
   $new_story->body['und'][0]['format'] = 'filtered_html';
   $new_story->field_ip_address['und'][0]['value'] = $_POST['ip_address'];
+  $new_story->field_submitter_name['und'][0]['value'] = $_POST['submitter_name'];
+  $new_story->field_submitter_email['und'][0]['value'] = $_POST['email'];
 
   if(isset($_POST['submitted_by'])){
     $submitted_by = user_load_by_name($_POST['submitted_by']);
@@ -740,6 +744,91 @@ function waggle_remote_add() {
   if(isset($_POST['phone'])){
     $new_story->field_phone['und'][0]['value'] = $_POST['phone'];
   }
+  if(isset($_POST['tags'])){
+    if (!isset($new_story->field_tags['und']))
+      $new_story->field_tags['und'] = array();
+    $vocab = taxonomy_vocabulary_machine_name_load('tags');
+    if (!$vocab) {
+      drupal_set_message(t('Could not find the tags vocabulary! Skipping hashtag processing.'), 'error');
+      drupal_json_output(FALSE);
+      drupal_exit();
+    }
+    foreach(preg_split('/(;|\n)/',$_POST['tags']) as $tag) {
+      $tag = trim($tag);
+      if ($tag == '') {
+        continue;
+      }
+      $term = taxonomy_get_term_by_name($tag, 'tags');
+      if (count($term)) {
+        // taxonomy_get_term_by_name returns an array of term objects.
+        $term = reset($term);
+      }
+      // If the term didn't exist after all, make it!
+      else {
+        $term = new stdClass();
+        $term->name = $tag;
+        $term->vid = $vocab->vid;
+        taxonomy_term_save($term);
+        $tid = $term->tid;
+      }
+      $new_story->field_tags['und'][] = array('tid' => $term->tid);
+    }
+  }
+  if(isset($_POST['associate'])) {
+    if (!isset($new_story->field_associated_users['und']))
+      $new_story->field_associated_users['und'] = array();
+    foreach(preg_split('/(;|\n)/',$_POST['associate']) as $username) {
+      $account = user_load_by_name(trim($username));
+      if ($account) {
+        $new_story->field_associated_users['und'][] = array('uid' => $account->uid);
+      }
+    }
+  }
+
+  if(isset($_POST['role_visibility'])) {
+    if (!isset($new_story->field_role_visibility['und'])) {
+      $new_story->field_role_visibility = array('und' => array());
+    }
+    $roles = user_roles();
+    foreach(preg_split('/(;|\n)/',$_POST['role_visibility']) as $role_name) {
+      if ($rid = array_search(trim($role_name),$roles)) {
+        $new_story->field_role_visibility['und'][] = array('value' => $rid);
+      }
+    }
+  }
+
+  //watchdog('waggle', "Received remote submission with POST data: <pre>\n" . print_r($_POST,true) . '</pre>');
+
+  foreach ($_FILES as $uploaded_filename => $uploaded_file) {
+    if (!isset($new_story->field_attachments['und']))
+      $new_story->field_attachments = array('und' => array());
+
+    $f = file_unmanaged_copy($uploaded_file['tmp_name'], 'private://attachments/' . $uploaded_file['name']);
+    if ($f) {
+      $file = new stdClass();
+      $file->filename = basename($f);
+      //$file->filepath = $f;
+      $file->uri = $f;
+      $file->filemime = file_get_mimetype($filepath);
+      $file->uid = $new_story->uid;
+      $file->status = FILE_STATUS_PERMANENT;
+
+      $file = file_save($file);
+  
+      $new_story->field_attachments['und'][] =
+        array(
+          'fid' => $file->fid,
+          'filename' => $file->filename,
+          'uri' => $file->uri,
+          'filemime' => $file->filemime,
+          'filesize' => $file->filesize,
+          'uid' => $file->uid,
+          'status' => $file->status,
+          'display' => 1,
+        );
+    }
+  }
+
   node_save($new_story);
 
   if($new_story){

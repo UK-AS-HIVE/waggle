@@ -15,5 +15,20 @@
         $(this).parents('form').submit();
       }
     });
+
+    // Delete existing saved searches
+    $('#waggle-story-sidebar .saved-search-delete').click(function(e) {
+      var div = $(this).parent();
+      var savedSearchName = div.find('a').first().text();
+      $.ajax({
+        url: 'waggle/api/remove-saved-search',
+        type: 'POST',
+        data: { name: savedSearchName },
+        success: function() {
+          div.remove();
+        }
+      });
+      return false;
+    });
   });
 }(jQuery));

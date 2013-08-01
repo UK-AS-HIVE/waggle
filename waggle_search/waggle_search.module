@@ -9,6 +9,11 @@ function waggle_search_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['waggle/api/remove-saved-search'] = array(
+    'page callback' => 'waggle_search_remove',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -131,6 +136,7 @@ function waggle_search_block_view($delta = '') {
  */
 function waggle_story_sidebar($form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'waggle_search') . '/waggle_search.js');
+  drupal_add_css(drupal_get_path('module', 'waggle_search') . '/waggle_search.css');
 
   $form['search_container'] = array(
     '#type' => 'container',
@@ -181,7 +187,8 @@ function waggle_story_sidebar($form, &$form_state) {
   while ($record = $result->fetchAssoc()) {
     $form['saved_searches']['#markup'] .=
       //l($record['title'], $record['search_string']);
-      '<a href="?ws=' . urlencode($record['search_string']) . '">' . $record['title'];
+      '<div class="saved-search-link">' .
+      '<a href="?ws=' . urlencode($record['search_string']) . '">' . $record['title'] . '</a><a>';
     global $_GET;
     $original_ws = $_GET['ws'];
     $_GET['ws'] = $record['search_string'];
@@ -193,7 +200,7 @@ function waggle_story_sidebar($form, &$form_state) {
     }
     $_GET['ws'] = $original_ws;
 
-    $form['saved_searches']['#markup'] .= '</a><br/>';
+    $form['saved_searches']['#markup'] .= '</a> <a class="saved-search-delete" href="#"><i class="icon-remove"></i></a></div>';
   }
 
   $form['prompt'] = array(
@@ -249,7 +256,7 @@ function waggle_story_sidebar_submit($form, $form_state) {
         db_insert('waggle_saved_searches')
           ->fields(array(
             'uid' => $user->uid,
-            'title' => $form_state['values']['save_name_textbox'],
+            'title' => check_plain($form_state['values']['save_name_textbox']),
             'search_string' => $form_state['values']['search'],
           ))
           ->execute();
@@ -258,7 +265,7 @@ function waggle_story_sidebar_submit($form, $form_state) {
         db_update('waggle_saved_searches')
           ->fields(array('search_string' => $form_state['values']['search']))
           ->condition('uid', $user->uid)
-          ->condition('title', $form_state['values']['save_name_textbox'])
+          ->condition('title', check_plain($form_state['values']['save_name_textbox']))
           ->execute();
       }
         
@@ -269,5 +276,24 @@ function waggle_story_sidebar_submit($form, $form_state) {
   }
   drupal_goto($path, $options);
   return '';
+}
+
+function waggle_search_remove() {
+  global $user;
+  
+  $title = check_plain($_POST['name']);
+
+  watchdog('waggle', t(':u is deleting saved search ":s".', array(':u'=>$user->name, ':s'=>$title)));
+
+  if (!($user->uid && $title)) {
+    return FALSE;
+  }
+
+  db_delete('waggle_saved_searches')
+    ->condition('uid', $user->uid)
+    ->condition('title', $title)
+    ->execute();
+
+  return TRUE;
 }
 

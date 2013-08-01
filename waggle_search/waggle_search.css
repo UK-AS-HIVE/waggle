@@ -1,0 +1,13 @@
+#waggle-story-sidebar .saved-search-link a~a {
+  text-decoration: none;
+}
+
+#waggle-story-sidebar .saved-search-link a.saved-search-delete {
+  visibility: hidden !important;
+  text-decoration: none;
+}
+
+#waggle-story-sidebar .saved-search-link:hover a.saved-search-delete {
+  visibility: visible !important;
+}
+
