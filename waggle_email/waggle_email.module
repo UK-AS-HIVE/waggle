@@ -136,6 +136,7 @@ function waggle_email_user_form_submit($form, &$form_state) {
 
 function waggle_email_node_insert($node) {
   if ($node->type === 'story') {
+
     global $user;
     $user = user_load($user->uid);
     $uids = array_unique(array_merge(
