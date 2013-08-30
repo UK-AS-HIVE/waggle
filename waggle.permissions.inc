@@ -8,6 +8,10 @@ function waggle_permission() {
     'access all stories' => array(
       'title' => t('Access all stories'),
     ),
+    'access departmental user stories' => array(
+      'title' => t('Access departmental user stories'),
+      'description' => t('Grants access to any story submitted by a user in the same department'),
+    ),
   );
 }
 
@@ -21,6 +25,23 @@ function waggle_node_access($node, $op, $account) {
   if ($node->uid == $account->uid
     || user_access('access all stories', $account)) {
     return NODE_ACCESS_IGNORE;
+  }
+
+
+  // Grant access to departmental managers.
+  if (user_access('access departmental user stories', $account)) {
+    //watchdog('waggle', 'node: <pre>' . print_r($node,TRUE) . '</pre>');
+    //watchdog('waggle', 'account: <pre>' . print_r($account,TRUE) . '</pre>');
+    $owner = user_load($node->uid);
+    $a = array_map(function($i) { return $i['value']; }, array_pop($owner->field_department));
+    $account = user_load($account->uid);
+    $b = array_map(function($i) { return $i['value']; }, array_pop($account->field_department));
+    /*watchdog('waggle', 'nid: ' . $node->nid . '   $a: ' . print_r($a,TRUE));
+    watchdog('waggle', 'nid: ' . $node->nid . '   $b: ' . print_r($b,TRUE));*/
+    $intersection = array_intersect($a, $b);
+    if (!empty($intersection)) {
+      return NODE_ACCESS_ALLOW;
+    }
   }
 
   // Grant access only to associated users.
@@ -61,6 +82,12 @@ function waggle_node_grants($account, $op) {
       foreach ($account->roles as $rid => $role) {
         $grants['waggle_role_story'][] = $rid;
       }
+      if (user_access('access departmental user stories', $account)) {
+        $grants['waggle_department'] = array();
+        foreach ($account->field_department_term['und'] as $dep_tid) {
+          $grants['waggle_department'][] = $dep_tid['tid'];
+        }
+      }
     }
   }
   return $grants;
@@ -99,6 +126,7 @@ function waggle_node_access_records($node) {
         }
       }
     }
+
     if ($node->uid != 0) {
       $grants[] = array(
         'realm' => 'waggle_own_story',
@@ -108,7 +136,24 @@ function waggle_node_access_records($node) {
         'grant_delete' => 0,
         'priority' => 1,
       );
+
+      $owner_account = user_load($node->uid);
+      if (isset($owner_account->field_department_term['und'])) {
+        foreach ($owner_account->field_department_term['und'] as $delta => $department_term) {
+          if (isset($department_term)) {
+            $grants[] = array(
+              'realm' => 'waggle_department',
+              'gid' => $department_term['tid'],
+              'grant_view' => $node->status,
+              'grant_update' => 1,
+              'grant_delete' => 0,
+              'priority' => 1,
+            );
+          }
+        }
+      }
     }
+
     $grants[] = array(
       'realm' => 'waggle_all_stories',
       'gid' => 0,
