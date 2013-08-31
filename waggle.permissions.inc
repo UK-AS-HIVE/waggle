@@ -80,13 +80,18 @@ function waggle_node_grants($account, $op) {
       $grants['waggle_role_story'] = array();
       $account = user_load($account->uid);
       foreach ($account->roles as $rid => $role) {
-        $grants['waggle_role_story'][] = $rid;
-      }
-      if (user_access('access departmental user stories', $account)) {
-        $grants['waggle_department'] = array();
-        foreach ($account->field_department_term['und'] as $dep_tid) {
-          $grants['waggle_department'][] = $dep_tid['tid'];
+        // TODO: Hardcoded to handle department manager role differently, that's not ideal
+        if ($rid != 10) {
+          $grants['waggle_role_story'][] = $rid;
+        } else {
+          if (user_access('access departmental user stories', $account)) {
+          $grants['waggle_department'] = array();
+          foreach ($account->field_department_term['und'] as $dep_tid) {
+            $grants['waggle_department'][] = $dep_tid['tid'];
+          }
         }
+      }
+
       }
     }
   }
@@ -114,7 +119,8 @@ function waggle_node_access_records($node) {
     }
     if (isset($node->field_role_visibility['und'])) {
       foreach ($node->field_role_visibility['und'] as $delta => $role) {
-        if (isset($role)) {
+        // TODO: Not hardcode 10 (tid for Departmental managers)
+        if (isset($role) && $role != 10) {
           $grants[] = array(
             'realm' => 'waggle_role_story',
             'gid' => $role,
@@ -137,18 +143,21 @@ function waggle_node_access_records($node) {
         'priority' => 1,
       );
 
-      $owner_account = user_load($node->uid);
-      if (isset($owner_account->field_department_term['und'])) {
-        foreach ($owner_account->field_department_term['und'] as $delta => $department_term) {
-          if (isset($department_term)) {
-            $grants[] = array(
-              'realm' => 'waggle_department',
-              'gid' => $department_term['tid'],
-              'grant_view' => $node->status,
-              'grant_update' => 1,
-              'grant_delete' => 0,
-              'priority' => 1,
-            );
+      // TODO: Department manager role is hardcoded to 10, make this configurable
+      if (isset($node->field_role_visibility['und']) && in_array(array('value' => 10), $node->field_role_visibility['und'])) {
+        $owner_account = user_load($node->uid);
+        if (isset($owner_account->field_department_term['und'])) {
+          foreach ($owner_account->field_department_term['und'] as $delta => $department_term) {
+            if (isset($department_term)) {
+              $grants[] = array(
+                'realm' => 'waggle_department',
+                'gid' => $department_term['tid'],
+                'grant_view' => $node->status,
+                'grant_update' => 1,
+                'grant_delete' => 0,
+                'priority' => 1,
+              );
+            }
           }
         }
       }
