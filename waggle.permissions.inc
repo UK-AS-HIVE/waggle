@@ -85,16 +85,19 @@ function waggle_node_grants($account, $op) {
           $grants['waggle_role_story'][] = $rid;
         } else {
           if (user_access('access departmental user stories', $account)) {
-          $grants['waggle_department'] = array();
-          foreach ($account->field_department_term['und'] as $dep_tid) {
-            $grants['waggle_department'][] = $dep_tid['tid'];
+            if (isset($account->field_department_term['und'])) {
+              $grants['waggle_department'] = array();
+              foreach ($account->field_department_term['und'] as $dep_tid) {
+                $grants['waggle_department'][] = $dep_tid['tid'];
+              }
+            }
           }
         }
-      }
 
       }
     }
   }
+  watchdog('waggle', 'granting for user ' . $account->uid . ': <pre>' . print_r($grants,true) . '</pre>');
   return $grants;
 }
 
