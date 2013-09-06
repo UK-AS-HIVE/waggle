@@ -1,0 +1,84 @@
+<?php
+
+/**
+ *  Implements hook_block_info().
+ */
+function waggle_vis_block_info() {
+  $blocks['waggle_vis_timeline'] = array(
+    'info' => 'Waggle Timeline',
+    'cache' => DRUPAL_NO_CACHE,
+    'weight' => -1,
+    'status' => 1,
+    'region' => 'content',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+  );
+  return $blocks;
+}
+
+/**
+ *  Implements hook_block_view().
+ */
+function waggle_vis_block_view($delta = '') {
+  switch ($delta) {
+    case 'waggle_vis_timeline':
+      return array(
+        'subject' => 'Timeline',
+        'content' => waggle_vis_timeline()
+      );
+  }
+}
+
+/**
+ *  Contents of timeline block.
+ */
+function waggle_vis_timeline() {
+  drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');
+
+  $output = '<div id="waggle-vis-timeline">';
+
+  // Custom request, as suggested at https://drupal.org/node/1999396
+  $server = search_api_index_get_server(search_api_index_load('default_node_index'));
+
+  $ws = isset($_GET['ws'])?$_GET['ws']:'';
+  
+  $connection = $server->getSolrConnection();
+
+  // First, facet by tag.
+  $tags = $connection->makeServletRequest('select',
+    array(
+      'rows' => 0,
+      'show' => 'index',
+      'fq' => '-is_field_status:2',
+      'facet' => 'on',
+      'facet.field' => 'sm_field_tags:name',
+      'facet.limit' => '25',
+    )
+  );
+  $tags = (array)($tags->facet_counts->facet_fields);
+  $tags = (array)($tags['sm_field_tags:name']);
+  // Now facet by creation date for each tag.
+  foreach ($tags as $tag => $tag_count) {
+    $created = $connection->makeServletRequest('select',
+      array(
+	'rows' => 0,
+	'show' => 'index',
+        'fq' => '-is_field_status:2',
+        'fq' => 'sm_field_tags\:name:' . $tag,
+	'facet' => 'on',
+	'facet.date' => 'ds_created',
+	'facet.date.other' => 'all',
+	'facet.date.start' => 'NOW/DAY-2MONTH',
+	'facet.date.end' => 'NOW/DAY',
+	'facet.date.gap' => '+1DAY',
+      )
+    );
+    $created = (array)($created->facet_counts->facet_dates->ds_created);
+    $tags[$tag] = $created;
+  }
+  $output .= '<pre>' . print_r($tags, true) . '</pre>';
+
+  $output .= '</div>';
+
+  return $output;
+}
+
