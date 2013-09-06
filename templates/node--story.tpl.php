@@ -87,6 +87,23 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
   <div class="story-head clearfix">
     <div class="top-right-corner">
+      <?php $roles = user_roles();
+        if (!empty($node->field_role_visibility)): ?>
+        <div title="This story is only visible to the listed roles.  Expand story details to edit the role visibility settings.">
+          <i class="icon-lock"></i> 
+      <?php
+          //print_r($node->field_role_visibility);
+
+          $rv = array();
+          foreach ($node->field_role_visibility['und'] as $r) {
+            $rid = $r['value'];
+            if (isset($roles[$rid])) {
+              $rv[] = $roles[$rid];
+            }
+          }
+          print implode(', ', $rv); ?>
+      </div>
+      <?php endif; ?>
       <div class="story-number"><?php print '#' . $node->nid;//print l('#' . $node->nid, 'node/' . $node->nid); ?></div>
       <div class="details waggle-secondary"><a>story details</a></div>
     </div>
