@@ -46,12 +46,10 @@
   //check to see if the email address is a users changeable address
   $dbresult = db_query("SELECT entity_id FROM field_data_field_mail WHERE field_mail_value = :email LIMIT 1", array(':email' => $fromAddress));
   foreach ($dbresult as $entID) {
-    watchdog('waggle_email', "uid from changeable email = " . $entID->entity_id);
     $drupalUserObject = user_load($entID->entity_id);
   }
 
   if(!isset($drupalUserObject)){
-    watchdog("waggle_email", "no changeable email");
     $drupalUserObject = user_load_by_mail($fromAddress);
   }
 
