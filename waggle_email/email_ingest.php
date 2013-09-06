@@ -43,6 +43,20 @@
 
   $fromAddress = $fromArray[1];
 
+  //check to see if the email address is a users changeable address
+  $dbresult = db_query("SELECT entity_id FROM field_data_field_mail WHERE field_mail_value = :email LIMIT 1", array(':email' => $fromAddress));
+  foreach ($dbresult as $entID) {
+    watchdog('waggle_email', "uid from changeable email = " . $entID->entity_id);
+    $drupalUserObject = user_load($entID->entity_id);
+  }
+
+  if(!isset($drupalUserObject)){
+    watchdog("waggle_email", "no changeable email");
+    $drupalUserObject = user_load_by_mail($fromAddress);
+  }
+
+
+
 
   //get the to address (same formate incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
 
@@ -62,19 +76,16 @@
   $nodeID = preg_replace('/^.+-/', '', $nodeID);
   $nodeID = preg_replace('/@.+$/', '', $nodeID);
   
-  //get the uid from drupal via the from email address
-  //grab the user object
-  $drupalUserObject = user_load_by_mail($fromAddress);
 
   $drupalUID = $drupalUserObject->uid;
 
   // NMA: This might be a good spot for permissions checks, like:
   if (!node_access('update', $node = node_load($nodeID), $drupalUserObject)) { 
-    watchdog('waggle', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
+    watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
     return;
   }
   else {
-    watchdog('waggle', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment and passed the node_access test');
+    watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment and passed the node_access test');
   }
 
   //get the message $body

@@ -387,7 +387,7 @@ function waggle_email_mail_alter(&$message) {
     $message['headers']['Reply-To'] = $replyTo;
     $message['headers']['From'] = $replyTo;
     $message['headers']['Bcc'] = $message['to'];
-    $message['to'] = "noreply-all@" . _get_email_domain_name();
+    $message['to'] = "waggle@" . _get_email_domain_name();
   }
 }
 
