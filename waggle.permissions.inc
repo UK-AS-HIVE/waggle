@@ -81,7 +81,7 @@ function waggle_node_grants($account, $op) {
       $account = user_load($account->uid);
       foreach ($account->roles as $rid => $role) {
         // TODO: Hardcoded to handle department manager role differently, that's not ideal
-        if ($rid != 10) {
+        if ($rid != 11) {
           $grants['waggle_role_story'][] = $rid;
         } else {
           if (user_access('access departmental user stories', $account)) {
@@ -122,8 +122,8 @@ function waggle_node_access_records($node) {
     }
     if (isset($node->field_role_visibility['und'])) {
       foreach ($node->field_role_visibility['und'] as $delta => $role) {
-        // TODO: Not hardcode 10 (tid for Departmental managers)
-        if (isset($role) && $role != 10) {
+        // TODO: Not hardcode 11 (tid for Departmental managers)
+        if (isset($role) && $role != 11) {
           $grants[] = array(
             'realm' => 'waggle_role_story',
             'gid' => $role,
@@ -146,8 +146,8 @@ function waggle_node_access_records($node) {
         'priority' => 1,
       );
 
-      // TODO: Department manager role is hardcoded to 10, make this configurable
-      if (isset($node->field_role_visibility['und']) && in_array(array('value' => 10), $node->field_role_visibility['und'])) {
+      // TODO: Department manager role is hardcoded to 11, make this configurable
+      if (isset($node->field_role_visibility['und']) && in_array(array('value' => 11), $node->field_role_visibility['und'])) {
         $owner_account = user_load($node->uid);
         if (isset($owner_account->field_department_term['und'])) {
           foreach ($owner_account->field_department_term['und'] as $delta => $department_term) {
