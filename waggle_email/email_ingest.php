@@ -32,12 +32,14 @@
 
   //the whole from address in the format "Foo, Jon D" <jfoo@address.com>
   $fromWhole = $message->from;
-
   //***substring and explode to split the 2 parts and remove unneccessary symbols.***
 
   $fromWhole = substr($fromWhole, 1, -1);
 
-  $fromArray = explode('" <', $fromWhole);
+  $fromArray = explode('<', $fromWhole);
+
+  watchdog("waggle_email", $message);
+
 
   $fromName = $fromArray[0];
 
@@ -56,16 +58,21 @@
 
 
 
-  //get the to address (same formate incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
+  //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
 
   $toWhole = $message->to;
+  watchdog('waggle_email', $toWhole);
 
-  //remove outside symbols
-  $toWhole = substr($toWhole, 1, -1);
+  if(strpos($toWhole, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
+    //remove outside symbols
+    $toWhole = substr($toWhole, 1, -1);
 
-  $toArray = explode('" <', $toWhole);
+    $toArray = explode('<', $toWhole);
 
-  $nodeID = $toArray[1];
+    $nodeID = $toArray[1];
+  }else{ //probably just the email address
+    $nodeID = $toWhole;
+  }
 
 
   //grab the story number (nid)
