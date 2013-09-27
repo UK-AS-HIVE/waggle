@@ -69,5 +69,11 @@ function waggle_user_push(){
   watchdog('waggle', '<pre>' . print_r($account, 1) . print_r($edit, 1) . '</pre>');
   $success = user_save($account, $edit);
 
+  // Force sync to LDAP.
+  $ldap_user_conf = ldap_user_conf();
+  if ($ldap_user_conf->synchToDrupalAccount($account, $user_edit = array(), LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, NULL, TRUE) === FALSE) {
+    watchdog('waggle', 'Failed to sync newly pushed user with LDAP');
+  }
+
   drupal_json_output($account);
 }
