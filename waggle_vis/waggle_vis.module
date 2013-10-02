@@ -32,7 +32,15 @@ function waggle_vis_block_view($delta = '') {
  *  Contents of timeline block.
  */
 function waggle_vis_timeline() {
+  drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/waggle_vis.css');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');
+
+  // Aaron added from here....
+  drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.js');
+  //drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.min.js');
+  // ....to here. Sorry if i broke something
+
+  // TODO: add any needed javascript libraries as above
 
   $output = '<div id="waggle-vis-timeline">';
 
@@ -40,6 +48,7 @@ function waggle_vis_timeline() {
   $server = search_api_index_get_server(search_api_index_load('default_node_index'));
 
   $ws = isset($_GET['ws'])?$_GET['ws']:'';
+  $fq = waggle_search_convert_to_fq($ws);
   
   $connection = $server->getSolrConnection();
 
@@ -48,7 +57,7 @@ function waggle_vis_timeline() {
     array(
       'rows' => 0,
       'show' => 'index',
-      'fq' => '-is_field_status:2',
+      'fq' => $fq,
       'facet' => 'on',
       'facet.field' => 'sm_field_tags:name',
       'facet.limit' => '25',
@@ -62,20 +71,21 @@ function waggle_vis_timeline() {
       array(
 	'rows' => 0,
 	'show' => 'index',
-        'fq' => '-is_field_status:2',
+        'fq' => $fq,
         'fq' => 'sm_field_tags\:name:' . $tag,
 	'facet' => 'on',
 	'facet.date' => 'ds_created',
 	'facet.date.other' => 'all',
-	'facet.date.start' => 'NOW/DAY-2MONTH',
+	'facet.date.start' => 'NOW/DAY-6MONTH',
 	'facet.date.end' => 'NOW/DAY',
-	'facet.date.gap' => '+1DAY',
+	'facet.date.gap' => '+7DAY',
       )
     );
     $created = (array)($created->facet_counts->facet_dates->ds_created);
     $tags[$tag] = $created;
   }
-  $output .= '<pre>' . print_r($tags, true) . '</pre>';
+  //$output .= '<pre>' . print_r($tags, true) . '</pre>';
+  $output .= '<script>var timelineData = ' . json_encode($tags) . '</script>';
 
   $output .= '</div>';
 
