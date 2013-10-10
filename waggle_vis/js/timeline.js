@@ -1,6 +1,7 @@
 (function ($) {
   $(document).ready(function() {
 
+  	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~'];
   	var SVGHEIGHT = 300;
   	var VOFFSET = 50;
   	var HOFFSET = 50;
@@ -290,6 +291,7 @@
 	    		var sColor = randomColor();
 	    		var aRequestsPerDay = new Array(aJSONDates.length);
 	    		var sCurrentTag = aTagKeys[iTag];
+	    		//console.log("working with on tag " + sCurrentTag); //DEBUG
 	    		var iTotalTagRequests = 0;
 
 				for(var iDate = 0; iDate < aJSONDates.length; iDate++)
@@ -314,6 +316,7 @@
 	    		}
 	    		//console.log(sCurrentTag + ": " + iTotalTagRequests); //DEBUG
 	    		//iTotalHits += iTotalTagRequests; //DEBUG
+	    		//console.log(aaRequestsPerTag[iTag]); //DEBUG
 			}
 			//console.log("Total hits: " + iTotalHits); //DEBUG
 			return aaRequestsPerTag;
@@ -375,12 +378,27 @@
 		//display the nodes if necessary
 		if (sHiddenOrDisplayed === "displayed")
 		{
+			//ESCAPE THE STRINGS
+			//console.log("attempting to display " + sTag +" -- Escaping string now"); //DEBUG
 			//escape the /. only needed for selectors
+			for (var i = 0; i < ASPECIALCSSCHARS.length; i++)
+			{
+				var cCurrentChar = ASPECIALCSSCHARS[i];
+				//console.log("checking for " + cCurrentChar);
+				var iSpecialIndex = sTag.indexOf(cCurrentChar);
+				if (iSpecialIndex !== -1)
+				{
+					sTag = sTag.substring(0, iSpecialIndex) + '\\' + sTag.substring(iSpecialIndex);
+				}
+
+			}
+			/*
 			var iSlashIndex = sTag.indexOf('/');
 			if (iSlashIndex !== -1)
 			{
 				sTag = sTag.substring(0, iSlashIndex) + '\\' + sTag.substring(iSlashIndex);   
 			}
+			*/
 
 			d3.selectAll("#waggle-vis-timeline .node.displayed." + sTag)
 				.attr("r", NODESIZE)
@@ -540,8 +558,10 @@
 							.style("fill", sColorClicked);
 					}
 
+					/*
 					d3.select("#facetStyleButton")
 						.call(toggleExistence);
+					*/
 				});
 	}
 
@@ -760,7 +780,7 @@
 		//Create Events
   		createNodeEvents();
   		createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted);
-  		createFacetStyleButton(isFaceted, true);
+  		//createFacetStyleButton(isFaceted, true);
   	}
 
     drawGraph(HTMLEtimelineData);

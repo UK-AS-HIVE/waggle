@@ -65,7 +65,7 @@ function waggle_vis_timeline() {
       'fq' => $fq . 'AND ds_created:[' . $sRange . ']',
       'facet' => 'on',
       'facet.field' => 'sm_field_tags:name',
-      'f.sm_field_tags:name.facet.limit' => '1'
+      'f.sm_field_tags:name.facet.limit' => '25'
     )
   );
   $aTags = (array)($asrTags->facet_counts->facet_fields);
@@ -78,7 +78,7 @@ function waggle_vis_timeline() {
       array(
       'rows' => 0,
       'show' => 'index',
-      'fq' => $fq, // 'AND sm_field_tags\:name:' . $sTag,
+      'fq' => 'sm_field_tags\:name:' . $sTag, //. ' AND ' . $fq,
       'facet' => 'on',
       'facet.date' => 'ds_created',
       'facet.date.other' => 'between',
