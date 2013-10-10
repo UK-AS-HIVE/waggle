@@ -51,42 +51,87 @@ function waggle_vis_timeline() {
   $fq = waggle_search_convert_to_fq($ws);
   
   $connection = $server->getSolrConnection();
+  $sStart = 'NOW/DAY-6MONTH';
+  $sEnd = 'NOW/DAY';
+  $sGap = '+7DAY';
+  $sRange = ($sStart . ' TO ' . $sEnd); 
 
-  // First, facet by tag.
-  $tags = $connection->makeServletRequest('select',
+  //1a. Facet by tag.
+  //note: doesn't look like multiple facet fields work with Drupal Facet API? If so, I can't figure it out. -Aaron
+  $asrTags = $connection->makeServletRequest('select',
+    array(
+      'rows' => 0,
+      'show' => 'index',
+      'fq' => $fq . 'AND ds_created:[' . $sRange . ']',
+      'facet' => 'on',
+      'facet.field' => 'sm_field_tags:name',
+      'f.sm_field_tags:name.facet.limit' => '1'
+    )
+  );
+  $aTags = (array)($asrTags->facet_counts->facet_fields);
+  $aTags = (array)($aTags['sm_field_tags:name']);
+  
+  //1b. Now facet by date, filtered by tag, and put those inside the tags in JSON.
+  $aTagsByDate = array();
+  foreach ($aTags as $sTag => $iTag_count) {
+    $asrDatesOnTag = $connection->makeServletRequest('select',
+      array(
+      'rows' => 0,
+      'show' => 'index',
+      'fq' => $fq, // 'AND sm_field_tags\:name:' . $sTag,
+      'facet' => 'on',
+      'facet.date' => 'ds_created',
+      'facet.date.other' => 'between',
+      'facet.date.start' => $sStart,
+      'facet.date.end' => $sEnd,
+      'facet.date.gap' => $sGap,
+      )
+    );
+    $aDatesCreated = (array)($asrDatesOnTag->facet_counts->facet_dates->ds_created);
+    $aTagsByDate[$sTag] = $aDatesCreated;
+  }
+  
+  //2a. Facet by date
+  $asrDates = $connection->makeServletRequest('select',
     array(
       'rows' => 0,
       'show' => 'index',
       'fq' => $fq,
       'facet' => 'on',
-      'facet.field' => 'sm_field_tags:name',
-      'facet.limit' => '25',
-    )
-  );
-  $tags = (array)($tags->facet_counts->facet_fields);
-  $tags = (array)($tags['sm_field_tags:name']);
-  // Now facet by creation date for each tag.
-  foreach ($tags as $tag => $tag_count) {
-    $created = $connection->makeServletRequest('select',
-      array(
-	'rows' => 0,
-	'show' => 'index',
-        'fq' => $fq,
-        'fq' => 'sm_field_tags\:name:' . $tag,
-	'facet' => 'on',
-	'facet.date' => 'ds_created',
-	'facet.date.other' => 'all',
-	'facet.date.start' => 'NOW/DAY-6MONTH',
-	'facet.date.end' => 'NOW/DAY',
-	'facet.date.gap' => '+7DAY',
+      'facet.date' => 'ds_created',
+      'facet.date.start' => $sStart,
+      'facet.date.end' => $sEnd,
+      'facet.date.other' => 'between',
+      'facet.date.gap' => $sGap
       )
     );
-    $created = (array)($created->facet_counts->facet_dates->ds_created);
-    $tags[$tag] = $created;
-  }
-  //$output .= '<pre>' . print_r($tags, true) . '</pre>';
-  $output .= '<script>var timelineData = ' . json_encode($tags) . '</script>';
+  $aDates = (array)($asrDates->facet_counts->facet_dates->ds_created);
 
+  $aData = array("Tags" => $aTagsByDate, "Total by Tags" => $aTags, "Total by Dates" => $aDates);
+
+  /*
+  THE ALMIGHTY ASR
+  $asrDates = $connection->makeServletRequest('select',
+    array(
+      'rows' => 1500000,
+      'show' => 'index',
+      'fq' => $fq, 
+      'fq' => 'ds_created:[' . $sRange . ']',
+      'fl' => 'is_nid, ds_created, sm_field_tags:name',
+      'facet' => 'on',
+      'facet.date' => 'ds_created',
+      'facet.date.start' => $sStart,
+      'facet.date.end' => $sEnd,
+      'facet.date.other' => 'between',
+      'facet.date.gap' => $sGap
+      )
+    );
+  */
+
+  //$output .= '<pre>' . print_r($tags, true) . '</pre>';
+  //$output .= '<script>var timelineData = ' . json_encode($tags) . ', jsonIDS = ' . json_encode($ids) '</script>';
+  $output .= '<script>var HTMLEtimelineData = ' . json_encode($aData) . '</script>';
+  //$output .= '<script>var HTMLEjsonData = ' . json_encode($aData) . '</script>';
   $output .= '</div>';
 
   return $output;

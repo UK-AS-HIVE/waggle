@@ -7,7 +7,7 @@
   	var AXISSTROKEWIDTH = 2;
   	var TICKHEIGHT = 3;
   	var INTERPOLATION = "linear";
-  	var DEFAULTSTYLE = "total";
+  	var DEFAULTSTYLE = "faceted";
   	var STANDARDDURATION = 300;
   	var NODESIZE = 3;
   	var LINEGRAPHWIDTH = 2;
@@ -138,108 +138,50 @@
   	function generateJSONDates(jsonData)
   	{
   		var aDates = new Array();
-
-  		//this for loop should break in one run!
-  		for (var facet in jsonData)
-  		{
-  			var iDays = 0;
-  			for(var date in jsonData[facet])
-  			{
-  				if (date.charAt(0) === '2')
-  				{
-  					var iDateIndexOfDash = date.indexOf("-");
-  					var iYear = parseInt(date.substring(0, iDateIndexOfDash));
-  					var iMonth = parseInt(date.substring(iDateIndexOfDash + 1, iDateIndexOfDash + 3));
-  					var iDay = parseInt(date.substring(iDateIndexOfDash + 4, iDateIndexOfDash + 6));
-
-  					aDates.push({"year" : iYear, "month" : iMonth, "day" : iDay, "full-date" : date.substring(0, date.indexOf("T")), "full-key" : date});
-  				}
-  			}
-  			return aDates;
-  		}
-  	}
-
-  	/*
-  	//Assuming Noah can't get me the span of days between nodes
-	function getXAxisInterval(aJSONDates)
-	{
-		var jsonFirstDate = aJSONDates[0];
-		var jsonEndDate = aJSONDates[aJSONDates.length - 1];
-
-		var iDays = 0;
-		var iYearCounter = jsonFirstDate.year;
-		var iMonthCounter = jsonFirstDate.month;
-		var iDayCounter = jsonFirstDate.day;
-
-		while(iYearCounter !== jsonEndDate.year && iMonthCounter !== jsonEndDate.month && iDayCounter !== jsonEndDate.day)
+		for(var sDate in jsonData["Total by Dates"])
 		{
-			//First we line up the days
-			if (iDayCounter < jsonEndDate.day)
+			if (sDate.charAt(0) === '2')
 			{
-				iDayCounter = jsonEndDate.day - iDayCounter
+				var iDateIndexOfDash = sDate.indexOf("-");
+				var iYear = parseInt(sDate.substring(0, iDateIndexOfDash));
+				var iMonth = parseInt(sDate.substring(iDateIndexOfDash + 1, iDateIndexOfDash + 3));
+				var iDay = parseInt(sDate.substring(iDateIndexOfDash + 4, iDateIndexOfDash + 6));
+
+				aDates.push({"year" : iYear, "month" : iMonth, "day" : iDay, "full-date" : sDate.substring(0, sDate.indexOf("T")), "full-key" : sDate});
 			}
 		}
-	}
-	*/
+		return aDates;
+  	}
 
-	/*
-	//Assuming Noah can get me the span between days and assuming aJSONDates is sorted
-	function generateXAxis(aJSONDates)
-	{
-		var fXAxisScale = d3.scale.ordinal()
-									.domain([0, aJSONDates.length])
-									.range([HOFFSET, HAXISEND]);
-
-		for (var i = 0; i < aJSONDates.length; i++)
-		{
-			aDomain.push(aJSONDates[i]["full-date"]);
-		}
-
-	}
-	*/
-
-	function getYAxisInterval(jsonData, sStyle)
+  	
+	function getYAxisInterval(jsonData, aJSONDates, aTagKeys, sStyle)
 	{
 		var iMaxRequests = 0;
     	var iGraphHeight = SVGHEIGHT - VOFFSET;
-    	var fCushion = 0;
-    	var aFacetKeys = d3.keys(jsonData); //n15
-    	var aDateKeys = d3.keys(jsonData[aFacetKeys[0]]);
-	
+    	var fPercentCushion = .2;
 		if (sStyle === "faceted")
 		{
-	    	for (var facet in jsonData)
-	    	{
-	    		for (var date in jsonData[facet])
-	    		{
-	    			if (date.charAt(0) === '2')
-	    			{
-	    				var iCurrentRequests = jsonData[facet][date];
-	    				iMaxRequests = iCurrentRequests > iMaxRequests ? iCurrentRequests : iMaxRequests;
-	    			}
-	    		}
-	    	}
+    		for (var iTag = 0; iTag < aTagKeys.length; iTag++)
+    		{
+    			var sCurrentTag = aTagKeys[iTag];
+    			for (var iDate = 0; iDate < aJSONDates.length; iDate++)
+    			{
+    				var sCurrentDateKey = aJSONDates[iDate]["full-key"];
+    				var iCurrentRequests = jsonData["Tags"][sCurrentTag][sCurrentDateKey];
+    				iMaxRequests = iCurrentRequests > iMaxRequests ? iCurrentRequests : iMaxRequests;
+    			}
+    		}
 		}
 		else
 		{
-			for (var i = 0; i < aDateKeys.length; i++)
-	    	{
-	    		var iRequestsFromCurrentDate = 0;
-	    		sDate = aDateKeys[i];
-
-	    		if (sDate.charAt(0) === '2')
-	    		{
-	    			for (var sFacet in jsonData)
-		    		{
-		    			iRequestsFromCurrentDate += jsonData[sFacet][sDate];
-		    		}
-	    		}
-
+			for (var i = 0; i < aJSONDates.length; i++)
+			{
+				var iRequestsFromCurrentDate = jsonData["Total by Dates"][aJSONDates[i]["full-key"]];
 	    		iMaxRequests = iRequestsFromCurrentDate > iMaxRequests ? iRequestsFromCurrentDate : iMaxRequests;
-	    	}
+			}
 		}
 
-	    fCushion = (.2) * iMaxRequests;
+	    var fCushion = fPercentCushion * iMaxRequests;
 
 	    return (iGraphHeight / (iMaxRequests + fCushion));
 	}
@@ -322,68 +264,59 @@
 			var jsonNextMonthChange = aMonthChange[i + 1];
 			var iMonth = jsonCurrentMonthChange.date.month; //n22
 			var iSpace =  (jsonNextMonthChange.x - iMonthTitlePadding) - (jsonCurrentMonthChange.x + iMonthTitlePadding);
-			if (i === aMonthChange.length - 2)
-			{
-				console.log(iSpace);
-				console.log(jsonNextMonthChange);
-			}
 
-
-			if (iSpace >= 30) //n18
+			if (iSpace >= 40) //n18
 			{
 				var sMonthName = AJSONMONTHS[iMonth - 1]["name"];
-				var fStep = iSpace / (sMonthName.length - 1);
-
-				for (var j = 0; j < sMonthName.length; j++)
-				{
-					var cCurrentChar = sMonthName.charAt(j);
-					d3sSVG.append("text").attr("class", "monthTitle")
-						.attr("x", aMonthChange[i].x + (fStep * j) + iMonthTitlePadding)
-						.text(cCurrentChar);
-				}
-
-				d3.selectAll(".monthTitle")
-					.attr("y", 40); //n18
+				var iMiddle = (iSpace / 2) + jsonCurrentMonthChange.x + iMonthTitlePadding;
+				d3sSVG.append("text").attr("class", "monthTitle")
+					.attr("text-anchor", "middle")
+					.attr("x", iMiddle)
+					.attr("y", 40)
+					.text(sMonthName);
 			}
 		}
     }
 
 
-    function generateJSONNodes(jsonData, aJSONDates, aFacetKeys, fXAxisInterval, fYAxisInterval, sStyle)
+    function generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisInterval, sStyle)
     {
     	if (sStyle === "faceted")
     	{
-    		var aaRequestsPerFacet = new Array();
-			for (var iFacet = 0; iFacet < aFacetKeys.length; iFacet++)
+    		//var iTotalHits = 0; //DEBUG
+    		var aaRequestsPerTag = new Array(); //CAREFUL: n24
+			for (var iTag = 0; iTag < aTagKeys.length; iTag++)
 	    	{
 	    		var sColor = randomColor();
 	    		var aRequestsPerDay = new Array(aJSONDates.length);
-	    		var sCurrentFacet = aFacetKeys[iFacet];
-	    		var jsonCurrentFacet = jsonData[aFacetKeys[iFacet]];
-	    		var iTotalFacetRequests = 0;
+	    		var sCurrentTag = aTagKeys[iTag];
+	    		var iTotalTagRequests = 0;
 
 				for(var iDate = 0; iDate < aJSONDates.length; iDate++)
 				{
 					var sDateKeyFull = aJSONDates[iDate]["full-key"];
 					var sDate = aJSONDates[iDate]["full-date"];
 
-					var iRequests = jsonCurrentFacet[sDateKeyFull];
-					iTotalFacetRequests += iRequests;
+					var iRequests = jsonData["Tags"][sCurrentTag][sDateKeyFull];
+					iTotalTagRequests += iRequests;
 
 					var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
 					var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
 
-	    			aRequestsPerDay[iDate] = 	{"date": sDate, "facet": sCurrentFacet,
+	    			aRequestsPerDay[iDate] = 	{"date": sDate, "tag": sCurrentTag,
 	    										"x": iCurrentX, "y": iCurrentY, 
 	    										"requests": iRequests, "color": sColor,
 	    										"style" : sStyle};
 	    		}
-	    		if (iTotalFacetRequests !== 0)
+	    		if (iTotalTagRequests !== 0)
 	    		{
-	    			aaRequestsPerFacet.push(aRequestsPerDay);
+	    			aaRequestsPerTag.push(aRequestsPerDay);
 	    		}
+	    		//console.log(sCurrentTag + ": " + iTotalTagRequests); //DEBUG
+	    		//iTotalHits += iTotalTagRequests; //DEBUG
 			}
-			return aaRequestsPerFacet;
+			//console.log("Total hits: " + iTotalHits); //DEBUG
+			return aaRequestsPerTag;
     	}
     	else if (sStyle === "total")
     	{
@@ -392,21 +325,12 @@
 
     		for (var iDate = 0; iDate < aJSONDates.length; iDate++)
     		{
-    			var iRequestsMadeThisDay = 0;
-    			var sDateKeyFull = aJSONDates[iDate]["full-key"];
-    			var sDate = aJSONDates[iDate]["full-date"];
-    			
-    			for (var iFacet = 0; iFacet < aFacetKeys.length; iFacet++)
-    			{
-    				var jsonCurrentFacet = jsonData[aFacetKeys[iFacet]];
-
-    				iRequestsMadeThisDay += jsonCurrentFacet[sDateKeyFull];
-    			}
+    			var iRequestsMadeThisDay = jsonData["Total by Dates"][aJSONDates[iDate]["full-key"]];
 
     			var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
     			var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequestsMadeThisDay * fYAxisInterval);
 
-				aJSONNodesTotal[iDate] = {"date": sDate, "facet": "AllFacets", //n19
+				aJSONNodesTotal[iDate] = {"date": aJSONDates[iDate]["full-date"], "tag": "All Tags", //n19
 										 "x": iCurrentX, "y": iCurrentY, 
 										 "requests": iRequestsMadeThisDay, "color": sColor,
 										 "style": sStyle};
@@ -415,73 +339,6 @@
     	}
 	}
 
-	/*
- 	function generateFacetedNodes(jsonData, aJSONDates, aFacetKeys fXAxisInterval, fYAxisInterval)
-    {
-		var aFacetKeys = getSortedKeys(jsonData);
-		var aaRequestsPerFacet = new Array();
-		for (var iFacet = 0; iFacet < aFacetKeys.length; iFacet++)
-    	{
-    		var sColor = randomColor();
-    		var aRequestsPerDay = new Array(aJSONDates.length);
-    		var sCurrentFacet = aFacetKeys[iFacet];
-    		var jsonCurrentFacet = jsonData[aFacetKeys[iFacet]];
-    		var iTotalFacetRequests = 0;
-
-			for(var iDate = 0; iDate < aJSONDates.length; iDate++)
-			{
-				var sDateKeyFull = aJSONDates[iDate]["full-key"];
-				var sDate = aJSONDates[iDate]["full-date"];
-
-				var iRequests = jsonCurrentFacet[sDateKeyFull];
-				iTotalFacetRequests += iRequests;
-
-				var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
-				var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
-
-    			aRequestsPerDay[iDate] = 	{"date": sDate, "facet": sCurrentFacet,
-    										"x": iCurrentX, "y": iCurrentY, 
-    										"requests": iRequests, "color": sColor,
-    										"style" : sStyle};
-    		}
-    		if (iTotalFacetRequests !== 0)
-    		{
-    			aaRequestsPerFacet.push(aRequestsPerDay);
-    		}
-		}
-		return aaRequestsPerFacet;
-	}
-
-	function generateTotalNodes(jsonData, aJSONDates, aFacetKeys, fXAxisInterval, fYAxisInterval)
-	{
-		var aFacetKeys = getSortedKeys(jsonData);
-		var sColor = randomColor();
-		var aJSONNodesTotal = new Array(aJSONDates.length);
-
-		for (var iDate = 0; iDate < aJSONDates.length; iDate++)
-		{
-			var iRequestsMadeThisDay = 0;
-			var sDateKeyFull = aJSONDates[iDate]["full-key"];
-			var sDate = aJSONDates[iDate]["full-date"];
-			
-			for (var iFacet = 0; iFacet < aFacetKeys.length; iFacet++)
-			{
-				var jsonCurrentFacet = jsonData[aFacetKeys[iFacet]];
-
-				iRequestsMadeThisDay += jsonCurrentFacet[sDateKeyFull];
-			}
-
-			var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
-			var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequestsMadeThisDay * fYAxisInterval);
-
-			aJSONNodesTotal[iDate] = {"date": sDate, "facet": "AllFacets", //n19
-									 "x": iCurrentX, "y": iCurrentY, 
-									 "requests": iRequestsMadeThisDay, "color": sColor,
-									 "style": sStyle};
-		}
-		return aJSONNodesTotal;
-	}
-	*/
 
 	//note: here sStyle can be displayed or hidden
 	function plotJSONNodes(aJSONNodes, sHiddenOrDisplayed)
@@ -493,11 +350,11 @@
 			.interpolate(INTERPOLATION);
 
 		var sColor = aJSONNodes[0].color;
-		var sFacet = aJSONNodes[0].facet;
+		var sTag = aJSONNodes[0].tag;
 
 		//create the path
 		var d3sPath = d3sSVG.append("path")
-			.attr("class", "lineGraph " + sHiddenOrDisplayed + " " + sFacet)
+			.attr("class", "lineGraph " + sHiddenOrDisplayed + " " + sTag)
 			.attr("d", d3sLineFunction(aJSONNodes))
 			.style("stroke", sColor)
 			.style("stroke-width", 0)
@@ -507,7 +364,7 @@
 		for (var i = 0; i < aJSONNodes.length; i++)
 		{
 			d3sSVG.append("circle").data([aJSONNodes[i]])
-				.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + sFacet)
+				.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + sTag)
 				.attr("r", 0)
 				.attr("cx", function(d) {return d.x;})
 				.attr("cy", function(d) {return d.y;})
@@ -518,11 +375,18 @@
 		//display the nodes if necessary
 		if (sHiddenOrDisplayed === "displayed")
 		{
-			d3.selectAll("#waggle-vis-timeline .node.displayed." + sFacet)
+			//escape the /. only needed for selectors
+			var iSlashIndex = sTag.indexOf('/');
+			if (iSlashIndex !== -1)
+			{
+				sTag = sTag.substring(0, iSlashIndex) + '\\' + sTag.substring(iSlashIndex);   
+			}
+
+			d3.selectAll("#waggle-vis-timeline .node.displayed." + sTag)
 				.attr("r", NODESIZE)
 				.style("display", "");
 
-			d3.select(".lineGraph.displayed." + sFacet)
+			d3.select(".lineGraph.displayed." + sTag)
 				.style("stroke-width", LINEGRAPHWIDTH)
 				.style("display", "");
 		}
@@ -558,24 +422,19 @@
 		
 	}
 
-	/*
-	function createLegend(aFacetKeys, aaJSONNodesFaceted)
+	function createFacetStyleButton(isViewFaceted, isTimeLine)
 	{
-		var iLegendWidth = 30;
-		var iFontSize = 5;
-		var iLegendHeight = (iFontSize + 2) * 25; //n18 25 = number of tags per search
-
-		//create legend box
-		d3sLegend = d3sSVG.append("rect").attr("class", "legend")
-						.attr("x1" = );
-		for (var i = 0; i < aFacetKeys.length; i++)
-		{
-			var sColor = aaJSONNodesFaceted[i][0].color;
-			var sFacet = aFacetKeys[i];
-			d3s
-		}
+		var sColorNotActivated = "rgb(171, 202, 222)";
+		var sColorActivated = "rgb(34, 120, 181)";
+		var d3sFacetStyleButton = d3sSVG.append("circle")
+									.attr("class", "button " + (isViewFaceted ? "on " : "off ") + (isTimeLine ? "inactivated" : "activated")) //n23
+									.attr("id", "facetStyleButton")
+									.attr("r", 5)
+									.attr("cx", HAXISEND)
+									.attr("cy", SVGHEIGHT - 5) //n18 consider selecting styleButton and placing based on that
+									.style("fill", isTimeLine && isViewFaceted ? sColorActivated : sColorNotActivated)
+									.style("display", isViewFaceted ? "" : "none");
 	}
-	*/
 
 	function createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted)
 	{
@@ -588,9 +447,10 @@
 
 		d3sSVG.append("text")
 			.attr("class", function() {return isFaceted ? "buttonInformation faceted highlighted" : "buttonInformation faceted normal";})
-			.attr("x", HAXISEND - 50) //n18
+			.attr("text-anchor", "end")
+			.attr("x", HAXISEND - 10) //n18
 			.attr("y", SVGHEIGHT - (iYOffset - 4)) //n18
-			.text("faceted")
+			.text("By tag")
 			.style("fill", function() {return isFaceted ? sColorClicked : sColorNotClicked;});
 
 		d3sSVG.append("text")
@@ -679,7 +539,38 @@
 							.duration(STANDARDDURATION)
 							.style("fill", sColorClicked);
 					}
+
+					d3.select("#facetStyleButton")
+						.call(toggleExistence);
 				});
+	}
+
+	function toggleExistence(d3sButton)
+	{
+		var bToggledOff = d3sButton.classed("on");
+
+		if (bToggledOff)
+		{
+			d3sButton.classed("on", false).classed("off", true)
+				.transition()
+				.duration(STANDARDDURATION)
+				.attr("r", 0)
+				.attr("fill-opacity", 0);
+
+			d3sButton
+				.transition()
+				.delay(STANDARDDURATION)
+				.style("display", "none");
+		}
+		else
+		{
+			d3sButton.classed("on", true).classed("off", false)
+				.style("display", "")
+				.transition()
+				.duration(STANDARDDURATION)
+				.attr("fill-opacity", 1)
+				.attr("r", 5); //n18
+		}
 	}
 
 	function createNodeEvents()
@@ -695,7 +586,7 @@
 				var d3sTickPath = d3.select(".tickInfoPath.date" + d.date);
 
 				d3sSVG.append("text")
-					.text(d.facet)
+					.text(d.tag)
 					.attr("class", "smallPop-up")
 					.attr("x", iXLocation + 5)
 					.attr("y", iYLocation - 5)
@@ -760,7 +651,7 @@
 
 	  				//draw info at top of page
 	  				d3sSVG.append("text")
-	  					.text("Facet: " + d.facet)
+	  					.text("Tag: " + d.tag)
 	  					.attr("class", "popUpText")
 	  					.style("fill", sColor)
 	  					.attr("x", fNodeX)
@@ -848,19 +739,19 @@
   					return (jsonDateOne.day <= jsonDateTwo.day) ? -1 : 1;
   				}
   			});
-		var aFacetKeys = getSortedKeys(jsonData);
+		var aTagKeys = getSortedKeys(jsonData["Total by Tags"]);
 
   		var iSpansOfDays = aJSONDates.length; //n20
   		var fXAxisInterval = (HAXISEND - HOFFSET) / iSpansOfDays; //n21
-  		var fYAxisIntervalFaceted = getYAxisInterval(jsonData, "faceted");
-  		var fYAxisIntervalTotal = getYAxisInterval(jsonData, "total");
+  		var fYAxisIntervalFaceted = getYAxisInterval(jsonData, aJSONDates, aTagKeys, "faceted");
+  		var fYAxisIntervalTotal = getYAxisInterval(jsonData, aJSONDates, aTagKeys, "total");
 
-  		var aJSONNodesTotal = generateJSONNodes(jsonData, aJSONDates, aFacetKeys, fXAxisInterval, fYAxisIntervalTotal, "total");
-  		var aaJSONNodesFaceted = generateJSONNodes(jsonData, aJSONDates, aFacetKeys, fXAxisInterval, fYAxisIntervalFaceted, "faceted");
+  		var aJSONNodesTotal = generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisIntervalTotal, "total");
+  		var aaJSONNodesFaceted = generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisIntervalFaceted, "faceted");
 
   		//Draw Graph
   		drawAxis(aJSONDates, fXAxisInterval);
-  		plotJSONNodes(aJSONNodesTotal, isFaceted ? "hidden" : "displayed");
+  		plotJSONNodes(aJSONNodesTotal, (isFaceted ? "hidden" : "displayed"));
 		for (var i = 0; i < aaJSONNodesFaceted.length; i++)
 		{
 			plotJSONNodes(aaJSONNodesFaceted[i], sFacetDisplay);
@@ -869,8 +760,9 @@
 		//Create Events
   		createNodeEvents();
   		createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted);
+  		createFacetStyleButton(isFaceted, true);
   	}
 
-    drawGraph(timelineData);
+    drawGraph(HTMLEtimelineData);
 	});
 })(jQuery);
