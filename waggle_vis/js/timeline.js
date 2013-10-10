@@ -1,7 +1,7 @@
 (function ($) {
   $(document).ready(function() {
 
-  	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~'];
+  	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~', '@'];
   	var SVGHEIGHT = 300;
   	var VOFFSET = 50;
   	var HOFFSET = 50;
