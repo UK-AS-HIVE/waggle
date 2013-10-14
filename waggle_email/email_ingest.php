@@ -38,15 +38,14 @@
 
   $fromArray = explode('<', $fromWhole);
 
-  watchdog("waggle_email", $message);
-
 
   $fromName = $fromArray[0];
 
   $fromAddress = $fromArray[1];
 
+
   //check to see if the email address is a users changeable address
-  $dbresult = db_query("SELECT entity_id FROM field_data_field_mail WHERE field_mail_value = :email LIMIT 1", array(':email' => $fromAddress));
+  $dbresult = db_query("SELECT entity_id FROM {field_data_field_mail} WHERE field_mail_value = :email LIMIT 1", array(':email' => $fromAddress));
   foreach ($dbresult as $entID) {
     $drupalUserObject = user_load($entID->entity_id);
   }
@@ -59,17 +58,19 @@
 
 
   //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
-
+  
   $toWhole = $message->to;
-  watchdog('waggle_email', $toWhole);
+  $toWhole = trim($toWhole);
 
   if(strpos($toWhole, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
     //remove outside symbols
+    watchdog('waggle_email', strlen($toWhole));
     $toWhole = substr($toWhole, 1, -1);
 
     $toArray = explode('<', $toWhole);
-
-    $nodeID = $toArray[1];
+    $toAddress = $toArray[1];
+    watchdog("waggle_email", $toAddress);
+    $nodeID = $toAddress;
   }else{ //probably just the email address
     $nodeID = $toWhole;
   }
@@ -105,28 +106,44 @@
       if ((strtok($part->contentType, ';') == 'text/plain') && ($hasBody == false)) {
         $bodyRaw = trim($part); 
 
-	      if ($part->contentTransferEncoding == 'base64') {
-	      	$bodyRaw = base64_decode($bodyRaw);
-	        watchdog('waggle', 'this was base 64 encoded');
-	      }
-	      elseif ($part->contentTransferEncoding == 'quoted-printable') {
 
-		      $bodyRaw = quoted_printable_decode($bodyRaw);
+        $fromDomain = explode('@', $fromAddress);
 
-		      preg_match('/charset="(.+)"$/', $part->contentType, $matches);
-		      switch($charset = $matches[1]){
-		        case 'Windows-1252':
-		          $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
-		          break;
-		        case 'iso-8859-1':
-		          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
-		          break;
-		      }
-	      }
+        watchdog('waggle_email', $fromDomain[1]);
+
+        watchdog('waggle_email', $toWhole);
+
+
+        if($fromDomain[1] == "gmail.com"){
+          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
+          $bodySplit = preg_split("/On .+<.*" . $toAddress .".*> wrote:/", $bodyRaw);
+          $bodyRaw = $bodySplit[0];
+        }else{
+
+  	      if ($part->contentTransferEncoding == 'base64') {
+  	      	$bodyRaw = base64_decode($bodyRaw);
+  	        watchdog('waggle', 'this was base 64 encoded');
+  	      }
+  	      elseif ($part->contentTransferEncoding == 'quoted-printable') {
+
+  		      $bodyRaw = quoted_printable_decode($bodyRaw);
+  		      preg_match('/charset="(.+)"$/', $part->contentType, $matches);
+
+  		      switch($charset = $matches[1]){
+  		        case 'Windows-1252':
+  		          $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
+  		          break;
+  		        case 'iso-8859-1':
+  		          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
+  		          break;
+  		      }
+  	      }
+        }
 
         $bodyRaw = preg_split('/From:/', $bodyRaw);
 
         $body = $bodyRaw[0];
+
 
         $hasBody = true;
       }
