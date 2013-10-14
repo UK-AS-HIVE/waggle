@@ -3,3 +3,6 @@ description = Syncs user data with another drupal installation.
 package = Waggle
 core = 7.x
 files[] = waggle_users.module
+
+dependencies[] = ldap_user
+
