@@ -55,7 +55,7 @@ function waggle_tracker_node_update($node){
     }
 
     // Get any new values
-    if(isset($node->$label['und'])){
+    if(!empty($node->$label)){
       $temp = $node->$label;
       foreach($temp['und'] as $delta => $values){
         if(isset($values['value'])){
