@@ -1,0 +1,54 @@
+text
+{
+	font-family: sans-serif;
+}
+
+.axis, .ticks
+{
+	stroke: gray;
+}
+
+.axis
+{
+	stroke-width: 2;
+}
+
+.ticks
+{
+	stroke-width: 1;
+}
+
+.infoBox
+{
+	stroke-width: 1;
+}
+
+.lineGraph
+{
+	fill: none;
+}
+
+.buttonInformation
+{
+	font-size: 12px;
+}
+
+.monthTitle
+{
+	fill: rgb(204, 204, 204);
+	font-family: sans-serif;
+	text-align: justify;
+	font-weight: bold;
+	font-size: 12px;
+}
+
+.tickInfo
+{
+	/*fill: rgb(180, 180, 180);*/
+	font-size: 12px;
+}
+
+.tickInfoPath
+{
+	stroke: rgb(180, 180, 180);
+}
