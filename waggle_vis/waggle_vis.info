@@ -1,0 +1,9 @@
+name = Waggle Vis
+description = Visualization blocks using aggregate story data
+dependencies[] = waggle
+dependencies[] = waggle_search
+core = 7.x
+package = Waggle
+
+files[] = waggle_vis.module
+
