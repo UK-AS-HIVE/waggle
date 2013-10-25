@@ -127,7 +127,7 @@ function waggle_feature_field_default_field_instances() {
           'fallback_settings' => array(),
         ),
         'type' => 'editable',
-        'weight' => 22,
+        'weight' => 13,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -143,7 +143,7 @@ function waggle_feature_field_default_field_instances() {
     'settings' => array(
       'description_field' => 0,
       'file_directory' => 'attachments',
-      'file_extensions' => 'txt pdf zip jpg png bmp doc docx xls xlsx csv tsv mp3 ogg',
+      'file_extensions' => 'txt pdf zip jpg png bmp doc docx xls xlsx csv tsv mp3 ogg ppt pptx',
       'max_filesize' => '',
       'user_register_form' => FALSE,
     ),
@@ -151,14 +151,6 @@ function waggle_feature_field_default_field_instances() {
       'active' => 1,
       'module' => 'file',
       'settings' => array(
-        'allowed_schemes' => array(
-          0 => 'public',
-          1 => 'private',
-        ),
-        'allowed_types' => array(
-          0 => 'image',
-        ),
-        'browser_plugins' => array(),
         'progress_indicator' => 'throbber',
       ),
       'type' => 'file_generic',
@@ -177,7 +169,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 5,
+        'weight' => 17,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -230,7 +222,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 14,
+        'weight' => 7,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -276,7 +268,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 16,
+        'weight' => 21,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -321,7 +313,7 @@ function waggle_feature_field_default_field_instances() {
           'multiple_to' => '',
         ),
         'type' => 'date_default',
-        'weight' => 11,
+        'weight' => 3,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -382,7 +374,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 6,
+        'weight' => 2,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -428,7 +420,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 15,
+        'weight' => 20,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -480,7 +472,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 19,
+        'weight' => 10,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -520,7 +512,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 21,
+        'weight' => 12,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -560,7 +552,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 20,
+        'weight' => 11,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -605,7 +597,7 @@ function waggle_feature_field_default_field_instances() {
           'fallback_settings' => array(),
         ),
         'type' => 'editable',
-        'weight' => 24,
+        'weight' => 15,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -651,7 +643,7 @@ function waggle_feature_field_default_field_instances() {
           'fallback_settings' => array(),
         ),
         'type' => 'editable',
-        'weight' => 17,
+        'weight' => 8,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -688,7 +680,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'user_reference',
         'settings' => array(),
         'type' => 'user_reference_default',
-        'weight' => 12,
+        'weight' => 4,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -724,6 +716,86 @@ function waggle_feature_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-story-field_submitter_email'
+  $field_instances['node-story-field_submitter_email'] = array(
+    'bundle' => 'story',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Stores values from external forms',
+    'display' => array(
+      'default' => array(
+        'label' => 'inline',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 6,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_submitter_email',
+    'label' => 'Submit Email',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 24,
+    ),
+  );
+
+  // Exported field_instance: 'node-story-field_submitter_name'
+  $field_instances['node-story-field_submitter_name'] = array(
+    'bundle' => 'story',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Saves the value reported by external forms.',
+    'display' => array(
+      'default' => array(
+        'label' => 'inline',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 5,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_submitter_name',
+    'label' => 'Submit Name',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 23,
+    ),
+  );
+
   // Exported field_instance: 'node-story-field_tags'
   $field_instances['node-story-field_tags'] = array(
     'bundle' => 'story',
@@ -736,7 +808,7 @@ function waggle_feature_field_default_field_instances() {
         'module' => 'taxonomy',
         'settings' => array(),
         'type' => 'taxonomy_term_reference_link',
-        'weight' => 18,
+        'weight' => 9,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -779,7 +851,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 9,
+        'weight' => 19,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -824,7 +896,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 8,
+        'weight' => 18,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -870,7 +942,7 @@ function waggle_feature_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 2,
+        'weight' => 16,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -902,6 +974,46 @@ function waggle_feature_field_default_field_instances() {
       ),
       'type' => 'user_reference_autocomplete',
       'weight' => 3,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_department_term'
+  $field_instances['user-user-field_department_term'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'taxonomy',
+        'settings' => array(),
+        'type' => 'taxonomy_term_reference_link',
+        'weight' => 18,
+      ),
+      'waggle_association' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_department_term',
+    'label' => 'Department (term)',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'taxonomy',
+      'settings' => array(
+        'autocomplete_path' => 'taxonomy/autocomplete',
+        'size' => 60,
+      ),
+      'type' => 'taxonomy_autocomplete',
+      'weight' => 21,
     ),
   );
 
@@ -945,26 +1057,317 @@ function waggle_feature_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'user-user-field_image_url'
+  $field_instances['user-user-field_image_url'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'A url pointing to an image of the user.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 5,
+      ),
+      'waggle_association' => array(
+        'label' => 'hidden',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 2,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_image_url',
+    'label' => 'Image URL',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 10,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_mail'
+  $field_instances['user-user-field_mail'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 7,
+      ),
+      'waggle_association' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 1,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_mail',
+    'label' => 'Email (changeable)',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 8,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_name'
+  $field_instances['user-user-field_name'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'full_name',
+        'settings' => array(),
+        'type' => 'full_name_default',
+        'weight' => 1,
+      ),
+      'waggle_association' => array(
+        'label' => 'hidden',
+        'module' => 'full_name',
+        'settings' => array(),
+        'type' => 'full_name_default',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_name',
+    'label' => 'Name',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'full_name',
+      'settings' => array(),
+      'type' => 'full_name_combined',
+      'weight' => 0,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_office'
+  $field_instances['user-user-field_office'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 6,
+      ),
+      'waggle_association' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 4,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_office',
+    'label' => 'Office',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 5,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_phone'
+  $field_instances['user-user-field_phone'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 2,
+      ),
+      'waggle_association' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 7,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_phone',
+    'label' => 'Phone',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_room'
+  $field_instances['user-user-field_room'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 4,
+      ),
+      'waggle_association' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 6,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_room',
+    'label' => 'Room',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 4,
+    ),
+  );
+
+  // Exported field_instance: 'user-user-field_staff_notes'
+  $field_instances['user-user-field_staff_notes'] = array(
+    'bundle' => 'user',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 8,
+      ),
+      'waggle_association' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 5,
+      ),
+    ),
+    'entity_type' => 'user',
+    'field_name' => 'field_staff_notes',
+    'label' => 'Staff-only Notes',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 1,
+      'user_register_form' => 0,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 11,
+    ),
+  );
+
   // Translatables
   // Included for use with string extractors like potx.
   t('<i class="icon-eye-open"></i> Select the roles able to view this story.');
+  t('A url pointing to an image of the user.');
   t('Attachments');
   t('Author revision');
   t('Body');
   t('Closed Time');
   t('Contact');
+  t('Department (term)');
   t('Does the story submitter want to receive all story updates?');
   t('Due Date');
+  t('Email (changeable)');
   t('Groups');
   t('Hostname');
   t('IP address');
   t('IP address the story was created from, if available.');
   t('If the story is submitted on behalf of someone, the actual submitted is saved in this field, and the node author is the person "on behalf of".');
+  t('Image URL');
   t('Location');
+  t('Name');
+  t('Office');
   t('On this story');
   t('Phone');
   t('Role Visibility');
+  t('Room');
+  t('Saves the value reported by external forms.');
+  t('Staff-only Notes');
   t('Status');
+  t('Stores values from external forms');
+  t('Submit Email');
+  t('Submit Name');
   t('Submitted by');
   t('Tags');
   t('The computer address from which the story was submitted.');

@@ -213,15 +213,16 @@ function waggle_feature_default_search_api_index() {
         "field_tags" : { "type" : "list\\u003Cinteger\\u003E", "entity_type" : "taxonomy_term" },
         "field_close_date" : { "type" : "date" },
         "search_api_language" : { "type" : "string" },
+        "search_api_aggregation_1" : { "type" : "text" },
         "search_api_access_node" : { "type" : "list\\u003Cstring\\u003E" },
         "author:name" : { "type" : "text" },
+        "author:field_department" : { "type" : "list\\u003Cstring\\u003E" },
         "author:field_office" : { "type" : "text" },
         "body:value" : { "type" : "text" },
         "field_associated_users:name" : { "type" : "list\\u003Cstring\\u003E" },
         "field_associated_users:field_department" : { "type" : "list\\u003Clist\\u003Cstring\\u003E\\u003E" },
         "field_associated_users:field_office" : { "type" : "list\\u003Ctext\\u003E" },
-        "field_tags:name" : { "type" : "list\\u003Cstring\\u003E" },
-        "search_api_aggregation_1" : { "type" : "text" }
+        "field_tags:name" : { "type" : "list\\u003Cstring\\u003E" }
       }
     },
     "enabled" : "1",
