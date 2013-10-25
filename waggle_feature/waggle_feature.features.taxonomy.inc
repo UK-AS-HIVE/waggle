@@ -9,6 +9,29 @@
  */
 function waggle_feature_taxonomy_default_vocabularies() {
   return array(
+    'departments' => array(
+      'name' => 'Departments',
+      'machine_name' => 'departments',
+      'description' => '',
+      'hierarchy' => 0,
+      'module' => 'taxonomy',
+      'weight' => 0,
+      'rdf_mapping' => array(
+        'rdftype' => array(
+          0 => 'skos:ConceptScheme',
+        ),
+        'name' => array(
+          'predicates' => array(
+            0 => 'dc:title',
+          ),
+        ),
+        'description' => array(
+          'predicates' => array(
+            0 => 'rdfs:comment',
+          ),
+        ),
+      ),
+    ),
     'groups_vocabulary_waggle111' => array(
       'name' => 'Groups',
       'machine_name' => 'groups_vocabulary_waggle111',
