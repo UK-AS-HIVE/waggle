@@ -106,7 +106,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
           print implode(', ', $rv); ?>
       </div>
       <?php endif; ?>
-      <div class="story-number"><?php print '#' . $node->nid;//print l('#' . $node->nid, 'node/' . $node->nid); ?></div>
+      <div class="story-number"><?php print l('#' . $node->nid, '', array('query' => array('ws' => 'status:any id:' . $node->nid), 'attributes' => array('target' => '_blank'))); ?></div>
       <div class="details waggle-secondary"><a>story details</a></div>
     </div>
     <div class="meta submitted">
