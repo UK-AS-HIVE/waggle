@@ -34,35 +34,42 @@ function waggle_vis_block_view($delta = '') {
 function waggle_vis_timeline() {
   drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/waggle_vis.css');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');
-
-  // Aaron added from here....
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.js');
   //drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.min.js');
-  // ....to here. Sorry if i broke something
-
-  // TODO: add any needed javascript libraries as above
 
   $output = '<div id="waggle-vis-timeline">';
 
   // Custom request, as suggested at https://drupal.org/node/1999396
   $server = search_api_index_get_server(search_api_index_load('default_node_index'));
 
-  $ws = isset($_GET['ws'])?$_GET['ws']:'';
-  $fq = waggle_search_convert_to_fq($ws);
-  
   $connection = $server->getSolrConnection();
   $sStart = 'NOW/DAY-6MONTH';
   $sEnd = 'NOW/DAY';
-  $sGap = '+7DAY';
-  $sRange = ($sStart . ' TO ' . $sEnd); 
+  $iDayStep = 7;
+  $sGap = '+' . $iDayStep . 'DAY'; //only use days for now! timeline.js needs to know gap in days
+  $sRange = ($sStart . ' TO ' . $sEnd);
+  $dateFQ = 'ds_created:[' . $sRange . ']';
+
+  $ws = isset($_GET['ws'])?$_GET['ws']:'';
+  $searchFQ = waggle_search_convert_to_fq($ws);
+
+  //Construct the fq to find the tags
+  $bigFQ = '';
+  if ($searchFQ != ' ')
+  {
+    $bigFQ .= $searchFQ . ' +' . $dateFQ;
+  }
+  else
+  {
+    $bigFQ .= $dateFQ;
+  }
 
   //1a. Facet by tag.
-  //note: doesn't look like multiple facet fields work with Drupal Facet API? If so, I can't figure it out. -Aaron
   $asrTags = $connection->makeServletRequest('select',
     array(
       'rows' => 0,
       'show' => 'index',
-      'fq' => $fq . 'AND ds_created:[' . $sRange . ']',
+      'fq' => $bigFQ,
       'facet' => 'on',
       'facet.field' => 'sm_field_tags:name',
       'f.sm_field_tags:name.facet.limit' => '25'
@@ -70,21 +77,38 @@ function waggle_vis_timeline() {
   );
   $aTags = (array)($asrTags->facet_counts->facet_fields);
   $aTags = (array)($aTags['sm_field_tags:name']);
-  
+
   //1b. Now facet by date, filtered by tag, and put those inside the tags in JSON.
+  //Construct an AND fq that includes the searchFQ if one exists
+  
+  $addedSearchFQ = '';
+  if ($searchFQ != ' ')
+  {
+    if ($searchFQ[0] == '+' || $searchFQ[0] == '-')
+    {
+      $addedSearchFQ .= ' ' . $bigFQ;
+    }
+    else
+    {
+      $addedSearchFQ .= ' +(' . $bigFQ . ')';
+    }
+  }
+  
   $aTagsByDate = array();
   foreach ($aTags as $sTag => $iTag_count) {
     $asrDatesOnTag = $connection->makeServletRequest('select',
       array(
       'rows' => 0,
+      'qf' => 'dismax',
       'show' => 'index',
-      'fq' => 'sm_field_tags\:name:' . $sTag, //. ' AND ' . $fq,
+      'fq' => 'sm_field_tags\:name:' . $sTag . $addedSearchFQ,
       'facet' => 'on',
       'facet.date' => 'ds_created',
       'facet.date.other' => 'between',
       'facet.date.start' => $sStart,
       'facet.date.end' => $sEnd,
       'facet.date.gap' => $sGap,
+      'facet.date.hardend' => 'true'
       )
     );
     $aDatesCreated = (array)($asrDatesOnTag->facet_counts->facet_dates->ds_created);
@@ -96,42 +120,21 @@ function waggle_vis_timeline() {
     array(
       'rows' => 0,
       'show' => 'index',
-      'fq' => $fq,
+      'fq' => $bigFQ,
       'facet' => 'on',
       'facet.date' => 'ds_created',
       'facet.date.start' => $sStart,
       'facet.date.end' => $sEnd,
       'facet.date.other' => 'between',
-      'facet.date.gap' => $sGap
+      'facet.date.gap' => $sGap,
+      'facet.date.hardend' => 'true'
       )
     );
   $aDates = (array)($asrDates->facet_counts->facet_dates->ds_created);
 
-  $aData = array("Tags" => $aTagsByDate, "Total by Tags" => $aTags, "Total by Dates" => $aDates);
+  $aData = array("Tags" => $aTagsByDate, "Total by Tags" => $aTags, "Total by Dates" => $aDates, "search" => $ws, "span" => $iDayStep);
 
-  /*
-  THE ALMIGHTY ASR
-  $asrDates = $connection->makeServletRequest('select',
-    array(
-      'rows' => 1500000,
-      'show' => 'index',
-      'fq' => $fq, 
-      'fq' => 'ds_created:[' . $sRange . ']',
-      'fl' => 'is_nid, ds_created, sm_field_tags:name',
-      'facet' => 'on',
-      'facet.date' => 'ds_created',
-      'facet.date.start' => $sStart,
-      'facet.date.end' => $sEnd,
-      'facet.date.other' => 'between',
-      'facet.date.gap' => $sGap
-      )
-    );
-  */
-
-  //$output .= '<pre>' . print_r($tags, true) . '</pre>';
-  //$output .= '<script>var timelineData = ' . json_encode($tags) . ', jsonIDS = ' . json_encode($ids) '</script>';
   $output .= '<script>var HTMLEtimelineData = ' . json_encode($aData) . '</script>';
-  //$output .= '<script>var HTMLEjsonData = ' . json_encode($aData) . '</script>';
   $output .= '</div>';
 
   return $output;

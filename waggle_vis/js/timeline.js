@@ -1,7 +1,6 @@
 (function ($) {
   $(document).ready(function() {
-
-  	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~', '@'];
+  	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~', '@', ';', "'", "\"", "\\"];
   	var SVGHEIGHT = 300;
   	var VOFFSET = 50;
   	var HOFFSET = 50;
@@ -11,7 +10,7 @@
   	var DEFAULTSTYLE = "faceted";
   	var STANDARDDURATION = 300;
   	var NODESIZE = 3;
-  	var LINEGRAPHWIDTH = 2;
+  	var LINEGRAPHWIDTH = 1;
   	var AJSONMONTHS =
 		[{"name" : "January",
 			"other-info" :
@@ -97,7 +96,7 @@
 				"days" : 31
 			}
 		}];
-	var ISPAN = 7; //one week
+	var ISPAN = HTMLEtimelineData["span"]; //one week
 	var SVGWIDTHPERCENTAGE = 100;
 	var ROOMFORLEGEND = 100;
 
@@ -182,9 +181,9 @@
 			}
 		}
 
-	    var fCushion = fPercentCushion * iMaxRequests;
+	    var fCushion = (fPercentCushion * iMaxRequests > 0) ? fPercentCushion * iMaxRequests : 1;
 
-	    return (iGraphHeight / (iMaxRequests + fCushion));
+	    return iGraphHeight / (iMaxRequests + fCushion);
 	}
   
     function drawAxis(aJSONDates, fPxBetweenNodes)
@@ -223,7 +222,7 @@
 
     		if (iCurrentMonth !== iPreviousMonth)
     		{
-    			var iMonthDivTickTop = 0; //n18
+    			var iMonthDivTickTop = 0;
     			var iMonthDivXLocation = iXLocation - ((iCurrentDay - 1) * fPxBetweenDays);
     			aMonthChange.push({	"x" : iMonthDivXLocation, "date" : jsonDate});
 
@@ -263,10 +262,10 @@
 		{
 			var jsonCurrentMonthChange = aMonthChange[i];
 			var jsonNextMonthChange = aMonthChange[i + 1];
-			var iMonth = jsonCurrentMonthChange.date.month; //n22
+			var iMonth = jsonCurrentMonthChange.date.month;
 			var iSpace =  (jsonNextMonthChange.x - iMonthTitlePadding) - (jsonCurrentMonthChange.x + iMonthTitlePadding);
 
-			if (iSpace >= 40) //n18
+			if (iSpace >= 40) //magic number
 			{
 				var sMonthName = AJSONMONTHS[iMonth - 1]["name"];
 				var iMiddle = (iSpace / 2) + jsonCurrentMonthChange.x + iMonthTitlePadding;
@@ -279,19 +278,27 @@
 		}
     }
 
+	function calculateXLocation(iDate, fXAxisInterval)
+	{
+		return HOFFSET + (iDate * fXAxisInterval);
+	}
+
+	function calculateYLocation(iRequests, fYAxisInterval)
+	{
+		return (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
+	}
 
     function generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisInterval, sStyle)
     {
+    	//FACETED
     	if (sStyle === "faceted")
     	{
-    		//var iTotalHits = 0; //DEBUG
     		var aaRequestsPerTag = new Array(); //CAREFUL: n24
 			for (var iTag = 0; iTag < aTagKeys.length; iTag++)
 	    	{
 	    		var sColor = randomColor();
 	    		var aRequestsPerDay = new Array(aJSONDates.length);
 	    		var sCurrentTag = aTagKeys[iTag];
-	    		//console.log("working with on tag " + sCurrentTag); //DEBUG
 	    		var iTotalTagRequests = 0;
 
 				for(var iDate = 0; iDate < aJSONDates.length; iDate++)
@@ -299,28 +306,38 @@
 					var sDateKeyFull = aJSONDates[iDate]["full-key"];
 					var sDate = aJSONDates[iDate]["full-date"];
 
+					var iDateEnd = iDate + 1;
+					var sDateEnd = "";
+					if (iDateEnd >= aJSONDates.length)
+					{
+						sDateEnd = "now"
+					}
+					else
+					{
+						sDateEnd = aJSONDates[iDateEnd]["full-date"];
+					}
+
 					var iRequests = jsonData["Tags"][sCurrentTag][sDateKeyFull];
 					iTotalTagRequests += iRequests;
 
-					var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
-					var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
+					var iCurrentX = calculateXLocation(iDate, fXAxisInterval);
+					var iCurrentY = calculateYLocation(iRequests, fYAxisInterval);
 
 	    			aRequestsPerDay[iDate] = 	{"date": sDate, "tag": sCurrentTag,
 	    										"x": iCurrentX, "y": iCurrentY, 
-	    										"requests": iRequests, "color": sColor,
-	    										"style" : sStyle};
+	    										"requests": iRequests, "fill": sColor,
+	    										"style": sStyle, "r": NODESIZE,
+	    										"display": "", "total": false, //we'll undisplay later if necessary
+	    										"date-range": sDate + " to " + sDateEnd}; 
 	    		}
-	    		if (iTotalTagRequests !== 0)
+	    		if (iTotalTagRequests !== 0) //don't draw a graph if there are no requests for it
 	    		{
 	    			aaRequestsPerTag.push(aRequestsPerDay);
 	    		}
-	    		//console.log(sCurrentTag + ": " + iTotalTagRequests); //DEBUG
-	    		//iTotalHits += iTotalTagRequests; //DEBUG
-	    		//console.log(aaRequestsPerTag[iTag]); //DEBUG
 			}
-			//console.log("Total hits: " + iTotalHits); //DEBUG
 			return aaRequestsPerTag;
     	}
+    	//TOTAL
     	else if (sStyle === "total")
     	{
     		var sColor = randomColor();
@@ -328,15 +345,33 @@
 
     		for (var iDate = 0; iDate < aJSONDates.length; iDate++)
     		{
+    			var sDate = aJSONDates[iDate]["full-date"];
+    			var iDateEnd = iDate + 1;
+    			var sDateEnd = "";
+    			if (iDateEnd >= aJSONDates.length)
+    			{
+    				sDateEnd = "now";
+    			}
+    			else
+    			{
+    				sDateEnd = aJSONDates[iDateEnd]["full-date"];
+    			}
+    			var sSearch = jsonData["search"];
+    			if (sSearch == '')
+    			{
+    				sSearch = "All tags";
+    			}
     			var iRequestsMadeThisDay = jsonData["Total by Dates"][aJSONDates[iDate]["full-key"]];
 
-    			var iCurrentX = HOFFSET + (iDate * fXAxisInterval);
-    			var iCurrentY = (SVGHEIGHT - VOFFSET) - (iRequestsMadeThisDay * fYAxisInterval);
+    			var iCurrentX = calculateXLocation(iDate, fXAxisInterval);
+    			var iCurrentY = calculateYLocation(iRequestsMadeThisDay, fYAxisInterval);
 
-				aJSONNodesTotal[iDate] = {"date": aJSONDates[iDate]["full-date"], "tag": "All Tags", //n19
+				aJSONNodesTotal[iDate] = {"date": aJSONDates[iDate]["full-date"], "tag": sSearch,
 										 "x": iCurrentX, "y": iCurrentY, 
-										 "requests": iRequestsMadeThisDay, "color": sColor,
-										 "style": sStyle};
+										 "requests": iRequestsMadeThisDay, "fill": sColor,
+										 "style": sStyle, "r": NODESIZE,
+										 "display": "", "total": true,  //we'll undisplay later if necessary
+										 "date-range": sDate + " to " + sDateEnd};
     		}
     		return aJSONNodesTotal;
     	}
@@ -346,68 +381,66 @@
 	//note: here sStyle can be displayed or hidden
 	function plotJSONNodes(aJSONNodes, sHiddenOrDisplayed)
 	{
-		//function to generate svg path commands
-		var d3sLineFunction = d3.svg.line()
+		var sColor = aJSONNodes[0]["fill"];
+		var sTag = aJSONNodes[0]["tag"];
+		var bDisplayed = (sHiddenOrDisplayed === "displayed");
+		var sDisplay = bDisplayed ? "" : "none";
+
+		var d3sLineFunction = d3.svg.line() //function to generate svg path commands
 			.x(function(d) {return d.x;})
 			.y(function(d) {return d.y;})
 			.interpolate(INTERPOLATION);
 
-		var sColor = aJSONNodes[0].color;
-		var sTag = aJSONNodes[0].tag;
+		var aJSONPathInfo = 
+			[{
+				"d": d3sLineFunction(aJSONNodes),
+				"stroke": sColor,
+				"stroke-width": bDisplayed ? LINEGRAPHWIDTH : 0,
+				"display": sDisplay,
+				"fill": "none"
+			}];
+
+		//ESCAPE THE STRINGS
+		for (var i = 0; i < sTag.length; i++)
+		{
+			var cCurrentChar = sTag.charAt(i);
+			if (ASPECIALCSSCHARS.indexOf(cCurrentChar) !== -1)
+			{
+				sTag = sTag.substring(0, i) + '\\' + sTag.substring(i);
+				i += 1; //move i two steps ahead so we don't keep seeing the same special char
+			}
+		}
+		if (!isNaN(sTag.charAt(0))) //first char is a number
+		{
+			sTag = "\\3" + sTag.charAt(0) + " " + sTag.substring(1);  //We have to add that space in there so that the new escaped numeral won't accidentally pick up other
+                                                                //characters after the \ to be included in the escape string.
+		}
 
 		//create the path
-		var d3sPath = d3sSVG.append("path")
+		//Data join and enter path (not really necessary, only one path per call)
+		 d3sSVG.selectAll(".lineGraph." + sHiddenOrDisplayed + "." + sTag)
+			.data(aJSONPathInfo)
+			.enter()
+			.append("path")
 			.attr("class", "lineGraph " + sHiddenOrDisplayed + " " + sTag)
-			.attr("d", d3sLineFunction(aJSONNodes))
-			.style("stroke", sColor)
-			.style("stroke-width", 0)
-			.style("display", "none");
-		
-		//create the nodes
-		for (var i = 0; i < aJSONNodes.length; i++)
-		{
-			d3sSVG.append("circle").data([aJSONNodes[i]])
-				.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + sTag)
-				.attr("r", 0)
-				.attr("cx", function(d) {return d.x;})
-				.attr("cy", function(d) {return d.y;})
-				.style("fill", sColor)
-				.style("display", "none");
-		}
+			.attr("d", function(d) {return d["d"];})
+			.style("stroke-width", function(d) {return d["stroke-width"];})
+			.style("stroke", function(d) {return d["stroke"];})
+			.style("display", function(d) {return d["display"];})
+			.style("fill", function(d) {return d["fill"];});
 
-		//display the nodes if necessary
-		if (sHiddenOrDisplayed === "displayed")
-		{
-			//ESCAPE THE STRINGS
-			//console.log("attempting to display " + sTag +" -- Escaping string now"); //DEBUG
-			//escape the /. only needed for selectors
-			for (var i = 0; i < ASPECIALCSSCHARS.length; i++)
-			{
-				var cCurrentChar = ASPECIALCSSCHARS[i];
-				//console.log("checking for " + cCurrentChar);
-				var iSpecialIndex = sTag.indexOf(cCurrentChar);
-				if (iSpecialIndex !== -1)
-				{
-					sTag = sTag.substring(0, iSpecialIndex) + '\\' + sTag.substring(iSpecialIndex);
-				}
-
-			}
-			/*
-			var iSlashIndex = sTag.indexOf('/');
-			if (iSlashIndex !== -1)
-			{
-				sTag = sTag.substring(0, iSlashIndex) + '\\' + sTag.substring(iSlashIndex);   
-			}
-			*/
-
-			d3.selectAll("#waggle-vis-timeline .node.displayed." + sTag)
-				.attr("r", NODESIZE)
-				.style("display", "");
-
-			d3.select(".lineGraph.displayed." + sTag)
-				.style("stroke-width", LINEGRAPHWIDTH)
-				.style("display", "");
-		}
+		//Create the nodes
+		//Data join and enter circles (more useful, many nodes per call)
+		d3sSVG.selectAll(".node.unclicked." + sHiddenOrDisplayed + "." + sTag)
+			.data(aJSONNodes)
+			.enter()
+			.append("circle")
+			.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + sTag)
+			.attr("r", function(d) {return d["r"];})
+			.attr("cx", function(d) {return d["x"];})
+			.attr("cy", function(d) {return d["y"];})
+			.style("fill", function(d) {return d["fill"];})
+			.style("display", sDisplay);
 	}
 
 	//+++++++++++++++++++++++++++++ EVENT FUNCTIONS ++++++++++++++++++++++++++++++++++++++++
@@ -420,7 +453,7 @@
 		{
 			var fBaseY = d3sClickedNode.datum().y;
 
-			d3.selectAll(".popUpText")
+			d3.selectAll(".popUp:not(.infoBox)")
 				.attr("class", "dying")
 				.transition()
 				.duration(STANDARDDURATION)
@@ -440,20 +473,6 @@
 		
 	}
 
-	function createFacetStyleButton(isViewFaceted, isTimeLine)
-	{
-		var sColorNotActivated = "rgb(171, 202, 222)";
-		var sColorActivated = "rgb(34, 120, 181)";
-		var d3sFacetStyleButton = d3sSVG.append("circle")
-									.attr("class", "button " + (isViewFaceted ? "on " : "off ") + (isTimeLine ? "inactivated" : "activated")) //n23
-									.attr("id", "facetStyleButton")
-									.attr("r", 5)
-									.attr("cx", HAXISEND)
-									.attr("cy", SVGHEIGHT - 5) //n18 consider selecting styleButton and placing based on that
-									.style("fill", isTimeLine && isViewFaceted ? sColorActivated : sColorNotActivated)
-									.style("display", isViewFaceted ? "" : "none");
-	}
-
 	function createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted)
 	{
 		var iSVGWidth = SVGWIDTH;
@@ -466,15 +485,15 @@
 		d3sSVG.append("text")
 			.attr("class", function() {return isFaceted ? "buttonInformation faceted highlighted" : "buttonInformation faceted normal";})
 			.attr("text-anchor", "end")
-			.attr("x", HAXISEND - 10) //n18
-			.attr("y", SVGHEIGHT - (iYOffset - 4)) //n18
+			.attr("x", HAXISEND - 10) //magic number
+			.attr("y", SVGHEIGHT - (iYOffset - 4)) //magic number
 			.text("By tag")
 			.style("fill", function() {return isFaceted ? sColorClicked : sColorNotClicked;});
 
 		d3sSVG.append("text")
 			.attr("class", function() {return isFaceted ? "buttonInformation total normal" : "buttonInformation faceted highlighted";})
-			.attr("x", HAXISEND + 10) //n18
-			.attr("y", SVGHEIGHT - (iYOffset - 4)) //n18
+			.attr("x", HAXISEND + 10) //magic number
+			.attr("y", SVGHEIGHT - (iYOffset - 4)) //magic number
 			.text("total")
 			.style("fill", function() {return isFaceted ? sColorNotClicked : sColorClicked;});
 
@@ -541,7 +560,7 @@
 						.duration(STANDARDDURATION)
 						.style("fill", sColorClicked);
 
-					if (d3sThisButton.attr("class") === "button clicked") //aka we currently have the faceted graph and are switching to total
+					if (d3sThisButton.classed("button clicked")) //aka we currently have the faceted graph and are switching to total
 					{
 						d3sThisButton
 							.attr("class", "button unclicked")
@@ -557,40 +576,7 @@
 							.duration(STANDARDDURATION)
 							.style("fill", sColorClicked);
 					}
-
-					/*
-					d3.select("#facetStyleButton")
-						.call(toggleExistence);
-					*/
 				});
-	}
-
-	function toggleExistence(d3sButton)
-	{
-		var bToggledOff = d3sButton.classed("on");
-
-		if (bToggledOff)
-		{
-			d3sButton.classed("on", false).classed("off", true)
-				.transition()
-				.duration(STANDARDDURATION)
-				.attr("r", 0)
-				.attr("fill-opacity", 0);
-
-			d3sButton
-				.transition()
-				.delay(STANDARDDURATION)
-				.style("display", "none");
-		}
-		else
-		{
-			d3sButton.classed("on", true).classed("off", false)
-				.style("display", "")
-				.transition()
-				.duration(STANDARDDURATION)
-				.attr("fill-opacity", 1)
-				.attr("r", 5); //n18
-		}
 	}
 
 	function createNodeEvents()
@@ -618,7 +604,7 @@
 				d3sTickPath
 					.classed("grown", true)
 					.transition()
-					.duration(STANDARDDURATION / 3) //n18 (we want it faster for design purposes)
+					.duration(STANDARDDURATION / 3) //magic number (we want it faster for design purposes)
 					.attr("d", function (d) {return "M" + (d["x1"] - 15) + " " + (d["y1"] + 15) + " L " + d["x2"] + " " + d["y2"];});
   			});
 
@@ -626,19 +612,22 @@
   			function()
   			{
   				var d3sPopUp = d3.select(".smallPop-up");
-  				var iYLocation = parseInt(d3sPopUp.attr("y"));
-				var d3sTickPath = d3.select(".grown");
+  				if ( !(d3sPopUp.empty()) ) //sometimes we get an empty selection (not sure why) this avoids it
+  				{
+	  				var iYLocation = parseInt(d3sPopUp.attr("y"));
+					var d3sTickPath = d3.select(".grown");
 
-				d3sPopUp.attr("class", "dying").transition().duration(STANDARDDURATION)
-					.attr("y", iYLocation + 5)
-					.style("fill-opacity", 0)
-					.remove();
+					d3sPopUp.attr("class", "dying").transition().duration(STANDARDDURATION)
+						.attr("y", iYLocation + 5)
+						.style("fill-opacity", 0)
+						.remove();
 
-				d3sTickPath
-					.classed("grown", false)
-					.transition()
-					.duration(STANDARDDURATION)
-					.attr("d", function (d) {return "M" + d["x1"] + " " + d["y1"] + " L " + d["x2"] + " " + d["y2"];});
+					d3sTickPath
+						.classed("grown", false)
+						.transition()
+						.duration(STANDARDDURATION)
+						.attr("d", function (d) {return "M" + d["x1"] + " " + d["y1"] + " L " + d["x2"] + " " + d["y2"];});
+  				}
 			});
 
   		d3sNodes.on("click",
@@ -656,7 +645,6 @@
   				{
 	  				var d3sSmallPopup = d3.select(".smallPop-up");
 	  				var iTextSize  = parseInt(d3sSmallPopup.attr("font-size"));
-
 	  				var iPopUpBuffer = 2;
 
 	  				//remove any other clicked nodes
@@ -667,17 +655,13 @@
 
 	  				d3sTrigger.classed("clicked", true).classed("unclicked", false)
 	  					.transition()
+	  					.duration(STANDARDDURATION)
 	  					.attr("r", 7);
 
 	  				//draw info at top of page
 	  				d3sSVG.append("text")
-	  					.text("Tag: " + d.tag)
-	  					.attr("class", "popUpText")
-	  					.style("fill", sColor)
-	  					.attr("x", fNodeX)
-	  					.attr("y", fNodeY)
-	  					.style("font-size", 0)
-	  					.style("fill-opacity", 0.3)
+	  					.text(d.total ? "Search: " + d.tag : "Tag: " + d.tag)
+	  					.attr("class", "popUp text")
 	  					.transition()
 	  					.duration(STANDARDDURATION)
 	  					.attr("y", iTextSize + iPopUpBuffer)
@@ -686,34 +670,24 @@
 
 	  				d3sSVG.append("text")
 	  					.text("Num. of Requests: " + d.requests)
-	  					.attr("class", "popUpText")
-	  					.style("fill", sColor)
-	  					.attr("x", fNodeX)
-	  					.attr("y", fNodeY)
-	  					.style("font-size", 0)
-	  					.style("fill-opacity", 0.3)
+	  					.attr("class", "popUp text")
 	  					.transition()
 	  					.duration(STANDARDDURATION)
-	  					.attr("y", (2 * iTextSize + iPopUpBuffer))
+	  					.attr("y", (2 * iTextSize) + iPopUpBuffer)
 	  					.style("fill-opacity", 1)
 	  					.style("font-size", iTextSize);
 
 	  				d3sSVG.append("text")
-	  					.text("Date: " + d.date)
-	  					.attr("class", "popUpText")
-	  					.style("fill", sColor)
-	  					.attr("x", fNodeX)
-	  					.attr("y", fNodeY)
-	  					.style("font-size", 0)
-	  					.style("fill-opacity", 0.3)
+	  					.text("Date: " + d["date-range"])
+	  					.attr("class", "popUp text")
 	  					.transition()
 	  					.duration(STANDARDDURATION)
-	  					.attr("y", (3 * iTextSize) + (2 * iPopUpBuffer))
+	  					.attr("y", (3 * iTextSize) + iPopUpBuffer)
 	  					.style("fill-opacity", 1)
 	  					.style("font-size", iTextSize);
 
 	  				//draw line from node to info
-	  				d3sSVG.append("line").attr("class", "infoBox")
+	  				d3sSVG.append("line").attr("class", "popUp infoBox")
 	  					.attr("x1", fNodeX)
 	  					.attr("y1", fNodeY - 7)
 	  					.attr("x2", fNodeX)
@@ -721,7 +695,15 @@
 	  					.style("stroke", sColor)
 	  					.transition()
 	  					.duration(STANDARDDURATION)
-	  					.attr("y2", (4 * iTextSize) + (2 * iPopUpBuffer));
+	  					.attr("y2", (3 * iTextSize) + iPopUpBuffer);
+
+	  				//set their sizes and opacities to low. This won't cancel transition, and makes fade-in nicer
+	  				d3.selectAll(".popUp:not(.infoBox)")
+	  					.attr("x", fNodeX)
+	  					.attr("y", fNodeY)
+	  					.style("fill", sColor)
+	  					.style("font-size", 0)
+	  					.style("fill-opacity", 0.3);
   				}
   				else
   				{
@@ -761,9 +743,9 @@
   			});
 		var aTagKeys = getSortedKeys(jsonData["Total by Tags"]);
 
-  		var iSpansOfDays = aJSONDates.length; //n20
-  		var fXAxisInterval = (HAXISEND - HOFFSET) / iSpansOfDays; //n21
-  		var fYAxisIntervalFaceted = getYAxisInterval(jsonData, aJSONDates, aTagKeys, "faceted");
+  		var iSpansOfDays = aJSONDates.length;
+  		var fXAxisInterval = (HAXISEND - HOFFSET) / iSpansOfDays; //TODO: scales would be better here
+  		var fYAxisIntervalFaceted = getYAxisInterval(jsonData, aJSONDates, aTagKeys, "total"); //always normalize based on total (facet option is valid though)
   		var fYAxisIntervalTotal = getYAxisInterval(jsonData, aJSONDates, aTagKeys, "total");
 
   		var aJSONNodesTotal = generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisIntervalTotal, "total");
@@ -780,9 +762,7 @@
 		//Create Events
   		createNodeEvents();
   		createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted);
-  		//createFacetStyleButton(isFaceted, true);
   	}
-
     drawGraph(HTMLEtimelineData);
 	});
 })(jQuery);
