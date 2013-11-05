@@ -19,6 +19,9 @@ function waggle_permission() {
  *  Implement hook_node_access().
  */
 function waggle_node_access($node, $op, $account) {
+  if ($node->type != 'story')
+    return;
+
   if ($op != 'view' && $op != 'update')
     return;
 
