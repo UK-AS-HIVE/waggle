@@ -22,7 +22,7 @@ function waggle_email_ingestion_get_from_address($message) {
 /**
  *  $message - a message object, as created by new Zend_Mail_Message.
  */
-function waggle_email_ingestion_parse_body($message) {
+function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@hostname') {
   $body = null;
 
   $fromAddress = waggle_email_ingestion_get_from_address($message);
@@ -49,30 +49,34 @@ function waggle_email_ingestion_parse_body($message) {
           $bodySplit = preg_split("/On .+<.*" . $toAddress .".*> wrote:/", $bodyRaw);
           $bodyRaw = $bodySplit[0];
         }else{
+          $enc = isset($part->contentTransferEncoding)?$part->contentTransferEncoding:'7bit';
 
-  	      if ($part->contentTransferEncoding == 'base64') {
-  	      	$bodyRaw = base64_decode($bodyRaw);
-  	        //watchdog('waggle', 'this was base 64 encoded');
-  	      }
-  	      elseif ($part->contentTransferEncoding == 'quoted-printable') {
+          switch (strtolower($enc)) {
+            case 'base64':
+              $bodyRaw = base64_decode($bodyRaw);
+              break;
+            //watchdog('waggle', 'this was base 64 encoded');
+          
+            case 'quoted-printable':
+              $bodyRaw = quoted_printable_decode($bodyRaw);
+              break;
+          }
 
-  		      $bodyRaw = quoted_printable_decode($bodyRaw);
-  		      preg_match('/charset="(.+)"$/', $part->contentType, $matches);
+          preg_match('/charset="(.+)"$/', $part->contentType, $matches);
 
-  		      switch($charset = $matches[1]){
-  		        case 'Windows-1252':
-  		          $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
-  		          break;
-  		        case 'iso-8859-1':
-  		          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
-  		          break;
-  		      }
-  	      }
+          switch($charset = $matches[1]){
+            case 'Windows-1252':
+              $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
+              break;
+            case 'iso-8859-1':
+              $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
+              break;
+          }
         }
 
-        $bodyRaw = preg_split('/From:/', $bodyRaw);
+        $bodyRaw = preg_split('/From: | .+<.*' . $toAddress . '.*> /x', $bodyRaw);
 
-        $body = $bodyRaw[0];
+        $body = trim($bodyRaw[0]);
 
 
         $hasBody = true;
