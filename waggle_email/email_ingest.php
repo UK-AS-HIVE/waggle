@@ -16,6 +16,8 @@
 
   drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
+  include_once DRUPAL_ROOT . '/sites/all/modules/waggle/waggle_email/waggle_email.ingestion.inc';
+
   //read the incoming email from stdin - put it in the variable $email
   $fd = fopen("php://stdin", "r");
 	$email = "";
