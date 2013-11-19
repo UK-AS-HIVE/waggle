@@ -32,7 +32,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
   // look for plain text part
   $hasBody = false; //we set this so we can iterate through all parts without overwriting the body if another text/plain part exists
   foreach (new RecursiveIteratorIterator($message) as $part) {
-    try {
+    //try {
 
       if ((strtok($part->contentType, ';') == 'text/plain') && ($hasBody == false)) {
         $bodyRaw = trim($part); 
@@ -49,7 +49,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
           $bodySplit = preg_split("/On .+<.*" . $toAddress .".*> wrote:/", $bodyRaw);
           $bodyRaw = $bodySplit[0];
         }else{
-          $enc = isset($part->contentTransferEncoding)?$part->contentTransferEncoding:'7bit';
+          $enc = array_key_exists('content-transfer-encoding', $part->getHeaders()) ? $part->contentTransferEncoding : '7bit';
 
           switch (strtolower($enc)) {
             case 'base64':
@@ -74,7 +74,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
           }
         }
 
-        $bodyRaw = preg_split('/From: | .+<.*' . $toAddress . '.*> /x', $bodyRaw);
+        $bodyRaw = preg_split('/(________________________________\n)?From: | .+<.*' . $toAddress . '.*> /x', $bodyRaw);
 
         $body = trim($bodyRaw[0]);
 
@@ -110,14 +110,14 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
         }
       }
 
-    } catch (Zend_Mail_Exception $e) { 
+    /*} catch (Zend_Mail_Exception $e) { 
     //none
     // NMA: At the least, log exceptions with watchdog().
     }
     catch (Exception $e) {
       //watchdog('waggle', 'exception: ' . print_r($e, true));
       throw $e;
-    }
+    }*/
     }
 
     if (!$body) {
