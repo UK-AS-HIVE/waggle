@@ -4,8 +4,9 @@
  */
 function waggle_vis_timeline() {
   drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/waggle_vis.css');
-  drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.min.js');
+  drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/share.js');
+  drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');
 
   $output = '<div id="waggle-vis-timeline">';
 
@@ -34,19 +35,9 @@ function waggle_vis_timeline() {
     $bigFQ .= $dateFQ;
   }
   
-  //check permissions of user vs permissions of query
-  global $user;
-  $userGrants = node_access_grants('view', $user); //user is drupal global
-  $userGrantAddedFQ = ' (';
-  foreach ($userGrants as $realm => $gids)
-  {
-    foreach ($gids as $gid)
-    {
-      $userGrantAddedFQ .= "sm_search_api_access_node:\"node_access_$realm:$gid\" OR ";
-    }
-  }
-  $userGrantAddedFQ .= 'sm_search_api_access_node:"node_access__all")';
-  $bigFQ .= $userGrantAddedFQ;
+  module_load_include('inc', 'waggle_vis', 'waggle_vis_security_check');
+  global $user; 
+  $bigFQ .= getSecurityCheckFQ($user);
 
   //1a. Facet by tag.
   $asrTags = $connection->makeServletRequest('select',

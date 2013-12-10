@@ -1,3 +1,5 @@
+//Dependent on D3.js and share.js
+
 (function ($) {
   $(document).ready(function() {
   	var ASPECIALCSSCHARS = ['#', '.', '>', '+', ':', '/', '~', '@', ';', "'", "\"", "\\", '(', ')'];
@@ -100,11 +102,9 @@
   	var SVGWIDTHPERCENTAGE = 100;
   	var ROOMFORLEGEND = 0;
 
-    var d3sSVG = d3.select("#waggle-vis-timeline").append("svg")
-    				.attr("width", SVGWIDTHPERCENTAGE + "%")
-    				.attr("height", SVGHEIGHT);
+    var d3sTimelineSVG = createSVG('waggle-vis-timeline', SVGWIDTHPERCENTAGE, SVGHEIGHT);
 
-  	var SVGWIDTH = parseInt(d3sSVG.style("width"));
+  	var SVGWIDTH = parseInt(d3sTimelineSVG.style("width"));
   	var HAXISEND = SVGWIDTH - (HOFFSET * 2) - ROOMFORLEGEND; //cut it off shorter on right side
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -113,79 +113,13 @@
 
     //++++++++++++++++++++++++++++ GRAPHER FUNCTIONS ++++++++++++++++++++++++++++++
 
+    //Not currently used
+    /*
   	function isLeapYear(iYear)
   	{
   		return (iYear % 4 === 0 && iYear % 100 !== 0) || iYear % 400 === 0;
   	}
-
-    function randomColor()
-    {
-		return "hsl(" 
-					+ Math.round(Math.random() * 360) + ", " 
-					+ Math.round(Math.random() * 100) + "%, " 
-					+ Math.round(30 + Math.random() * 30) + "%)";
-    }
-
-  	function getSortedKeys(jsonData)
-  	{
-  		return d3.keys(jsonData).sort(
-  			function(sOne, sTwo)
-  			{
-  				return sOne.toLowerCase() < sTwo.toLowerCase() ? -1 : 1;
-  			});
-  	}
-
-  	function generateJSONDates(jsonData)
-  	{
-  		var aDates = new Array();
-		for(var sDate in jsonData["Total by Dates"])
-		{
-			if (sDate.charAt(0) === '2') //there is also a 'between' field
-			{
-				var aDate = sDate.split("-");
-				var iYear = parseInt(aDate[0]);
-				var iMonth = parseInt(aDate[1]);
-				var iDay = parseInt(aDate[2]);
-
-				aDates.push({"year" : iYear, "month" : iMonth, "day" : iDay, "full-date" : sDate.substring(0, sDate.indexOf("T")), "full-key" : sDate});
-			}
-		}
-		return aDates;
-  	}
-
-  	function determineMax(jsonSingleGraphData, aJSONDates, iCurrentMax)
-  	{
-  		for (var i = 0; i < aJSONDates.length; i++)
-  		{
-  			var iCurrentRequests = jsonSingleGraphData[aJSONDates[i]["full-key"]];
-  			iCurrentMax = iCurrentRequests > iCurrentMax ? iCurrentRequests : iCurrentMax;
-  		}
-      return iCurrentMax;
-  	}
-    	
-  	function getYAxisInterval(jsonData, aJSONDates, aTagKeys, sStyle)
-  	{
-  		var iMaxRequests = 0;
-    	var iGraphHeight = SVGHEIGHT - VOFFSET;
-    	var fPercentCushion = .2;
-  		if (sStyle === "faceted")
-  		{
-      		for (var iTag = 0; iTag < aTagKeys.length; iTag++)
-      		{
-      			var sCurrentTag = aTagKeys[iTag];
-      			jsonCurrentTag = jsonData["Tags"][sCurrentTag];
-      			iMaxRequests = determineMax(jsonCurrentTag, aJSONDates, iMaxRequests);
-      		}
-  		}
-  		else
-  		{
-  			iMaxRequests = determineMax(jsonData["Total by Dates"], aJSONDates, iMaxRequests);
-  		}
-
-  	    var fCushion = (fPercentCushion * iMaxRequests > 0) ? fPercentCushion * iMaxRequests : 1;
-
-  	    return iGraphHeight / (iMaxRequests + fCushion);
-  	}
+    */
     
     function drawAxis(aJSONDates, fPxBetweenNodes)
     {
@@ -193,14 +127,14 @@
     	var fPxBetweenDays = fPxBetweenNodes / ISPAN;
 
     	//Vertical axis
-    	d3sSVG.append("line").attr("class", "axis")
+    	d3sTimelineSVG.append("line").attr("class", "axis")
     		.attr("x1", HOFFSET)
     		.attr("x2", HOFFSET)
     		.attr("y1", 0)
     		.attr("y2", SVGHEIGHT - VOFFSET);
 
     	//Horizontal axis
-    	d3sSVG.append("line").attr("class", "axis")
+    	d3sTimelineSVG.append("line").attr("class", "axis")
     		.attr("x1", HOFFSET)
     		.attr("x2", HAXISEND)
     		.attr("y1", SVGHEIGHT - VOFFSET)
@@ -227,25 +161,25 @@
     			var iMonthDivXLocation = iXLocation - ((iCurrentDay - 1) * fPxBetweenDays);
     			aMonthChange.push({	"x" : iMonthDivXLocation, "date" : jsonDate});
 
-    			d3sSVG.append("line").attr("class", "ticks")
+    			d3sTimelineSVG.append("line").attr("class", "ticks")
       			.attr("x1", iMonthDivXLocation)
       			.attr("x2", iMonthDivXLocation)
       			.attr("y1", SVGHEIGHT - VOFFSET)
       			.attr("y2", iMonthDivTickTop);
     		}
 
-    		d3sSVG.append("line").attr("class", "ticks")
+    		d3sTimelineSVG.append("line").attr("class", "ticks")
     			.attr("x1", iXLocation)
     			.attr("x2", iXLocation)
     			.attr("y1", SVGHEIGHT - VOFFSET)
     			.attr("y2", iTickTop);
 
-    		d3sSVG.append("path").attr("id", "tickInfoPath" + i).attr("class", "tickInfoPath date" + jsonDate["full-date"])
+    		d3sTimelineSVG.append("path").attr("id", "tickInfoPath" + i).attr("class", "tickInfoPath date" + jsonDate["full-date"])
     			.data([	{"x1" : iXLocation - 18, "y1" : SVGHEIGHT - VOFFSET + 18,
     					"x2" : iXLocation, "y2" : SVGHEIGHT - VOFFSET}])
     			.attr("d", function (d) {return "M" + d["x1"] + " " + d["y1"] + " L " + d["x2"] + " " + d["y2"];});
 
-    		d3sSVG.append("text")
+    		d3sTimelineSVG.append("text")
     			.attr("class", "tickInfo date" + jsonDate["full-date"])
     			.style("fill", "rgb(140, 140, 140)")
     			.append("textPath")
@@ -270,7 +204,7 @@
     		{
     			var sMonthName = AJSONMONTHS[iMonth - 1]["name"];
     			var iMiddle = (iSpace / 2) + jsonCurrentMonthChange.x + iMonthTitlePadding;
-    			d3sSVG.append("text").attr("class", "monthTitle")
+    			d3sTimelineSVG.append("text").attr("class", "monthTitle")
     				.attr("text-anchor", "middle")
     				.attr("x", iMiddle)
     				.attr("y", 40)
@@ -279,170 +213,82 @@
     	}
     }
 
-  	function calculateXLocation(iDate, fXAxisInterval)
-  	{
-  		return HOFFSET + (iDate * fXAxisInterval);
-  	}
-
-  	function calculateYLocation(iRequests, fYAxisInterval)
-  	{
-  		return (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
-  	}
-
-    function generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisInterval, sStyle)
+    //Not currently used 
+    /*
+    //Relies on the following globals defined in this file: ASPECIALCSSCHARS
+    function escapeForSelectors(sString)
     {
-    	//FACETED
-    	if (sStyle === "faceted")
-    	{
-    		var aaRequestsPerTag = new Array();
-			for (var iTag = 0; iTag < aTagKeys.length; iTag++)
-	    	{
-	    		var sColor = randomColor();
-	    		var aRequestsPerDay = new Array(aJSONDates.length);
-	    		var sCurrentTag = aTagKeys[iTag];
-	    		var iTotalTagRequests = 0;
-
-				for(var iDate = 0; iDate < aJSONDates.length; iDate++)
-				{
-					var sDateKeyFull = aJSONDates[iDate]["full-key"];
-					var sDate = aJSONDates[iDate]["full-date"];
-
-					var iDateEnd = iDate + 1;
-					var sDateEnd = "";
-					if (iDateEnd >= aJSONDates.length)
-					{
-						sDateEnd = "now"
-					}
-					else
-					{
-						sDateEnd = aJSONDates[iDateEnd]["full-date"];
-					}
-
-					var iRequests = jsonData["Tags"][sCurrentTag][sDateKeyFull];
-					iTotalTagRequests += iRequests;
-
-					var iCurrentX = calculateXLocation(iDate, fXAxisInterval);
-					var iCurrentY = calculateYLocation(iRequests, fYAxisInterval);
-
-	    			aRequestsPerDay[iDate] = 	{"date": sDate, "tag": sCurrentTag,
-	    										"x": iCurrentX, "y": iCurrentY, 
-	    										"requests": iRequests, "fill": sColor,
-	    										"style": sStyle, "r": NODESIZE,
-	    										"display": "", "total": false, //we'll undisplay later if necessary
-	    										"date-range": sDate + " to " + sDateEnd}; 
-	    		}
-	    		if (iTotalTagRequests !== 0) //don't draw a graph if there are no requests for it
-	    		{
-	    			aaRequestsPerTag.push(aRequestsPerDay);
-	    		}
-			}
-			return aaRequestsPerTag;
-    	}
-    	//TOTAL
-    	else if (sStyle === "total")
-    	{
-    		var sColor = randomColor();
-    		var aJSONNodesTotal = new Array(aJSONDates.length);
-
-    		for (var iDate = 0; iDate < aJSONDates.length; iDate++)
-    		{
-    			var sDate = aJSONDates[iDate]["full-date"];
-    			var iDateEnd = iDate + 1;
-    			var sDateEnd = "";
-    			if (iDateEnd >= aJSONDates.length)
-    			{
-    				sDateEnd = "now";
-    			}
-    			else
-    			{
-    				sDateEnd = aJSONDates[iDateEnd]["full-date"];
-    			}
-    			var sSearch = jsonData["search"];
-    			if (sSearch == '')
-    			{
-    				sSearch = "All tags";
-    			}
-    			var iRequestsMadeThisDay = jsonData["Total by Dates"][aJSONDates[iDate]["full-key"]];
-
-    			var iCurrentX = calculateXLocation(iDate, fXAxisInterval);
-    			var iCurrentY = calculateYLocation(iRequestsMadeThisDay, fYAxisInterval);
-
-				aJSONNodesTotal[iDate] = {"date": aJSONDates[iDate]["full-date"], "tag": sSearch,
-										 "x": iCurrentX, "y": iCurrentY, 
-										 "requests": iRequestsMadeThisDay, "fill": sColor,
-										 "style": sStyle, "r": NODESIZE,
-										 "display": "", "total": true,  //we'll undisplay later if necessary
-										 "date-range": sDate + " to " + sDateEnd};
-    		}
-    		return aJSONNodesTotal;
+      //ESCAPE THE TAGS
+      //not necessary since we never actually make a selection based on the tags, but could
+      //definitely be handy if we ever implement a legend or something. Probably worth keeping
+      var sStringMod = sString;
+      for (var i = 0; i < sStringMod.length; i++)
+      {
+        var cCurrentChar = sStringMod.charAt(i);
+        if (ASPECIALCSSCHARS.indexOf(cCurrentChar) !== -1)
+        {
+          sStringMod = sStringMod.substring(0, i) + '\\' + sStringMod.substring(i);
+          i += 1; //move i two steps ahead so we don't keep seeing the same special char
+        }
       }
+      if (!isNaN(sStringMod.charAt(0))) //first char is a number
+      {
+        sStringMod = "\\3" + sStringMod.charAt(0) + sStringMod.substring(1);  //We have to add that space in there so that the new escaped numeral won't accidentally pick up other
+                                                                  //characters after the \ to be included in the escape string.
+      }
+      sStringMod = sStringMod.replace(/\s/g, '.');
+      return sStringMod;
+    }
+    */
+
+    function drawPathsThroughNodes(aJSONNodes, sHiddenOrDisplayed)
+    {
+      var bDisplayed = (sHiddenOrDisplayed === "displayed");
+      var sDisplay = bDisplayed ? "" : "none";
+
+      var d3sLineFunction = d3.svg.line() //function to generate svg path commands
+        .x(function(d) {return d.x;})
+        .y(function(d) {return d.y;})
+        .interpolate(INTERPOLATION);
+
+      var aJSONPathInfo = 
+        [{
+          "d": d3sLineFunction(aJSONNodes),
+          "stroke": aJSONNodes[0]["fill"],
+          "stroke-width": bDisplayed ? LINEGRAPHWIDTH : 0,
+          "display": sDisplay,
+          "fill": "none"
+        }];
+
+      //create the path
+      //Data join and enter path (not really necessary, only one path per call)
+       d3sTimelineSVG.selectAll(".this.must.be.an.empty.selection.so.all.our.data.gets.bound.to.the.enter.selection.ajsdlkfjioeajwf")
+        .data(aJSONPathInfo)
+        .enter()
+        .append("path")
+        .attr("class", "lineGraph " + sHiddenOrDisplayed + " " + aJSONNodes[0]["tag"])
+        .attr("d", function(d) {return d["d"];})
+        .style("stroke-width", function(d) {return d["stroke-width"];})
+        .style("stroke", function(d) {return d["stroke"];})
+        .style("display", function(d) {return d["display"];})
+        .style("fill", function(d) {return d["fill"];});
     }
 
-
-  	//note: here sStyle can be displayed or hidden
-  	function plotJSONNodes(aJSONNodes, sHiddenOrDisplayed)
+    //note: here sStyle can be displayed or hidden
+    //Relies on the following globals defined in this file: INTERPOLATION, LINEGRAPHWIDTH
+  	function drawNodes(aJSONNodes, sHiddenOrDisplayed)
   	{
   		var sColor = aJSONNodes[0]["fill"];
-  		var sTag = aJSONNodes[0]["tag"];
   		var bDisplayed = (sHiddenOrDisplayed === "displayed");
   		var sDisplay = bDisplayed ? "" : "none";
 
-  		var d3sLineFunction = d3.svg.line() //function to generate svg path commands
-  			.x(function(d) {return d.x;})
-  			.y(function(d) {return d.y;})
-  			.interpolate(INTERPOLATION);
-
-  		var aJSONPathInfo = 
-  			[{
-  				"d": d3sLineFunction(aJSONNodes),
-  				"stroke": sColor,
-  				"stroke-width": bDisplayed ? LINEGRAPHWIDTH : 0,
-  				"display": sDisplay,
-  				"fill": "none"
-  			}];
-
-  		//ESCAPE THE TAGS
-  		//not necessary since we never actually make a selection based on the tags, but could definitely
-  		//be handy if we ever implement a legend or something. Probably worth keeping around
-  		/*
-  		var sTagMod = sTag; //we will assign straight up sTag to the class, but search for them using sTagMod in the selectors
-  		for (var i = 0; i < sTagMod.length; i++)
-  		{
-  			var cCurrentChar = sTagMod.charAt(i);
-  			if (ASPECIALCSSCHARS.indexOf(cCurrentChar) !== -1)
-  			{
-  				sTagMod = sTagMod.substring(0, i) + '\\' + sTagMod.substring(i);
-  				i += 1; //move i two steps ahead so we don't keep seeing the same special char
-  			}
-  		}
-  		if (!isNaN(sTagMod.charAt(0))) //first char is a number
-  		{
-  			sTagMod = "\\3" + sTagMod.charAt(0) + sTagMod.substring(1);  //We have to add that space in there so that the new escaped numeral won't accidentally pick up other
-                                                                  //characters after the \ to be included in the escape string.
-  		}
-  		sTagMod = sTagMod.replace(/\s/g, '.');
-  		*/
-
-  		//create the path
-  		//Data join and enter path (not really necessary, only one path per call)
-  		 d3sSVG.selectAll(".this.must.be.an.empty.selection.so.all.our.data.gets.bound.to.the.enter.selection.ajsdlkfjioeajwf")
-  			.data(aJSONPathInfo)
-  			.enter()
-  			.append("path")
-  			.attr("class", "lineGraph " + sHiddenOrDisplayed + " " + sTag)
-  			.attr("d", function(d) {return d["d"];})
-  			.style("stroke-width", function(d) {return d["stroke-width"];})
-  			.style("stroke", function(d) {return d["stroke"];})
-  			.style("display", function(d) {return d["display"];})
-  			.style("fill", function(d) {return d["fill"];});
-
-  		//Create the nodes
+  		//Draw the nodes
   		//Data join and enter circles (more useful, many nodes per call)
-  		d3sSVG.selectAll(".this.must.be.an.empty.selection.so.all.our.data.gets.bound.to.the.enter.selection.ajsdlkfjioeajwf")
+  		d3sTimelineSVG.selectAll(".this.must.be.an.empty.selection.so.all.our.data.gets.bound.to.the.enter.selection.ajsdlkfjioeajwf")
   			.data(aJSONNodes)
   			.enter()
   			.append("circle")
-  			.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + sTag)
+  			.attr("class", "node unclicked " + sHiddenOrDisplayed + " " + aJSONNodes[0]["tag"])
   			.attr("r", function(d) {return d["r"];})
   			.attr("cx", function(d) {return d["x"];})
   			.attr("cy", function(d) {return d["y"];})
@@ -450,8 +296,9 @@
   			.style("display", sDisplay);
   	}
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   	//+++++++++++++++++++++++++++++ EVENT FUNCTIONS ++++++++++++++++++++++++++++++++++++++++
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   	function removePopUps ()
   	{
@@ -489,7 +336,7 @@
   		var sColorClicked = "rgb(124, 181, 34)";
   		var iButtonSize = 5;
 
-  		d3sSVG.append("text")
+  		d3sTimelineSVG.append("text")
   			.attr("class", function() {return isFaceted ? "buttonInformation faceted highlighted" : "buttonInformation faceted normal";})
   			.attr("text-anchor", "end")
   			.attr("x", HAXISEND - 10) //magic number
@@ -497,14 +344,14 @@
   			.text("By tag")
   			.style("fill", function() {return isFaceted ? sColorClicked : sColorNotClicked;});
 
-  		d3sSVG.append("text")
+  		d3sTimelineSVG.append("text")
   			.attr("class", function() {return isFaceted ? "buttonInformation total normal" : "buttonInformation faceted highlighted";})
   			.attr("x", HAXISEND + 10) //magic number
   			.attr("y", SVGHEIGHT - (iYOffset - 4)) //magic number
   			.text("total")
   			.style("fill", function() {return isFaceted ? sColorNotClicked : sColorClicked;});
 
-  		var d3sButton = d3sSVG.append("circle")
+  		var d3sButton = d3sTimelineSVG.append("circle")
   			.attr("class", function() {return isFaceted ? "button clicked" : "button unclicked";})
   			.attr("r", iButtonSize)
   			.attr("cx", HAXISEND)
@@ -598,7 +445,7 @@
   				var iYLocation = parseInt(d3sTrigger.attr("cy"));
   				var d3sTickPath = d3.select(".tickInfoPath.date" + d.date);
 
-  				d3sSVG.append("text")
+  				d3sTimelineSVG.append("text")
   					.text(d.tag)
   					.attr("class", "smallPop-up")
   					.attr("x", iXLocation + 5)
@@ -666,7 +513,7 @@
   	  					.attr("r", 7);
 
   	  				//draw info at top of page
-  	  				d3sSVG.append("text")
+  	  				d3sTimelineSVG.append("text")
   	  					.text(d.total ? "Search: " + d.tag : "Tag: " + d.tag)
   	  					.attr("class", "popUp text")
   	  					.transition()
@@ -675,7 +522,7 @@
   	  					.style("fill-opacity", 1)
   	  					.style("font-size", iTextSize);
 
-  	  				d3sSVG.append("text")
+  	  				d3sTimelineSVG.append("text")
   	  					.text("Num. of Requests: " + d.requests)
   	  					.attr("class", "popUp text")
   	  					.transition()
@@ -684,7 +531,7 @@
   	  					.style("fill-opacity", 1)
   	  					.style("font-size", iTextSize);
 
-  	  				d3sSVG.append("text")
+  	  				d3sTimelineSVG.append("text")
   	  					.text("Date: " + d["date-range"])
   	  					.attr("class", "popUp text")
   	  					.transition()
@@ -694,7 +541,7 @@
   	  					.style("font-size", iTextSize);
 
   	  				//draw line from node to info
-  	  				d3sSVG.append("line").attr("class", "popUp infoBox")
+  	  				d3sTimelineSVG.append("line").attr("class", "popUp infoBox")
   	  					.attr("x1", fNodeX)
   	  					.attr("y1", fNodeY - 7)
   	  					.attr("x2", fNodeX)
@@ -721,16 +568,181 @@
     				}
     			});
   	}
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //+++++++++++++++++++++++++++++ Creating JSON Nodes ++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  	//++++++++++++++++++++++++++ MAIN FUNCTION ++++++++++++++++++++++++++++++++
-  	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //+++++++++++++++++++++++++++++ L1 Helper Functions ++++++++++++++++++++++++++++++++++++
 
+    function calculateXLocation(iDate, fXAxisInterval)
+    {
+      return HOFFSET + (iDate * fXAxisInterval);
+    }
+
+    function calculateYLocation(iRequests, fYAxisInterval)
+    {
+      return (SVGHEIGHT - VOFFSET) - (iRequests * fYAxisInterval);
+    }
+
+    function randomColor()
+    {
+      return "hsl(" 
+          + Math.round(Math.random() * 360) + ", " 
+          + Math.round(Math.random() * 100) + "%, " 
+          + Math.round(30 + Math.random() * 30) + "%)";
+    }
+
+    //Note: Does not include the tag, y, and request values for the json node
+    function buildPartialJSONNode(jsonData, iDate, sColor, fXAxisInterval, fYAxisInterval, aJSONDates, sStyle, sTagField)
+    {
+      var bIsTotal = (sStyle === "total");
+      var sDate = aJSONDates[iDate]["full-date"];
+      var iDateEnd = iDate + 1;
+      var sDateEnd = "";
+      if (iDateEnd >= aJSONDates.length)
+      {
+        sDateEnd = "now"
+      }
+      else
+      {
+        sDateEnd = aJSONDates[iDateEnd]["full-date"];
+      }
+
+      var iRequests = bIsTotal ? jsonData["Total by Dates"][aJSONDates[iDate]["full-key"]] : jsonData["Tags"][sTagField][aJSONDates[iDate]["full-key"]];
+
+      jsonNode =  
+      {
+        "date": sDate, "tag": sTagField,
+        "x": calculateXLocation(iDate, fXAxisInterval), "y": calculateYLocation(iRequests, fYAxisInterval), 
+        "requests": iRequests, "fill": sColor,
+        "style": sStyle, "r": NODESIZE,
+        "display": "", "total": bIsTotal, //we'll undisplay later if necessary
+        "date-range": sDate + " to " + sDateEnd
+      }; 
+      return jsonNode;
+    }
+
+    //++++++++++++++++++++++++++++++++++++++ Meat ++++++++++++++++++++++++++++++++++++++++++
+
+    function generateJSONNodes(jsonData, aJSONDates, aTagKeys, fXAxisInterval, fYAxisInterval, sStyle)
+    {
+      //FACETED
+      if (sStyle === "faceted")
+      {
+        var aaJSONPerDayPerTag = new Array();
+
+        //go through each tag
+        for (var iTag = 0; iTag < aTagKeys.length; iTag++)
+        {
+          var sColor = randomColor();
+          var aJSONNodesPerDay = new Array(aJSONDates.length);
+          var sCurrentTag = aTagKeys[iTag];
+          var iTotalTagRequests = 0;
+
+          //and then through each date in each tag
+          for(var iDate = 0; iDate < aJSONDates.length; iDate++)
+          {
+            aJSONNodesPerDay[iDate] = buildPartialJSONNode(jsonData, iDate, sColor, fXAxisInterval, fYAxisInterval, aJSONDates, sStyle, sCurrentTag);
+
+            iTotalTagRequests += aJSONNodesPerDay[iDate]["requests"];
+          }
+          if (iTotalTagRequests !== 0) //only add it to our array if it has requests
+          {
+            aaJSONPerDayPerTag.push(aJSONNodesPerDay);
+          }
+        }
+        return aaJSONPerDayPerTag;
+      }
+      //TOTAL
+      else if (sStyle === "total")
+      {
+        var sColor = randomColor();
+        var aJSONNodesTotal = new Array(aJSONDates.length);
+
+        //Go through each day
+        for (var iDate = 0; iDate < aJSONDates.length; iDate++)
+        {
+          var sSearch = jsonData["search"];
+
+          aJSONNodesTotal[iDate] = buildPartialJSONNode(jsonData, iDate, sColor, fXAxisInterval, fYAxisInterval, aJSONDates, sStyle, sSearch); 
+        }
+        return aJSONNodesTotal;
+      }
+    }
+
+
+  	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  	//+++++++++++++++++++++++++++++++++ Main Function +++++++++++++++++++++++++++++++++++++++
+  	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //+++++++++++++++++++++++++++++ L1 Helper Functions ++++++++++++++++++++++++++++++++++++
+
+    function determineMax(jsonSingleGraphData, aJSONDates, iCurrentMax)
+    {
+      for (var i = 0; i < aJSONDates.length; i++)
+      {
+        var iCurrentRequests = jsonSingleGraphData[aJSONDates[i]["full-key"]];
+        iCurrentMax = iCurrentRequests > iCurrentMax ? iCurrentRequests : iCurrentMax;
+      }
+      return iCurrentMax;
+    }
+      
+    function getYAxisInterval(jsonData, aJSONDates, aTagKeys, sStyle)
+    {
+      var iMaxRequests = 0;
+      var iGraphHeight = SVGHEIGHT - VOFFSET;
+      var fPercentCushion = .2;
+      if (sStyle === "faceted")
+      {
+          for (var iTag = 0; iTag < aTagKeys.length; iTag++)
+          {
+            var sCurrentTag = aTagKeys[iTag];
+            jsonCurrentTag = jsonData["Tags"][sCurrentTag];
+            iMaxRequests = determineMax(jsonCurrentTag, aJSONDates, iMaxRequests);
+          }
+      }
+      else
+      {
+        iMaxRequests = determineMax(jsonData["Total by Dates"], aJSONDates, iMaxRequests);
+      }
+
+        var fCushion = (fPercentCushion * iMaxRequests > 0) ? fPercentCushion * iMaxRequests : 1;
+
+        return iGraphHeight / (iMaxRequests + fCushion);
+    }
+    
+    function getSortedKeys(jsonData)
+    {
+      return d3.keys(jsonData).sort(
+        function(sOne, sTwo)
+        {
+          return sOne.toLowerCase() < sTwo.toLowerCase() ? -1 : 1;
+        });
+    }
+
+    function generateJSONDates(jsonData)
+    {
+      var aDates = new Array();
+      for(var sDate in jsonData["Total by Dates"])
+      {
+        if (sDate.charAt(0) === '2') //there is also a 'between' field
+        {
+          var aDate = sDate.split("-");
+          var iYear = parseInt(aDate[0]);
+          var iMonth = parseInt(aDate[1]);
+          var iDay = parseInt(aDate[2]);
+
+          aDates.push({"year" : iYear, "month" : iMonth, "day" : iDay, "full-date" : sDate.substring(0, sDate.indexOf("T")), "full-key" : sDate});
+        }
+      }
+      return aDates;
+    }
+
+    //++++++++++++++++++++++++++++++++++++++ Meat ++++++++++++++++++++++++++++++++++++++++++
 
   	function drawGraph(jsonData)
   	{
-  		var isFaceted = (DEFAULTSTYLE === "faceted" ? true : false);
-  		var sFacetDisplay = (isFaceted ? "displayed" : "hidden");
+  		var isByTag = (DEFAULTSTYLE === "faceted" ? true : false);
   		var aJSONDates = generateJSONDates(jsonData).sort(
   			function (jsonDateOne, jsonDateTwo) 
   			{
@@ -748,7 +760,7 @@
   					return (jsonDateOne.day <= jsonDateTwo.day) ? -1 : 1;
   				}
   			});
-		var aTagKeys = getSortedKeys(jsonData["Total by Tags"]);
+		  var aTagKeys = getSortedKeys(jsonData["Total by Tags"]);
 
   		var iSpansOfDays = aJSONDates.length;
   		var fXAxisInterval = (HAXISEND - HOFFSET) / iSpansOfDays; //TODO: scales would be better here
@@ -760,15 +772,18 @@
 
   		//Draw Graph
   		drawAxis(aJSONDates, fXAxisInterval);
-  		plotJSONNodes(aJSONNodesTotal, (isFaceted ? "hidden" : "displayed"));
+      drawPathsThroughNodes(aJSONNodesTotal, (isByTag ? "hidden" : "displayed"));
+  		drawNodes(aJSONNodesTotal, (isByTag ? "hidden" : "displayed"));
+      var sFacetDisplay = (isByTag ? "displayed" : "hidden");
 		for (var i = 0; i < aaJSONNodesFaceted.length; i++)
 		{
-			plotJSONNodes(aaJSONNodesFaceted[i], sFacetDisplay);
+      drawPathsThroughNodes(aaJSONNodesFaceted[i], sFacetDisplay);
+			drawNodes(aaJSONNodesFaceted[i], sFacetDisplay); //precalculate sFacet display earlier so that we don'thave to do it every loop
 		}
 
 		//Create Events
   		createNodeEvents();
-  		createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isFaceted);
+  		createStyleButton(aaJSONNodesFaceted, aJSONNodesTotal, isByTag);
   	}
     drawGraph(HTMLEtimelineData);
 	});
