@@ -339,7 +339,7 @@ function waggle_search_entity_property_info_alter(&$info) {
 }
 
 function waggle_search_hour_created_getter_callback($item) {
-  return format_date($item->created, 'custom', 'G'); //hour without leading 0s, 0 to 23
+  return format_date($item->created, 'custom', 'G'); //hour without leading 0, 0 to 23
 }
 
 function waggle_search_time_to_close_getter_callback($item) {
