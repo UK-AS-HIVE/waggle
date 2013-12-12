@@ -13,22 +13,46 @@ function waggle_vis_heatmap()
   $servSolr = search_api_index_get_server(search_api_index_load('default_node_index'));
   $connection = $servSolr->getSolrConnection();
   $sWordSearch = isset($_GET['ws']) ? $_GET['ws'] : '';
-  $sStart = 'NOW/DAY-1MONTH';
+  $sStart = 'NOW/DAY-6MONTH';
   $sEnd = 'NOW/DAY';
-  $sStartTime = substr($sStart, 0, strpos($sStart, 'T') + 1) . '08:00:00Z';
-  $sEndTime = substr($sEnd, 0, strpos($sStart, 'T') + 1) . '20:00:00Z';
-  $dateFQ = 'ds_created:[' . $sStart . ' TO ' . $sEnd . ']';
+  $sDateFQ = "ds_created:[$sStart TO $sEnd]";
+  $iHourStart = 8;
+  $iHourEnd = 19;
+  $sHourCreatedFQ = "is_hour_created:[$iHourStart TO $iHourEnd]";
   $output .= '<p>hello!</p>';
+  $sBigFQ =  waggle_search_convert_to_fq($sWordSearch) . $sDateFQ . ' ' . $sHourCreatedFQ; //left optional because waggle_search_convert_to_fq leaves it's filters as optional
 
+  /*
   $asrHourFilter = $connection->makeServletRequest('select',
     array(
       'rows' => 25,
       'show' => 'index',
-      'fq' => $dateFQ. '+is_hour_created:[8 TO 19]',
+      'fq' => $sBigFQ,
+      'facet' => 'on',
+      'facet.field' => 'is_hour_created',
+      'facet.mincount' => 1,
       'debugQuery' => 'on'
     )
   );
   dpm($asrHourFilter);
+  */
+  $aHeatMapData;
+  for ($i = 0; $i < 7; $i++)
+  {
+    $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
+      array(
+        'rows' => 0,
+        'show' => 'index',
+        'fq' => $sBigFQ . " is_day_created=$i",
+        'facet' => 'on',
+        'facet.field' => 'is_hour_created',
+        'facet.mincount' => 1,
+        'debugQuery' => 'on',
+      )
+    );
+    dpm($asrRequestsByHourPerDay);
+    $aHeatMapData[$i][$asrRequestsByHourPerDay['facet_counts']['facet_fields']['is_hour_created']];
+  }
 
   /*
   $asrTimeClosedFilter = $connection->makeServletRequest('select',

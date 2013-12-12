@@ -327,64 +327,30 @@ function waggle_search_entity_property_info_alter(&$info) {
      //'required' => TRUE //note that this is not currently required. Only closed stories will have a value here, otherwise the getter_callback returns nothing. this doesn't seem like a good solution though...
     'getter callback' => 'waggle_search_time_to_close_getter_callback',
   );
+
+  $info['node']['bundles']['story']['properties']['day_created'] = array(
+    'label' => t('Day of Creation (0 = Sunday)'),
+    'type' => 'integer',
+    'computed' => TRUE,
+    'required' => TRUE,
+    'getter callback' => 'waggle_search_day_created_getter_callback',
+  );
   //watchdog("aaron", print_r($info, true));
 }
 
 function waggle_search_hour_created_getter_callback($item) {
-  return format_date($item->created, 'custom', 'G');
+  return format_date($item->created, 'custom', 'G'); //hour without leading 0, 0 to 23
 }
 
 function waggle_search_time_to_close_getter_callback($item) {
   $iStatus = $item->field_status;
+  //TODO: figure out way to specify closed value other than checking this way. Doesn't work across the taxonomy
   if ($iStatus['und'][0]['tid'] == '2') //if it's closed (note: tid is a string!)
   {
     return $item->changed - $item->created;
   }
 }
 
-/**
- * Implements hook_node_view().
- *
- * Create a test psuedo-field for stories
- * Added by: Aaron
- */
-/*
-function waggle_search_node_view($node, $view_mode, $langcode) {
-  switch ($node->type) {
-    case 'story':
-      $aAssociatedUsers = $node->content['sm_field_associated_users'];
-      $iNumOfUsers = sizeof($aAssociatedUsers);
-      if ($iNumOfUsers !== 0)
-      {
-        $iNumOfUsers = sizeof($aAssociatedUsers['#items']);
-      }
-      dpm($node);
-
-      $node->content['test_field'] = array(
-        '#type' => 'item',
-        '#title' => t('test title!'),
-        '#markup' => t("Num. of Users Associated: $iNumOfUsers"),
-      );
-    break;
-  }
+function waggle_search_day_created_getter_callback($item) {
+  return format_date($item->created, 'custom', 'w'); //day of the week, 0 being sunday
 }
-*/
-
-/**
- * Implements hook_field_extra_fields().
- *
- * Create a test psuedo-field for stories
- * Added by: Aaron
- */
-/*
-function waggle_search_field_extra_fields() {
-  $extra['node']['story']['display'] = array (
-    'test_field' => array(
-      'label' => t('Test field!'),
-      'description' => t('using this to test psuedo-fields')
-    )
-  );
-
-  return $extra;
-}
-*/
