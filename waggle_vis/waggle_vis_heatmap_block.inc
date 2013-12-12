@@ -36,23 +36,19 @@ function waggle_vis_heatmap()
   );
   dpm($asrHourFilter);
   */
-  $aHeatMapData;
-  for ($i = 0; $i < 7; $i++)
-  {
-    $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
-      array(
-        'rows' => 0,
-        'show' => 'index',
-        'fq' => $sBigFQ . " is_day_created=$i",
-        'facet' => 'on',
-        'facet.field' => 'is_hour_created',
-        'facet.mincount' => 1,
-        'debugQuery' => 'on',
-      )
-    );
-    dpm($asrRequestsByHourPerDay);
-    $aHeatMapData[$i][$asrRequestsByHourPerDay['facet_counts']['facet_fields']['is_hour_created']];
-  }
+  $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
+    array(
+      'rows' => 0,
+      'show' => 'index',
+      'fq' => $sBigFQ,
+      'facet' => 'on',
+      'facet.field' => 'is_hour_created',
+      'facet.mincount' => 1,
+      'debugQuery' => 'on',
+    )
+  );
+  $data = json_encode($asrRequestsByHourPerDay->facet_counts->facet_fields->is_hour_created);
+  dpm($data);
 
   /*
   $asrTimeClosedFilter = $connection->makeServletRequest('select',
