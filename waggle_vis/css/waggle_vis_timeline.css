@@ -1,0 +1,31 @@
+.ticks
+{
+  stroke-width: 1;
+}
+
+.lineGraph
+{
+  fill: none;
+}
+
+.buttonInformation
+{
+  font-size: 12px;
+}
+
+
+.tickInfo
+{
+  /*fill: rgb(180, 180, 180);*/
+  font-size: 12px;
+}
+
+.tickInfoPath
+{
+  stroke: rgb(180, 180, 180);
+}
+
+.infoBox
+{
+  stroke-width: 1;
+}

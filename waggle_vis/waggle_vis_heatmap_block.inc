@@ -4,6 +4,8 @@
  */
 function waggle_vis_heatmap()
 {
+  drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/css/waggle_vis_share.css'); //TODO: put this in it's own block
+  //drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/css/waggle_vis_heatmap.css');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.min.js');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/share.js');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/heatmap.js');
@@ -36,20 +38,25 @@ function waggle_vis_heatmap()
   );
   dpm($asrHourFilter);
   */
-  $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
-    array(
-      'rows' => 0,
-      'show' => 'index',
-      'fq' => $sBigFQ,
-      'facet' => 'on',
-      'facet.field' => 'is_hour_created',
-      'facet.mincount' => 1,
-      'debugQuery' => 'on',
-    )
-  );
-  $data = json_encode($asrRequestsByHourPerDay->facet_counts->facet_fields->is_hour_created);
-  dpm($data);
+  $data;
+  for ($i = 0; $i <= 6; $i++)
+  {
+    $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
+      array(
+        'rows' => 0,
+        'show' => 'index',
+        'fq' => $sBigFQ . " is_day_created:$i", //TODO: add security check
+        'facet' => 'on',
+        'facet.field' => 'is_hour_created',
+        'facet.mincount' => 1,
+        'debugQuery' => 'on',
+      )
+    );
+    $data[$i] = json_encode($asrRequestsByHourPerDay->facet_counts->facet_fields->is_hour_created);
+  }
 
+  dpm($data);
+  $sOutput .= '<script>var HTMLEHeatmapData = ' . json_encode($data, JSON_FORCE_OBJECT) . ', iHourStart = ' . $iHourStart . ', iHourEnd = ' . $iHourEnd . ';</script>';
   /*
   $asrTimeClosedFilter = $connection->makeServletRequest('select',
     array(
@@ -58,6 +65,6 @@ function waggle_vis_heatmap()
       'fq' => '+is_time_to_close'))
   */
 
-  $output .= '</div>';
-  return $output;
+  $sOutput .= '</div>';
+  return $sOutput;
 }
