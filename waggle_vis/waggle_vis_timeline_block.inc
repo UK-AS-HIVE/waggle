@@ -3,7 +3,8 @@
  *  Contents of timeline block.
  */
 function waggle_vis_timeline() {
-  drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/waggle_vis.css');
+  drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/css/waggle_vis_share.css'); //TODO: put this in it's own block
+  drupal_add_css(drupal_get_path('module', 'waggle_vis') . '/css/waggle_vis_timeline.css');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/d3.v3/d3.v3.min.js');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/share.js');
   drupal_add_js(drupal_get_path('module', 'waggle_vis') . '/js/timeline.js');

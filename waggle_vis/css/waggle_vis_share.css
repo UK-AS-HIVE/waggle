@@ -1,0 +1,23 @@
+text
+{
+	font-family: sans-serif;
+}
+
+.axis, .heatMapAxis line
+{
+  stroke-width: 2;
+}
+
+.axis, .ticks, .heatMapAxis line
+{
+	stroke: gray;
+}
+
+.monthTitle, .heatMapAxis text
+{
+	fill: rgb(204, 204, 204);
+	font-family: sans-serif;
+	text-align: justify;
+	font-weight: bold;
+	font-size: 12px;
+}
