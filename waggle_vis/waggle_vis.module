@@ -21,6 +21,16 @@ function waggle_vis_block_info() {
     'visibility' => BLOCK_VISIBILITY_LISTED,
     );
 
+  $blocks['waggle_vis_averages'] = array(
+    'info' => 'Waggle Averages',
+    'cache' => DRUPAL_NO_CACHE,
+    'weight' => -1,
+    'status' => 1,
+    'region' => 'content',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    );
+
+
   return $blocks;
 }
 
@@ -39,10 +49,15 @@ function waggle_vis_block_view($delta = '') {
         'subject' => 'Heat Map',
         'content' => waggle_vis_heatmap()
       );
+    case 'waggle_vis_averages':
+      return array(
+        'subject' => 'Averages',
+        'content' => waggle_vis_averages()
+      );
   }
 }
 
 module_load_include('inc', 'waggle_vis', 'waggle_vis_timeline_block');
 module_load_include('inc', 'waggle_vis', 'waggle_vis_heatmap_block');
-
+module_load_include('inc', 'waggle_vis', 'waggle_vis_averages_block');
 
