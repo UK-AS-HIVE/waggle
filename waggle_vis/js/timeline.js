@@ -439,27 +439,27 @@
     		d3sNodes.on("mouseover", 
     			function(d) 
     			{
-  				var d3sTrigger = d3.select(this);
-  				var sColor = d3sTrigger.style("fill");
-  				var iXLocation = parseInt(d3sTrigger.attr("cx"));
-  				var iYLocation = parseInt(d3sTrigger.attr("cy"));
-  				var d3sTickPath = d3.select(".tickInfoPath.date" + d.date);
+    				var d3sTrigger = d3.select(this);
+    				var sColor = d3sTrigger.style("fill");
+    				var iXLocation = parseInt(d3sTrigger.attr("cx"));
+    				var iYLocation = parseInt(d3sTrigger.attr("cy"));
+    				var d3sTickPath = d3.select(".tickInfoPath.date" + d.date);
 
-  				d3sTimelineSVG.append("text")
-  					.text(d.tag)
-  					.attr("class", "smallPop-up")
-  					.attr("x", iXLocation + 5)
-  					.attr("y", iYLocation - 5)
-  					.attr("font-family", "sans-serif")
-  					.attr("font-size", "10px")
-  					.attr("fill", sColor)
-  					.style("fill-opacity", 1.0);
+    				d3sTimelineSVG.append("text")
+    					.text(d.tag)
+    					.attr("class", "smallPop-up")
+    					.attr("x", iXLocation + 5)
+    					.attr("y", iYLocation - 5)
+    					.attr("font-family", "sans-serif")
+    					.attr("font-size", "10px")
+    					.attr("fill", sColor)
+    					.style("fill-opacity", 1.0);
 
-  				d3sTickPath
-  					.classed("grown", true)
-  					.transition()
-  					.duration(STANDARDDURATION / 3) //magic number (we want it faster for design purposes)
-  					.attr("d", function (d) {return "M" + (d["x1"] - 15) + " " + (d["y1"] + 15) + " L " + d["x2"] + " " + d["y2"];});
+    				d3sTickPath
+    					.classed("grown", true)
+    					.transition()
+    					.duration(STANDARDDURATION / 3) //magic number (we want it faster for design purposes)
+    					.attr("d", function (d) {return "M" + (d["x1"] - 15) + " " + (d["y1"] + 15) + " L " + d["x2"] + " " + d["y2"];});
     			});
 
     		d3sNodes.on("mouseleave", 
