@@ -368,6 +368,23 @@ function waggle_search_entity_property_info_alter(&$info) {
     'getter callback' => 'waggle_search_day_created_getter_callback',
   );
   //watchdog("aaron", print_r($info, true));
+
+  $info['node']['bundles']['story']['properties']['is_associated_user_count'] = array(
+    'label' => t('Count of associated users'),
+    'type' => 'integer',
+    'computed' => TRUE,
+    'required' => TRUE,
+    'getter callback' => 'waggle_search_associated_user_count_getter_callback',
+  );
+
+  $info['node']['bundles']['story']['properties']['is_action_count'] = array(
+    'label' => t('Count of actions performed on node'),
+    'type' => 'integer',
+    'computed' => TRUE,
+    'required' => TRUE,
+    'getter callback' => 'waggle_search_action_count_getter_callback',
+  );
+
 }
 
 function waggle_search_hour_created_getter_callback($item) {
@@ -386,3 +403,18 @@ function waggle_search_time_to_close_getter_callback($item) {
 function waggle_search_day_created_getter_callback($item) {
   return format_date($item->created, 'custom', 'w'); //day of the week, 0 being sunday
 }
+
+function waggle_search_associated_user_count_getter_callback($item) {
+  if (isset($item->field_associated_users['und'])) {
+    return count($item->field_associated_users['und']);
+  }
+  return 0;
+}
+
+function waggle_search_action_count_getter_callback($item) {
+  $c = db_query('select count(*) from {waggle_tracker} where entity_id=:entity_id',
+    array(':entity_id' => $item->nid)
+  ); 
+  return $c->fetchField() || 0;
+}
+
