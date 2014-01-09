@@ -369,7 +369,7 @@ function waggle_search_entity_property_info_alter(&$info) {
   );
   //watchdog("aaron", print_r($info, true));
 
-  $info['node']['bundles']['story']['properties']['is_associated_user_count'] = array(
+  $info['node']['bundles']['story']['properties']['associated_user_count'] = array(
     'label' => t('Count of associated users'),
     'type' => 'integer',
     'computed' => TRUE,
@@ -377,7 +377,7 @@ function waggle_search_entity_property_info_alter(&$info) {
     'getter callback' => 'waggle_search_associated_user_count_getter_callback',
   );
 
-  $info['node']['bundles']['story']['properties']['is_action_count'] = array(
+  $info['node']['bundles']['story']['properties']['action_count'] = array(
     'label' => t('Count of actions performed on node'),
     'type' => 'integer',
     'computed' => TRUE,

@@ -24,7 +24,12 @@ function waggle_vis_averages() {
       'wt' => 'json',
       'fq' => $fq,
       'stats' => 'true',
-      'stats.field' => array('is_time_to_close', 'is_comment_count'),
+      'stats.field' => array(
+        'is_time_to_close',
+        'is_comment_count',
+        'is_associated_user_count',
+        'is_action_count',
+      ),
       //'stats.facet' => 'sm_field_tags:name'
     )
   );
