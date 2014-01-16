@@ -25,6 +25,9 @@ function waggle_vis_heatmap()
   $sHourCreatedFQ = "is_hour_created:[$iHourStart TO $iHourEnd]";
   $output .= '<p>hello!</p>';
   $sBigFQ =  waggle_search_convert_to_fq($sWordSearch) . $sDateFQ . ' ' . $sHourCreatedFQ; //left optional because waggle_search_convert_to_fq leaves it's filters as optional
+  global $user; //get access to the global user var
+  module_load_include('inc', 'waggle_vis', 'waggle_vis_security_check');
+  $sBigFQ .= ' ' . getSecurityCheckFQ($user);
 
   $data;
   for ($i = $iDayStart; $i <= $iDayEnd; $i++)
