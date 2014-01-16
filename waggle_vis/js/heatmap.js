@@ -34,9 +34,8 @@
     {
       var iColorVal = jsonHelpfulData['color'];
       var iMaxHours = jsonHelpfulData['maxRequests'];
-      var iColorPadLight = 20;
-      var iColorPadDark = 20;
-      var iColorScalePad = 0; //might through off color scale slider calculations, leave at 0 for now
+      var iColorHighBound = 90;
+      var iColorLowBound = 30;
       var iRoundedness = 0;
 
       //var d3sAxis = d3sSVG.append('g').attr("class", "heatMapAxis");
@@ -62,7 +61,7 @@
           //get the hour data for this time
           iRequests = HTMLEHeatmapData[i + DAYSTART][j + HOURSTART]; //TODO: resave HTMLEHeatmapData in this file so if it changes in waggle_vis_heatmap_block.inc we only have to change it once here too
           iRequestsNormalized = (iRequests / iMaxHours);
-          iLightnesVal = iColorPadLight + (iRequestsNormalized * (100 - iColorPadDark - iColorPadLight));
+          iColorPercentages = iColorLowBound + (iRequestsNormalized * (iColorHighBound - iColorLowBound));
           d3sBlocksGroup
             .append("rect")
             .classed("cell", true)
@@ -73,7 +72,7 @@
             .attr("width", fXSpan - 1) //TODO: Magic number 1
             .attr("rx", iRoundedness)
             .attr("ry", iRoundedness)
-            .style("fill", "hsl(" + iColorVal + ", " + 100 + "%, " + iLightnesVal + "%)");
+            .style("fill", "hsl(" + iColorVal + ", " + iColorPercentages + "%, " + iColorPercentages + "%)");
         }
       }
 
@@ -84,7 +83,7 @@
         .attr("x1", MARGINFORCHART['left'])
         .attr("x2", SVGWIDTH - MARGINFORCHART['right']);*/
 
-      return {"ySpan" : fYSpan, "xSpan" : fXSpan, 'colLight': "hsl(" + iColorVal + ", " + 100 + "%, " + (100 - iColorPadDark + iColorScalePad) + "%)", 'colDark': "hsl(" + iColorVal + ", " + 100 + "%, " + (iColorPadLight - iColorScalePad) + "%)"};
+      return {"ySpan" : fYSpan, "xSpan" : fXSpan, 'colLight': "hsl(" + iColorVal + ", " + 100 + "%, " + iColorHighBound + "%)", 'colDark': "hsl(" + iColorVal + ", " + 100 + "%, " + iColorLowBound + "%)"};
     }
 
     function drawHours(fYSpan)
