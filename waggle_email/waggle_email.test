@@ -34,12 +34,16 @@ class WaggleEmailUnitTestCase extends DrupalUnitTestCase {
         'file' => 'base64_plaintext.mail',
         'expected' => 'This is a reply.',
       ),
+      array(
+        'file' => 'reply_with_attachment.mail',
+        'expected' => 'An attachment', 
+      ),
     );
 
     foreach ($tests as $test) {
       $raw = file_get_contents(DRUPAL_ROOT . '/sites/all/modules/waggle/waggle_email/ingest_tests/' . $test['file']);
       $zend_message = new Zend_Mail_Message(array('raw' => $raw));
-      $body = waggle_email_ingestion_parse_body($zend_message, 'story-719679@help.as.uky.edu');
+      $body = waggle_email_ingestion_parse_body($zend_message, 'story-719679@help.as.uky.edu', 719679);
       $this->assertEqual($body, $test['expected'], "Reply extracted incorrectly.\n--Expected--:\n" . $test['expected'] . "\n--Extracted--:\n" . $body);
     }
   }

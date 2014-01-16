@@ -22,7 +22,7 @@ function waggle_email_ingestion_get_from_address($message) {
 /**
  *  $message - a message object, as created by new Zend_Mail_Message.
  */
-function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@hostname') {
+function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@hostname', $nodeID) {
   $body = null;
 
   $fromAddress = waggle_email_ingestion_get_from_address($message);

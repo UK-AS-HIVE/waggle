@@ -83,7 +83,7 @@
   }
 
   //get the message $body
-  $body = waggle_email_ingestion_parse_body($message, $toAddress);
+  $body = waggle_email_ingestion_parse_body($message, $toAddress, $nodeID);
 
   //ok, lets make it a comment in drupal, now
 

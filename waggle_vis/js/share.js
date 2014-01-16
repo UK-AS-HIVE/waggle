@@ -6,3 +6,5 @@ function createSVG(sID, iWidthPercent, iHeightPx)
           .attr("width", iWidthPercent + '%')
           .attr("height", iHeightPx);
 }
+
+//TODO: consider creating a main get color function to use in heatmap and timeline. could help in creating a consistent theme in the colors between the apps

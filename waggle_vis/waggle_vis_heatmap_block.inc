@@ -20,26 +20,17 @@ function waggle_vis_heatmap()
   $sDateFQ = "ds_created:[$sStart TO $sEnd]";
   $iHourStart = 8;
   $iHourEnd = 19;
+  $iDayStart = 0; //monday
+  $iDayEnd = 6; //friday
   $sHourCreatedFQ = "is_hour_created:[$iHourStart TO $iHourEnd]";
   $output .= '<p>hello!</p>';
   $sBigFQ =  waggle_search_convert_to_fq($sWordSearch) . $sDateFQ . ' ' . $sHourCreatedFQ; //left optional because waggle_search_convert_to_fq leaves it's filters as optional
+  global $user; //get access to the global user var
+  module_load_include('inc', 'waggle_vis', 'waggle_vis_security_check');
+  $sBigFQ .= ' ' . getSecurityCheckFQ($user);
 
-  /*
-  $asrHourFilter = $connection->makeServletRequest('select',
-    array(
-      'rows' => 25,
-      'show' => 'index',
-      'fq' => $sBigFQ,
-      'facet' => 'on',
-      'facet.field' => 'is_hour_created',
-      'facet.mincount' => 1,
-      'debugQuery' => 'on'
-    )
-  );
-  dpm($asrHourFilter);
-  */
   $data;
-  for ($i = 0; $i <= 6; $i++)
+  for ($i = $iDayStart; $i <= $iDayEnd; $i++)
   {
     $asrRequestsByHourPerDay = $connection->makeServletRequest('select',
       array(
@@ -48,15 +39,15 @@ function waggle_vis_heatmap()
         'fq' => $sBigFQ . " is_day_created:$i", //TODO: add security check
         'facet' => 'on',
         'facet.field' => 'is_hour_created',
-        'facet.mincount' => 1,
+        //'facet.mincount' => 1,
         'debugQuery' => 'on',
       )
     );
-    $data[$i] = json_encode($asrRequestsByHourPerDay->facet_counts->facet_fields->is_hour_created);
+    $data[$i] = $asrRequestsByHourPerDay->facet_counts->facet_fields->is_hour_created;
   }
 
   dpm($data);
-  $sOutput .= '<script>var HTMLEHeatmapData = ' . json_encode($data, JSON_FORCE_OBJECT) . ', iHourStart = ' . $iHourStart . ', iHourEnd = ' . $iHourEnd . ';</script>';
+  $sOutput .= '<script>var HTMLEHeatmapData = ' . json_encode($data, JSON_FORCE_OBJECT) . ", HOURSTART = $iHourStart, HOUREND = $iHourEnd, DAYSTART = $iDayStart, DAYEND = $iDayEnd;</script>";
   /*
   $asrTimeClosedFilter = $connection->makeServletRequest('select',
     array(
