@@ -29,8 +29,9 @@ function waggle_node_access($node, $op, $account) {
   // Grant access only to associated users.
   foreach ($node->field_associated_users as $lang => $user_map) {
     foreach ($user_map as $associated_user) {
-      if ($associated_user['uid'] == $account->uid)
+      if ($associated_user['uid'] === $account->uid) {
         return NODE_ACCESS_ALLOW;
+      }
     }
   }
 
