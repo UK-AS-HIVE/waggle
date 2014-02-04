@@ -20,7 +20,7 @@ function waggle_node_access($node, $op, $account) {
 
   if ($node->uid == $account->uid
     || user_access('access all stories', $account)) {
-    return NODE_ACCESS_IGNORE;
+    return NODE_ACCESS_ALLOW;
   }
 
   // Grant access only to associated users.
