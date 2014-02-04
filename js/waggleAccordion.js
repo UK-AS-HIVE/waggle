@@ -170,7 +170,7 @@ $(document).ready(function(){
     /**
      * Story Autocomplete inputs
      */
-    var stories = $('.view-accordion-view .node-story').each(function(i, story){
+    var stories = $('.view-accordion-view .node-story').not('.waggle-bound').each(function(i, story){
       var id = '#' + $(story).attr('id');
       WaggleAutocomplete(id + ' .add-user-wrapper .suggestions', $(id + ' .add-user-wrapper input'), 'AddUserAutocompleteHandler', 'StoryAddUserBindings');
       WaggleAutocomplete(id + ' .add-tag-wrapper .suggestions', $(id + ' .add-tag-wrapper input'), 'AddTagAutocompleteHandler', 'StoryAddTagBindings');
@@ -178,6 +178,8 @@ $(document).ready(function(){
         $(id + ' .comment-form textarea').parent().append('<div class="suggestions" style="display:none;"></div>');
       }
       WaggleAutocomplete(id + ' .story-new-comment-form .suggestions', $(id + ' .story-new-comment-form textarea'), 'SidebarAutocompleteHandler', 'SidebarAutocompleteBindings');
+      StoryAddStatusBindings(id);
+      $(story).addClass('waggle-bound');
     });
 
     /**
@@ -243,6 +245,41 @@ $(document).ready(function(){
 
 });
 }(jQuery));
+
+function StoryAddStatusBindings(id) {
+  (function($) {
+    // Waggle story status <select>s
+    $(id + ' select.change-status').bind('change', function(){
+      var select = $(this);
+      select.parents('ul').append('<li class="change-status-ajax"><em>saving...</em></li>');
+      select.parents('li').hide();
+      $.post('/waggle/api/story/status/' + select.parents('.node').attr('id').substring(5), 
+        {'status': $(this).children('option:selected').val()},
+        function(json){
+          if (!json) {
+            select.parents('li').find('.change-status-ajax em').text('error');
+            return;
+          }
+          select.parents('ul').find('.change-status-ajax').remove();
+          select.parents('li').show();
+          select.blur();
+
+          if (select.children('option:selected').val() == 2) {
+            select.parents('li').removeClass('waggle-secondary');
+          }
+          else {
+            select.parents('li').addClass('waggle-secondary');
+          }
+        }
+      );
+    });
+    $(id + 'select.change-status').focus(function(){
+      $(this).parents('.waggle-secondary').addClass('waggle-secondary-disabled').removeClass('waggle-secondary');
+    }).blur(function(){
+      $(this).parents('.waggle-secondary-disabled').addClass('waggle-secondary').removeClass('waggle-secondary-disabled');
+    });
+  }(jQuery));
+}
 
 function StoryAddUserBindings(selector, input){
   (function($){

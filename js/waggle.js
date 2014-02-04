@@ -31,35 +31,5 @@ var tagsByName = new Array();
 		// New Story Autocomplete
 		WaggleAutocomplete('#block-waggle-waggle-add-story .suggestions', $('#block-waggle-waggle-add-story .field-name-body textarea'), 'SidebarAutocompleteHandler', 'SidebarAutocompleteBindings');
 
-    // Waggle story status <select>s
-    $('select.change-status').live('change', function(){
-      var select = $(this);
-      select.parents('ul').append('<li class="change-status-ajax"><em>saving...</em></li>');
-      select.parents('li').hide();
-      $.post('/waggle/api/story/status/' + select.parents('.node').attr('id').substring(5), 
-        {'status': $(this).children('option:selected').val()},
-        function(json){
-          if (!json) {
-            select.parents('li').find('.change-status-ajax em').text('error');
-            return;
-          }
-          select.parents('ul').find('.change-status-ajax').remove();
-          select.parents('li').show();
-          select.blur();
-
-          if (select.children('option:selected').val() == 2) {
-            select.parents('li').removeClass('waggle-secondary');
-          }
-          else {
-            select.parents('li').addClass('waggle-secondary');
-          }
-        });
-      });
-    $('select.change-status').focus(function(){
-      $(this).parents('.waggle-secondary').addClass('waggle-secondary-disabled').removeClass('waggle-secondary');
-    }).blur(function(){
-      $(this).parents('.waggle-secondary-disabled').addClass('waggle-secondary').removeClass('waggle-secondary-disabled');
-    });
-
-	});
+    	});
 })(jQuery);

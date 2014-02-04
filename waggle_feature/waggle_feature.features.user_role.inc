@@ -10,10 +10,10 @@
 function waggle_feature_user_default_roles() {
   $roles = array();
 
-  // Exported role: staff.
-  $roles['staff'] = array(
-    'name' => 'staff',
-    'weight' => 2,
+  // Exported role: superuser.
+  $roles['superuser'] = array(
+    'name' => 'superuser',
+    'weight' => 3,
   );
 
   return $roles;

@@ -6,7 +6,5 @@ files[] = waggle.module
 files[] = waggle.install
 files[] = waggle.permissions.test
 scripts[] = js/jquery-ui.custom.min.js
-scripts[] = js/jquery-ui.custom.min.js
 scripts[] = js/autocomplete.js
 scripts[] = js/waggle.js
-

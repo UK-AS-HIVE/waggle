@@ -14,7 +14,8 @@ function waggle_feature_user_default_permissions() {
   $permissions['access all stories'] = array(
     'name' => 'access all stories',
     'roles' => array(
-      'staff' => 'staff',
+      'administrator' => 'administrator',
+      'superuser' => 'superuser',
     ),
     'module' => 'waggle',
   );

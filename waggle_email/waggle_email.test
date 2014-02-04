@@ -1,0 +1,51 @@
+<?php
+
+include "Zend/Mime.php";
+include "Zend/Mail/Message.php";
+include "Zend/Mail.php";
+include "waggle_email.ingestion.inc";
+
+class WaggleEmailUnitTestCase extends DrupalUnitTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'waggle_email ingestion unit tests',
+      'description' => 'Test that waggle_email reply parsing works properly',
+      'group' => 'Waggle',
+    );
+  }
+
+  function setUp() {
+    drupal_load('module', 'waggle_email');
+    parent::setUp();
+  }
+
+  public function testReplyParsing() {
+    //print_r(drupal_get_path('module', 'waggle_email') . '/ingest_tests/uky_forwarded_to_gmail.mail');
+    $tests = array(
+      array(
+        'file' => 'uky_forwarded_to_gmail.mail',
+        'expected' => "I use gmail--my uk email is forwarded to a gmail account.\n\nWaggle User",
+      ),
+      array(
+        'file' => 'outlook_web_app.mail',
+        'expected' => 'This sholud definitely become a comment.',
+      ),
+      array(
+        'file' => 'base64_plaintext.mail',
+        'expected' => 'This is a reply.',
+      ),
+      array(
+        'file' => 'reply_with_attachment.mail',
+        'expected' => 'An attachment', 
+      ),
+    );
+
+    foreach ($tests as $test) {
+      $raw = file_get_contents(DRUPAL_ROOT . '/sites/all/modules/waggle/waggle_email/ingest_tests/' . $test['file']);
+      $zend_message = new Zend_Mail_Message(array('raw' => $raw));
+      $body = waggle_email_ingestion_parse_body($zend_message, 'story-719679@help.as.uky.edu', 719679);
+      $this->assertEqual($body, $test['expected'], "Reply extracted incorrectly.\n--Expected--:\n" . $test['expected'] . "\n--Extracted--:\n" . $body);
+    }
+  }
+
+}

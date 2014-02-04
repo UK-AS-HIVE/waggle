@@ -7,6 +7,8 @@ package = Waggle
 
 files[] = waggle_email.module
 files[] = waggle_email.admin.inc
+files[] = waggle_email.ingestion.inc
 files[] = includes/exception.inc
+files[] = waggle_email.test
 
 configure = admin/config/waggle/waggle_email
