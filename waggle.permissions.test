@@ -1,0 +1,56 @@
+<?php
+
+class WagglePermissionsWebTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'waggle node access unit tests',
+      'description' => 'Verify story permissions',
+      'group' => 'Waggle',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('waggle');
+
+    $this->users = array(
+      'client' => $this->drupalCreateUser(),
+      'helper1' => $this->drupalCreateUser(array(),'staff1'),
+      'helper2' => $this->drupalCreateUser(array(),'staff2'),
+    );
+
+    $this->stories = array(
+      $this->drupalCreateNode(array(
+        'uid' => $this->users['client']->uid,
+        'type' => 'story',
+        'body' => array(LANGUAGE_NONE => array(array('Testing'))),
+        'field_associated_users' => array('und' => array($this->users['helper1']->uid)),
+        'field_role_visibility' => array(),
+      )),
+    );
+  }
+
+  public function testAnonymousUser() {
+    $account = drupal_anonymous_user();
+
+    $node = $this->drupalCreateNode(array(
+      'type' => 'story',
+      'body' => array(LANGUAGE_NONE => array(array($this->randomName(64)))),
+      'field_associated_users' => array(),
+      'field_role_visibility' => array(),
+    ));
+
+    $this->assertEqual(
+      waggle_node_access($node, 'view', $account),
+      NODE_ACCESS_DENY,
+      'Anonymous users have no access to stories');
+  }
+
+  public function testWaggleOwnStory() {
+    $this->assertEqual(
+      node_access('view', $this->stories[0], $this->users['client']),
+      NODE_ACCESS_ALLOW,
+      'Client can access own submitted stories');
+  }
+
+}
+
