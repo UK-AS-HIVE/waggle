@@ -2287,6 +2287,7 @@ ul.facetapi-facetapi-checkbox-links li.leaf {
   font-family: museo-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: #eeeeee;
   border-color: #999;
+  border-width: 1px;
 }
 .story-new-comment-form input {
   position: absolute;
