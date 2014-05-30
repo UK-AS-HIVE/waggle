@@ -279,6 +279,19 @@ function waggle_email_node_update($node) {
     $old_status = taxonomy_term_load($node->original->field_status['und'][0]['tid']);
 
 
+    if($new_status->name == "Done" && preg_match('/.*This story originated from./', $node->body['und'][0]['value']) == 1){
+      if(variable_get('emailSurveyCount', 1) >= 5){
+        $surveyText = "If you would like, please take a few minutes to complete this customer service survey: http://www.surveyhere.com.  Thank you.";
+        variable_set('emailSurveyCount', 1);
+        watchdog('waggle_email', 'survey!');
+      }else{
+        $surveyText = "";
+        variable_set('emailSurveyCount', variable_get('emailSurveyCount', 1) + 1);
+        watchdog('waggle_email', variable_get('emailSurveyCount', 'none'));
+      }
+    }
+
+
     $uids = array_unique(array_merge(
       array($node->uid),
       _check_associated_users($node)
@@ -320,6 +333,7 @@ function waggle_email_node_update($node) {
           '!updater' => $user->name,
           '!old_status' => $old_status->name,
           '!new_status' => $new_status->name,
+          '!surveyText' => $surveyText,
           '!from_story' => true,
           ),
         $user->mail, TRUE);
@@ -363,6 +377,7 @@ function waggle_email_mail($key, &$message, $params) {
     case 'status_change':
       $message['subject'] = t('The status of Story# !nid has been changed to !new_status', $params);
       $message['body'] = t('!updater has changed the status for Story #!nid from "!old_status" to "!new_status"<br /><br />'
+        . '<p>!surveyText</p>'
         . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
         . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
         . 'the story</a> or reply to this email to respond.',
