@@ -353,8 +353,8 @@ function waggle_search_entity_property_info_alter(&$info) {
   );
 
   $info['node']['bundles']['story']['properties']['time_to_close'] = array(
-    'label' => t('Time from open to close in seconds'),
-    'type' => 'integer',
+    'label' => t('Time from open to close (stored as date from Unix Epoch)'),
+    'type' => 'date',
     'computed' => TRUE,
      //'required' => TRUE //note that this is not currently required. Only closed stories will have a value here, otherwise the getter_callback returns nothing. this doesn't seem like a good solution though...
     'getter callback' => 'waggle_search_time_to_close_getter_callback',
@@ -393,11 +393,21 @@ function waggle_search_hour_created_getter_callback($item) {
 
 function waggle_search_time_to_close_getter_callback($item) {
   $iStatus = $item->field_status;
+
   //TODO: figure out way to specify closed value other than checking this way. Doesn't work across the taxonomy
   if ($iStatus['und'][0]['tid'] == '2') //if it's closed (note: tid is a string!)
   {
+    /*$da = new DateTime('1970-01-01T00:00:00Z');
+    $da->add(new DateInterval('PT' . ($item->changed - $item->created) . 'S'));
+    $iso = $da->format('c');
+    watchdog('waggle_search', 'Getter call stack: ' . print_r(array_map(function($i){ return array('file' => $i['file'], 'line' => $i['line'], 'function' => $i['function']); },debug_backtrace()),true));
+    return $iso;*/
+
     return $item->changed - $item->created;
   }
+
+
+
 }
 
 function waggle_search_day_created_getter_callback($item) {

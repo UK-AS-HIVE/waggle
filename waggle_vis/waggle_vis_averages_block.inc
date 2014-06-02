@@ -17,12 +17,28 @@ function waggle_vis_averages() {
   global $user;
   $fq .= getSecurityCheckFQ($user);
 
+  $time_to_close_ranges = array();
+  $lower_bound = 0;
+  for ($i = 0; $i < 17; ++$i) {
+    $upper_bound = 3600*pow(2,$i);
+    $time_to_close_ranges[] = 'is_time_to_close:[' . $lower_bound . ' TO ' . $upper_bound . ']';
+    $lower_bound = $upper_bound;
+  }
+  $time_to_close_ranges[] = 'is_time_to_close:[' . $lower_bound . ' TO *]';
+
   $averages = $connection->makeServletRequest('select',
     array(
       'fld=item_id,score',
       'rows' => 0,
       'wt' => 'json',
       'fq' => $fq,
+      'facet.query' => $time_to_close_ranges,
+      'facet' => 'true',
+      'facet.date' => 'ds_time_to_close',
+      'facet.date.start' => '1970-1-1T00:00:00Z',
+      'facet.date.end' => '1971-1-1T00:00:00Z',
+      'facet.date.gap' => '+7DAY',
+      'facet.date.other' => 'after',
       'stats' => 'true',
       'stats.field' => array(
         'is_time_to_close',
@@ -49,10 +65,17 @@ function waggle_vis_averages() {
   $options = $index->getFields(FALSE, TRUE);
   //dpm($options, 'search index options');
 
+  $i = 0;
+  foreach ($data['facet_counts']['facet_queries'] as $q => $count) {
+    $upper_bound = waggle_vis_averages_format_timespan(3600*pow(2,$i));
+    $i++;
+    $output .= 'Closed < ' . $upper_bound . ': ' . $count . '<br/>';
+  }
+
   foreach ($data['stats']['stats_fields'] as $field => $stats) {
     $field_label = $options['fields'][array_search($field, $fieldMap)]['name'];
     if ($field === 'is_time_to_close') {
-      $output .= $field_label . ': ' . waggle_vis_averages_format_timespan($data['stats']['stats_fields'][$field]['mean']) . "<br/>\n";
+      $output .= $field_label . ': ' . waggle_vis_averages_format_timespan($data['stats']['stats_fields'][$field]['mean']) . ' (+/- ' . waggle_vis_averages_format_timespan($data['stats']['stats_fields'][$field]['stddev']) . ")<br/>\n";
     } else {
       $output .= $field_label . ': ' . ($data['stats']['stats_fields'][$field]['mean']) . "<br/>\n";
     }
@@ -80,7 +103,13 @@ function waggle_vis_averages_format_timespan($timespan_in_seconds) {
   }
   $weeks = floor($days / 7);
   $days -= 7*$weeks;
+  if ($weeks < 4) {
+    return $weeks . ' weeks, ' . $days . ' days';
+  }
+  $months = floor ($weeks / 4);
+  $weeks -= 4*$months;
+  return $months . ' months, ' . $weeks . ' weeks';
   //return $timespan_in_seconds . ' seconds';
-  return $weeks . ' weeks, ' . $days . ' days, ' . $hours . ' hours';
+
 }
 
