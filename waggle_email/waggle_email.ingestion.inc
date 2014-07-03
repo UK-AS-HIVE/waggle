@@ -134,11 +134,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
 
         //watchdog('waggle_email', $toWhole);
 
-        if($fromDomain[1] == "gmail.com"){
-          $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
-          $bodySplit = preg_split("/On .+<.*" . $toAddress .".*> wrote:/", $bodyRaw);
-          $bodyRaw = $bodySplit[0];
-        }else{
+        try {
           $enc = array_key_exists('content-transfer-encoding', $part->getHeaders()) ? $part->contentTransferEncoding : '7bit';
 
           switch (strtolower($enc)) {
@@ -151,17 +147,20 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
               $bodyRaw = quoted_printable_decode($bodyRaw);
               break;
           }
+        } catch (Exception $e) {
+          /* There was an error with decoding the text,
+             just continue on */
+        }
 
-          preg_match('/charset="(.+)"$/', $part->contentType, $matches);
+        preg_match('/charset="?([^"]+)"?$/', $part->contentType, $matches);
 
-          switch($charset = $matches[1]){
-            case 'Windows-1252':
-              $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
-              break;
-            case 'iso-8859-1':
-              $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
-              break;
-          }
+        switch($charset = strtolower($matches[1])){
+          case 'windows-1252':
+            $bodyRaw = iconv('Windows-1252', 'UTF-8//IGNORE', $bodyRaw);
+            break;
+          case 'iso-8859-1':
+            $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
+            break;
         }
 
         $bodyRaw = preg_split('/(________________________________\n)?From: | .+<.*' . $toAddress . '.*> /x', $bodyRaw);
