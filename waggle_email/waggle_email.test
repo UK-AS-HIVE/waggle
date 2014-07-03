@@ -25,26 +25,42 @@ class WaggleEmailUnitTestCase extends DrupalUnitTestCase {
       array(
         'file' => 'uky_forwarded_to_gmail.mail',
         'expected' => "I use gmail--my uk email is forwarded to a gmail account.\n\nWaggle User",
+        'storyid' => 719679,
       ),
       array(
         'file' => 'outlook_web_app.mail',
         'expected' => 'This sholud definitely become a comment.',
+        'storyid' => 720971,
       ),
       array(
         'file' => 'base64_plaintext.mail',
         'expected' => 'This is a reply.',
+        'storyid' => 720997,
       ),
       array(
         'file' => 'reply_with_attachment.mail',
         'expected' => 'An attachment', 
+        'storyid' => 719671,
+        'attachments' => array(
+          'Gotham-Ultra.otf' => array(
+            'size' => 161252
+          )
+        )
       ),
     );
 
     foreach ($tests as $test) {
       $raw = file_get_contents(DRUPAL_ROOT . '/sites/all/modules/waggle/waggle_email/ingest_tests/' . $test['file']);
       $zend_message = new Zend_Mail_Message(array('raw' => $raw));
-      $body = waggle_email_ingestion_parse_body($zend_message, 'story-719679@help.as.uky.edu', 719679);
+
+      $this->assertEqual($test['storyid'], waggle_email_parse_story_id($zend_message), "Failed to extract correct story id from message.");
+
+      $body = waggle_email_ingestion_parse_body($zend_message, 'story-'.$test['storyid'].'@help.as.uky.edu', $test['storyid']);
       $this->assertEqual($body, $test['expected'], "Reply extracted incorrectly.\n--Expected--:\n" . $test['expected'] . "\n--Extracted--:\n" . $body);
+
+      $expectedAttachmentCount = array_key_exists('attachments', $test) ? count($test['attachments']) : 0;
+      $parsedAttachments = waggle_email_parse_attachments($zend_message, $test['storyid'], 1);
+      $this->assertEqual($expectedAttachmentCount, count($parsedAttachments), "Expected " . $expectedAttachmentCount . " attachments\nExtracted " . count($parsedAttachments) . " attachments\n");
     }
   }
 

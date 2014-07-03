@@ -1,5 +1,95 @@
 <?php
 
+function waggle_email_ingest_message(Zend_Mail_Message $message) {
+  $fromAddress = waggle_email_ingestion_get_from_address($message);
+
+  //check to see if the email address is a users changeable address
+  $dbresult = db_query("SELECT entity_id FROM {field_data_field_mail} WHERE field_mail_value = :email LIMIT 1", array(':email' => $fromAddress));
+  foreach ($dbresult as $entID) {
+    $drupalUserObject = user_load($entID->entity_id);
+  }
+
+  if(!isset($drupalUserObject)){
+    $drupalUserObject = user_load_by_mail($fromAddress);
+  }
+
+  $nodeID = waggle_email_parse_story_id($message);
+
+  $drupalUID = $drupalUserObject->uid;
+
+  // NMA: This might be a good spot for permissions checks, like:
+  if (!node_access('update', $node = node_load($nodeID), $drupalUserObject)) { 
+    watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
+    return;
+  }
+  else {
+    watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment and passed the node_access test');
+  }
+
+  //get the message $body
+  $body = waggle_email_ingestion_parse_body($message, $toAddress, $nodeID);
+
+  //ok, lets make it a comment in drupal, now
+
+  $comment = (object) array(
+    'nid' => $nodeID,
+    'cid' => 0,
+    'pid' => 0,
+    'uid' => $drupalUID,
+    'mail' => $fromAddress,
+    'is_anonymous' => 0,
+    'homepage' => '',
+    'status' => COMMENT_PUBLISHED,
+    'subject' => '',
+    'language' => LANGUAGE_NONE,
+    'comment_body' => array(
+      LANGUAGE_NONE => array(
+        0 => array(
+        'value' => check_plain($body),
+        'format' => 'filtered_html',
+      	),
+    	),
+  	),
+	);
+
+	comment_submit($comment);
+	comment_save($comment);
+
+
+  //do another pass, and add any incoming attachments to the story
+  $attachments = waggle_email_parse_attachments($message, $nodeID, $drupalUID);
+}
+
+function waggle_email_parse_story_id(Zend_Mail_Message $message) {
+  //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
+  
+  $toWhole = $message->to;
+  $toWhole = trim($toWhole);
+
+  if(strpos($toWhole, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
+    //remove outside symbols
+    //watchdog('waggle_email', strlen($toWhole));
+    $toWhole = substr($toWhole, 1, -1);
+
+    $toArray = explode('<', $toWhole);
+    $toAddress = $toArray[1];
+    //watchdog("waggle_email", $toAddress);
+    $nodeID = $toAddress;
+  }else{ //probably just the email address
+    $nodeID = $toWhole;
+  }
+
+
+  //grab the story number (nid)
+  //use preg_replace to turn story-XXXXXX@YYYY.com to just XXXXXX
+  
+  $nodeID = preg_replace('/^.+-/', '', $nodeID);
+  $nodeID = preg_replace('/@.+$/', '', $nodeID);
+
+  return $nodeID;
+}
+
+
 function waggle_email_ingestion_get_from_address($message) {
   //get constituent parts of the email that we need to put into the new story note
 
@@ -82,33 +172,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
         $hasBody = true;
       }
 
-      // check to see if there is an attachment part
-      if ($part->headerExists('Content-Disposition'))
-      {
-        $contentDisposition = explode(';', $part->getHeader('Content-Disposition'));
-        //cycle through the rest of the parts looking for attachments
-        if ($contentDisposition[0] == "attachment")
-        {
-
-          $filename = $part->contentDescription;
-
-          $attachment = base64_decode($part->getContent());
-
-          $saveLoc = variable_get("waggle_email_attachment_save_location", "public://");
-
-          if ($file = file_save_data($attachment, $saveLoc . $filename, FILE_EXISTS_RENAME))
-          {
-            $node = node_load($nodeID);
-            //watchdog('waggle', 'succesfully saved file: ' . $filename);
-            $node->field_attachments[LANGUAGE_NONE][] = array('fid' => $file->fid, 'display' => 1, 'uid' => $drupalUID);
-            //watchdog('waggle', 'succesfully attached file to node as array: ' . $filename);
-            $freakout = node_save($node);
-          }
-          else {
-            //watchdog('waggle', 'failed to save attachment from eamail: ' . $filename . ":" . $nodeID, WATCHDOG_ERROR);
-          }
-        }
-      }
+      
 
     /*} catch (Zend_Mail_Exception $e) { 
     //none
@@ -129,5 +193,49 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
   }
 
   return $body;
+}
+
+function waggle_email_parse_attachments($message, $nodeID, $drupalUID) {
+  $attachments = array();
+
+  if (!($message->isMultipart()))
+    return $attachments;
+
+  foreach (new RecursiveIteratorIterator($message) as $part) {
+    // check to see if there is an attachment part
+    if ($part->headerExists('Content-Disposition'))
+    {
+      $contentDisposition = explode(';', $part->getHeader('Content-Disposition'));
+      //cycle through the rest of the parts looking for attachments
+      if ($contentDisposition[0] == "attachment")
+      {
+
+        $filename = $part->contentDescription;
+
+        $attachment = base64_decode($part->getContent());
+
+        $attachments[$filename] = $attachment;
+
+        $saveLoc = variable_get("waggle_email_attachment_save_location", "public://");
+
+        // TODO: probably break out attachments to be their own unit test
+        // in the meantime, unit tests will fail due to not being able to set file perms
+        if (!class_exists('DrupalTestCase'))
+          if ($file = file_save_data($attachment, $saveLoc . $filename, FILE_EXISTS_RENAME))
+          {
+            $node = node_load($nodeID);
+            //watchdog('waggle', 'succesfully saved file: ' . $filename);
+            $node->field_attachments[LANGUAGE_NONE][] = array('fid' => $file->fid, 'display' => 1, 'uid' => $drupalUID);
+            //watchdog('waggle', 'succesfully attached file to node as array: ' . $filename);
+            $freakout = node_save($node);
+          }
+          else {
+            watchdog('waggle', 'failed to save attachment from eamail: ' . $filename . ":" . $nodeID, WATCHDOG_ERROR);
+          }
+      }
+    }
+  }
+
+  return $attachments;
 }
 
