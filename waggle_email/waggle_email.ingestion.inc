@@ -163,7 +163,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
             break;
         }
 
-        $bodyRaw = preg_split('/(________________________________\n)?From: | .+<.*' . $toAddress . '.*> /x', $bodyRaw);
+        $bodyRaw = preg_split('/(________________________________\n)?From: | .+<.*' . $toAddress . '.*> |On\ .+,\ ' . $toAddress . '\ wrote/x', $bodyRaw);
 
         $body = trim($bodyRaw[0]);
 
