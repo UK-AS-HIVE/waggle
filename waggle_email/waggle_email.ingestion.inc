@@ -172,7 +172,6 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
       }
 
       
-
     /*} catch (Zend_Mail_Exception $e) { 
     //none
     // NMA: At the least, log exceptions with watchdog().
