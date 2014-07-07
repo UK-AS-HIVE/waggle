@@ -25,7 +25,7 @@ function waggle_node_access($node, $op, $account) {
   if ($op != 'view' && $op != 'update')
     return;
 
-  if ($node->uid == $account->uid
+  if ($node->uid === $account->uid
     || user_access('access all stories', $account)) {
     return NODE_ACCESS_ALLOW;
   }
