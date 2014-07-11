@@ -13,7 +13,9 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
     $drupalUserObject = user_load_by_mail($fromAddress);
   }
 
-  $nodeID = waggle_email_parse_story_id($message);
+  $toAddress = waggle_email_get_toAddress($message);
+  //$nodeID = waggle_email_parse_story_id($message);
+  $nodeID = waggle_email_parse_story_id_from_toAddress($toAddress);
 
   $drupalUID = $drupalUserObject->uid;
 
@@ -28,6 +30,7 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
 
   //get the message $body
   $body = waggle_email_ingestion_parse_body($message, $toAddress, $nodeID);
+
 
   //ok, lets make it a comment in drupal, now
 
@@ -60,6 +63,40 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
   $attachments = waggle_email_parse_attachments($message, $nodeID, $drupalUID);
 }
 
+function waggle_email_get_toAddress(Zend_Mail_Message $message) {
+  //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
+  
+  $toAddress = $message->to;
+  $toAddress = trim($toAddress);
+
+  if(strpos($toAddress, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
+    //remove outside symbols
+    //watchdog('waggle_email', strlen($toAddress));
+    $toAddress = substr($toAddress, 1, -1);
+
+    $toArray = explode('<', $toAddress);
+    $toAddress = $toArray[1];
+  }
+  
+  return $toAddress;
+}
+
+function waggle_email_parse_story_id_from_toAddress($toAddress) {
+  //grab the story number (nid)
+  //use preg_replace to turn story-XXXXXX@YYYY.com to just XXXXXX
+  
+  $nodeID = preg_replace('/^.+-/', '', $toAddress);
+  $nodeID = preg_replace('/@.+$/', '', $nodeID);
+
+  return $nodeID;
+}
+
+function waggle_email_parse_story_id(Zend_Mail_Message $message) {
+  return waggle_email_parse_story_id_from_toAddress(
+    waggle_email_get_toAddress($message)
+  );
+}
+/*
 function waggle_email_parse_story_id(Zend_Mail_Message $message) {
   //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
   
@@ -87,7 +124,7 @@ function waggle_email_parse_story_id(Zend_Mail_Message $message) {
   $nodeID = preg_replace('/@.+$/', '', $nodeID);
 
   return $nodeID;
-}
+}*/
 
 
 function waggle_email_ingestion_get_from_address($message) {
@@ -163,7 +200,7 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
             break;
         }
 
-        $bodyRaw = preg_split('/(________________________________\n)?From: | .+<.*' . $toAddress . '.*> |On\ .+,\ ' . $toAddress . '\ wrote/x', $bodyRaw);
+        $bodyRaw = preg_split('/(^________________________________\n)?^From:|^[0-9\/]+ <' . preg_quote($toAddress) . '>$|^On.+?, <' . preg_quote($toAddress) . '> wrote:/sm', $bodyRaw);
 
         $body = trim($bodyRaw[0]);
 
