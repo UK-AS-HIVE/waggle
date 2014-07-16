@@ -8,6 +8,10 @@ function waggle_permission() {
     'access all stories' => array(
       'title' => t('Access all stories'),
     ),
+    'access departmental user stories' => array(
+      'title' => t('Access departmental user stories'),
+      'description' => t('Grants access to any story submitted by a user in the same department'),
+    ),
   );
 }
 
@@ -21,9 +25,26 @@ function waggle_node_access($node, $op, $account) {
   if ($op != 'view' && $op != 'update')
     return;
 
-  if ($node->uid == $account->uid
+  if ($node->uid === $account->uid
     || user_access('access all stories', $account)) {
     return NODE_ACCESS_ALLOW;
+  }
+
+
+  // Grant access to departmental managers.
+  if (user_access('access departmental user stories', $account)) {
+    //watchdog('waggle', 'node: <pre>' . print_r($node,TRUE) . '</pre>');
+    //watchdog('waggle', 'account: <pre>' . print_r($account,TRUE) . '</pre>');
+    $owner = user_load($node->uid);
+    $a = array_map(function($i) { return $i['value']; }, array_pop($owner->field_department));
+    $account = user_load($account->uid);
+    $b = array_map(function($i) { return $i['value']; }, array_pop($account->field_department));
+    /*watchdog('waggle', 'nid: ' . $node->nid . '   $a: ' . print_r($a,TRUE));
+    watchdog('waggle', 'nid: ' . $node->nid . '   $b: ' . print_r($b,TRUE));*/
+    $intersection = array_intersect($a, $b);
+    if (!empty($intersection)) {
+      return NODE_ACCESS_ALLOW;
+    }
   }
 
   // Grant access only to associated users.
@@ -63,10 +84,24 @@ function waggle_node_grants($account, $op) {
       $grants['waggle_role_story'] = array();
       $account = user_load($account->uid);
       foreach ($account->roles as $rid => $role) {
-        $grants['waggle_role_story'][] = $rid;
+        // TODO: Hardcoded to handle department manager role differently, that's not ideal
+        if ($rid != 11) {
+          $grants['waggle_role_story'][] = $rid;
+        } else {
+          if (user_access('access departmental user stories', $account)) {
+            if (isset($account->field_department_term['und'])) {
+              $grants['waggle_department'] = array();
+              foreach ($account->field_department_term['und'] as $dep_tid) {
+                $grants['waggle_department'][] = $dep_tid['tid'];
+              }
+            }
+          }
+        }
+
       }
     }
   }
+  watchdog('waggle', 'granting for user ' . $account->uid . ': <pre>' . print_r($grants,true) . '</pre>');
   return $grants;
 }
 
@@ -91,7 +126,8 @@ function waggle_node_access_records($node) {
     }
     if (isset($node->field_role_visibility['und'])) {
       foreach ($node->field_role_visibility['und'] as $delta => $role) {
-        if (isset($role)) {
+        // TODO: Not hardcode 11 (tid for Departmental managers)
+        if (isset($role) && $role != 11) {
           $grants[] = array(
             'realm' => 'waggle_role_story',
             'gid' => $role,
@@ -103,6 +139,7 @@ function waggle_node_access_records($node) {
         }
       }
     }
+
     if ($node->uid != 0) {
       $grants[] = array(
         'realm' => 'waggle_own_story',
@@ -112,7 +149,27 @@ function waggle_node_access_records($node) {
         'grant_delete' => 0,
         'priority' => 1,
       );
+
+      // TODO: Department manager role is hardcoded to 11, make this configurable
+      if (isset($node->field_role_visibility['und']) && in_array(array('value' => 11), $node->field_role_visibility['und'])) {
+        $owner_account = user_load($node->uid);
+        if (isset($owner_account->field_department_term['und'])) {
+          foreach ($owner_account->field_department_term['und'] as $delta => $department_term) {
+            if (isset($department_term)) {
+              $grants[] = array(
+                'realm' => 'waggle_department',
+                'gid' => $department_term['tid'],
+                'grant_view' => $node->status,
+                'grant_update' => 1,
+                'grant_delete' => 0,
+                'priority' => 1,
+              );
+            }
+          }
+        }
+      }
     }
+
     $grants[] = array(
       'realm' => 'waggle_all_stories',
       'gid' => 0,
