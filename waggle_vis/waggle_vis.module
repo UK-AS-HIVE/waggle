@@ -21,8 +21,8 @@ function waggle_vis_block_info() {
     'visibility' => BLOCK_VISIBILITY_LISTED,
     );
 
-  $blocks['waggle_vis_averages'] = array(
-    'info' => 'Waggle Averages',
+  $blocks['waggle_vis_close_times'] = array(
+    'info' => 'Waggle Close Times',
     'cache' => DRUPAL_NO_CACHE,
     'weight' => -1,
     'status' => 1,
@@ -49,15 +49,15 @@ function waggle_vis_block_view($delta = '') {
         'subject' => 'Heat Map',
         'content' => waggle_vis_heatmap()
       );
-    case 'waggle_vis_averages':
+    case 'waggle_vis_close_times':
       return array(
-        'subject' => 'Averages',
-        'content' => waggle_vis_averages()
+        'subject' => 'Close Times',
+        'content' => waggle_vis_close_times()
       );
   }
 }
 
 module_load_include('inc', 'waggle_vis', 'waggle_vis_timeline_block');
 module_load_include('inc', 'waggle_vis', 'waggle_vis_heatmap_block');
-module_load_include('inc', 'waggle_vis', 'waggle_vis_averages_block');
+module_load_include('inc', 'waggle_vis', 'waggle_vis_close_times_block');
 

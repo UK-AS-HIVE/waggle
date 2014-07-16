@@ -353,8 +353,8 @@ function waggle_search_entity_property_info_alter(&$info) {
   );
 
   $info['node']['bundles']['story']['properties']['time_to_close'] = array(
-    'label' => t('Time from open to close (stored as date from Unix Epoch)'),
-    'type' => 'date',
+    'label' => t('Time from open to close (in seconds)'),
+    'type' => 'integer',
     'computed' => TRUE,
      //'required' => TRUE //note that this is not currently required. Only closed stories will have a value here, otherwise the getter_callback returns nothing. this doesn't seem like a good solution though...
     'getter callback' => 'waggle_search_time_to_close_getter_callback',

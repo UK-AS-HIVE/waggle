@@ -1,10 +1,10 @@
 <?php
 
 /**
- *  Contents of averages block.
+ *  Contents of close_times block.
  */
-function waggle_vis_averages() {
-  $output = '<div id="waggle-vis-averages">';
+function waggle_vis_close_times() {
+  $output = '<svg id="waggle-vis-close-times" width="690" height="300">';
 
   $index = search_api_index_load('default_node_index');
   $server = search_api_index_get_server($index);
@@ -19,14 +19,14 @@ function waggle_vis_averages() {
 
   $time_to_close_ranges = array();
   $lower_bound = 0;
-  for ($i = 0; $i < 17; ++$i) {
-    $upper_bound = 3600*pow(2,$i);
+  for ($i = 1; $i < 45; ++$i) {
+    $upper_bound = 24*3600*$i; //pow(2,$i);
     $time_to_close_ranges[] = 'is_time_to_close:[' . $lower_bound . ' TO ' . $upper_bound . ']';
     $lower_bound = $upper_bound;
   }
   $time_to_close_ranges[] = 'is_time_to_close:[' . $lower_bound . ' TO *]';
 
-  $averages = $connection->makeServletRequest('select',
+  $close_times = $connection->makeServletRequest('select',
     array(
       'fld=item_id,score',
       'rows' => 0,
@@ -50,10 +50,8 @@ function waggle_vis_averages() {
     )
   );
 
-  //$output .= '<script>var waggleVisAverages = ' . $averages->data . ';</script>';
-
-  $data = drupal_json_decode(str_replace('NaN','null',$averages->data));
-  dpm($data, 'averages data');
+  $data = drupal_json_decode(str_replace('NaN','null',$close_times->data));
+  dpm($data, 'close_times data');
 
   $fieldMap = $server->getFieldNames($index);
 
@@ -66,26 +64,28 @@ function waggle_vis_averages() {
   //dpm($options, 'search index options');
 
   $i = 0;
+  $max = 1;
   foreach ($data['facet_counts']['facet_queries'] as $q => $count) {
-    $upper_bound = waggle_vis_averages_format_timespan(3600*pow(2,$i));
+    if ($count > $max) $max = $count;
+  }
+
+  $height_scale = 265.0/$max;
+
+  foreach ($data['facet_counts']['facet_queries'] as $q => $count) {
+    //$upper_bound = waggle_vis_close_times_format_timespan(24*3600*$i/*pow(2,$i)*/);
     $i++;
-    $output .= 'Closed < ' . $upper_bound . ': ' . $count . '<br/>';
+    /*$output .= 'Day ' . $i . ': ' . $count . '<br/>';*/
+    $output .= "<rect fill=\"#0070b3\" x=\"" . (20+14*$i) . "\" y=\"" . (275 -  $count*$height_scale) . "\" width=\"8\" height=\"" . ($count*$height_scale) . "\" />";
+    $output .= '<text x="' . (20+14*$i+4) . '" y="285" text-anchor="middle" style="font-size: 9px;">' . $i . '</text>';
   }
 
-  foreach ($data['stats']['stats_fields'] as $field => $stats) {
-    $field_label = $options['fields'][array_search($field, $fieldMap)]['name'];
-    if ($field === 'is_time_to_close') {
-      $output .= $field_label . ': ' . waggle_vis_averages_format_timespan($data['stats']['stats_fields'][$field]['mean']) . ' (+/- ' . waggle_vis_averages_format_timespan($data['stats']['stats_fields'][$field]['stddev']) . ")<br/>\n";
-    } else {
-      $output .= $field_label . ': ' . ($data['stats']['stats_fields'][$field]['mean']) . "<br/>\n";
-    }
-  }
+  $output .= '<text x="10" y="10" text-anchor="middle" alignment-baseline="middle" style="font-size: 9px;">' . $max . '</text>';
 
-  $output .= '</div>';
+  $output .= '</svg>';
   return $output;
 }
 
-function waggle_vis_averages_format_timespan($timespan_in_seconds) {
+function waggle_vis_close_times_format_timespan($timespan_in_seconds) {
   $minutes = floor($timespan_in_seconds / 60);
   $seconds = $timespan_in_seconds - 60*$minutes;
   if ($minutes < 60) {
