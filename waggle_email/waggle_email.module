@@ -281,7 +281,7 @@ function waggle_email_node_update($node) {
 
     if($new_status->name == "Done" && preg_match('/.*This request originated from https:.+staff\.as\.uky\.edu./', $node->body['und'][0]['value']) == 1){
       if(variable_get('emailSurveyCount', 1) >= 5){
-        $surveyText = "If you would like, please take a few minutes to complete this customer service survey: https://uky.az1.qualtrics.com/SE/?SID=SV_9sEdefvEzDpUp4F.  Thank you.";
+        $surveyText = "In order to help us evaluate our customer service, please take a few minutes to complete this customer service survey: https://uky.az1.qualtrics.com/SE/?SID=SV_9sEdefvEzDpUp4F.  Thank you.";
         variable_set('emailSurveyCount', 1);
       }else{
         $surveyText = "";
@@ -376,10 +376,10 @@ function waggle_email_mail($key, &$message, $params) {
       if(t('!surveyText', $params) == ""){
         $message['subject'] = t('The status of Story# !nid has been changed to !new_status', $params);
       }else{
-        $message['subject'] = t('The status of Story# !nid has been changed to !new_status.  Please take a moment to tell us how we did.', $params);
+        $message['subject'] = t('Your waggle ticket has been closed.  Please take a moment to complete our survey.', $params);
       }
-      $message['body'] = t('!updater has changed the status for Story #!nid from "!old_status" to "!new_status"<br /><br />'
-        . '<p>!surveyText</p>'
+      $message['body'] = t('<p>!surveyText</p>'
+        . '!updater has changed the status for Story #!nid from "!old_status" to "!new_status"<br /><br />'
         . '<br/><b>!original_author\'s original story was:</b><br/>!original_body<br/>'
         . '<br/>Visit <a href="https://' . _get_email_domain_name() . '/story-search?ws=id:!nid+status:any">'
         . 'the story</a> or reply to this email to respond.',
