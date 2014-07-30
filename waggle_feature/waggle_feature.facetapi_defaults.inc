@@ -169,7 +169,7 @@ function waggle_feature_facetapi_default_facet_settings() {
   $facet->enabled = FALSE;
   $facet->settings = array(
     'operator' => 'and',
-    'hard_limit' => '50',
+    'hard_limit' => '100',
     'dependencies' => array(
       'bundle' => 'none',
       'bundle_selected' => array(),
@@ -307,7 +307,7 @@ function waggle_feature_facetapi_default_facet_settings() {
   $facet->searcher = 'search_api@default_node_index';
   $facet->realm = 'block';
   $facet->facet = 'comment_count';
-  $facet->enabled = FALSE;
+  $facet->enabled = TRUE;
   $facet->settings = array(
     'weight' => 0,
     'widget' => 'facetapi_links',

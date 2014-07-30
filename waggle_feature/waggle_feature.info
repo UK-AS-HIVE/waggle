@@ -2,7 +2,6 @@ name = Waggle
 description = Help request and ticketing system
 core = 7.x
 package = Features
-php = 5.2.4
 version = 7.x-1.0-dev
 project = waggle_feature
 dependencies[] = auto_nodetitle

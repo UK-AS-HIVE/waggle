@@ -107,9 +107,10 @@ function waggle_feature_default_search_api_index() {
                   "created",
                   "changed",
                   "author",
+                  "comments",
+                  "field_phone",
                   "field_associated_users",
                   "field_waiting",
-                  "field_phone",
                   "field_hostname",
                   "field_user_category",
                   "field_due_date",
@@ -133,7 +134,7 @@ function waggle_feature_default_search_api_index() {
                   "field_associated_users:mail",
                   "field_tags:name"
                 ],
-                "description" : "A Fulltext aggregation of the following fields: Node ID, URL, Status, Date created, Date changed, Author, On this story, Waiting on, Phone, Hostname, User Category, Due Date, Submitted by, Closed Time, hr_id, Contact, Status, Tags, IP address, Location, Close Date, Author \\u00bb User ID, Author \\u00bb Name, Author \\u00bb Email, Author \\u00bb Phone, Author \\u00bb Department, The main body text \\u00bb Text, On this story \\u00bb User ID, On this story \\u00bb Name, On this story \\u00bb Email, Tags \\u00bb Name."
+                "description" : "A Fulltext aggregation of the following fields: Node ID, URL, Status, Date created, Date changed, Author, Comments, Phone, On this story, Waiting on, Hostname, User Category, Due Date, Submitted by, Closed Time, hr_id, Contact, Status, Tags, IP address, Location, Close Date, Author \\u00bb User ID, Author \\u00bb Name, Author \\u00bb Email, Author \\u00bb Phone, Author \\u00bb Department, The main body text \\u00bb Text, On this story \\u00bb User ID, On this story \\u00bb Name, On this story \\u00bb Email, Tags \\u00bb Name."
               }
             }
           }
@@ -211,6 +212,12 @@ function waggle_feature_default_search_api_index() {
         "field_submitted_by" : { "type" : "integer", "entity_type" : "user" },
         "field_status" : { "type" : "integer", "entity_type" : "taxonomy_term" },
         "field_tags" : { "type" : "list\\u003Cinteger\\u003E", "entity_type" : "taxonomy_term" },
+        "field_role_visibility" : { "type" : "list\\u003Cstring\\u003E" },
+        "hour_created" : { "type" : "integer" },
+        "time_to_close" : { "type" : "integer" },
+        "day_created" : { "type" : "integer" },
+        "associated_user_count" : { "type" : "integer" },
+        "action_count" : { "type" : "integer" },
         "field_close_date" : { "type" : "date" },
         "search_api_language" : { "type" : "string" },
         "search_api_aggregation_1" : { "type" : "text" },
