@@ -11,8 +11,6 @@ stylesheets[all][] = css/colors.css
 stylesheets[all][] = fontawesome/css/font-awesome.min.css
 stylesheets[print][] = css/print.css
 
-scripts[] = js/waggle.js
-
 regions[header] = Header
 regions[help] = Help
 regions[page_top] = Page top

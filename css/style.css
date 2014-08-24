@@ -1835,6 +1835,9 @@ div.admin-panel .description {
   text-align: right;
   font-size: 11pt;
 }
+.view-accordion-view .story-head .top-right-corner span {
+  margin-left: 0.5em;
+}
 .view-accordion-view .story-hr-id {
   color: #888;
   font-size: 8pt;
@@ -2289,10 +2292,16 @@ ul.facetapi-facetapi-checkbox-links li.leaf {
   border-color: #999;
   border-width: 1px;
 }
-.story-new-comment-form input {
+.story-new-comment-form .submit-comment-buttons {
   position: absolute;
   bottom: 0;
   right: 0;
+}
+
+.story-new-comment-form .cc-comment-options {
+  float: left;
+  margin-left: 100px;
+  font-size: 8pt;
 }
 
 .story-new-comment-form .comment-arrow {
