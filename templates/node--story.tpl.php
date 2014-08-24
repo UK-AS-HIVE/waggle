@@ -87,11 +87,17 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
   <div class="story-head clearfix">
     <div class="top-right-corner">
+      <?php if (count($node->field_attachments['und']) > 0): ?>
+        <span>
+	  <i class="icon-paper-clip"></i><?php echo count($node->field_attachments['und']); ?>
+        </span>
+      <?php endif; ?>
+
       <?php
         if (!empty($node->field_role_visibility)):
           $roles = user_roles();
       ?>
-        <div title="This story is only visible to the listed roles.  Expand story details to edit the role visibility settings.">
+        <span title="This story is only visible to the listed roles.  Expand story details to edit the role visibility settings.">
           <i class="icon-lock"></i> 
       <?php
           //print_r($node->field_role_visibility);
@@ -104,10 +110,16 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
             }
           }
           print implode(', ', $rv); ?>
-      </div>
+      </span>
       <?php endif; ?>
-      <div class="story-number"><?php print l('#' . $node->nid, '', array('query' => array('ws' => 'status:any id:' . $node->nid), 'attributes' => array('target' => '_blank'))); ?></div>
+      <div class="story-number">
+
+        <?php print l('#' . $node->nid, '', array('query' => array('ws' => 'status:any id:' . $node->nid), 'attributes' => array('target' => '_blank'))); ?>
+      </div>
+
       <div class="details waggle-secondary"><a>story details</a></div>
+
+
     </div>
     <div class="meta submitted">
       <?php print $user_picture; ?>
@@ -197,7 +209,11 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
       <div class="comment-arrow"></div>
       <textarea class="add-comment" id="add-comment-node-<?php print $node->nid;?>"></textarea>
       <div class="clearfix suggestions-wrapper"><div class="suggestions"></div></div>
-      <input type="submit" class="submit-comment" id="submit-comment-node-<?php print $node->nid;?>"/>
+      <div class="cc-comment-options" title="If checked, the story author will be sent an email update including the comment.  If unchecked, only associated users will be contacted."><input type="checkbox" class="cc-author-checkbox" />CC Author</div>
+      <div class="submit-comment-buttons">
+
+        <input type="submit" value="Submit" class="submit-comment" id="submit-comment-node-<?php print $node->nid;?>">
+      </div>
     </div>
   </div>
 

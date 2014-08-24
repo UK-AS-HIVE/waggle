@@ -143,9 +143,10 @@ $(document).ready(function(){
    */
   $('.story-new-comment-form .submit-comment').live('click', function(){
     var element_id = $(this).attr('id'),
-      nid = element_id.substring(20),
-      container = $(this),
-      textarea = container.parents('.story-new-comment-form').find('textarea');
+      nid = /[0-9]+/.exec(element_id),
+      container = $(this).parents('.story-new-comment-form').find('input, textarea'),
+      textarea = container.parents('.story-new-comment-form').find('textarea'),
+      cc_author = container.parents('.story-new-comment-form').find('input.cc-author-checkbox');
 
     // Don't do it if the textarea is empty or equal to the default val, or the submit is disabled.
     if (textarea.val() == '' || textarea.val() == defaultVal || container.attr('disabled') == 'disabled') {
@@ -153,7 +154,7 @@ $(document).ready(function(){
     }
 
     container.attr('disabled', 'disabled');
-    $.post('waggle/api/story/note/' + nid,{'note' : textarea.val()}, function(json) {
+    $.post('waggle/api/story/note/' + nid,{'note' : textarea.val(), 'email-author': cc_author.attr('checked')}, function(json) {
       if (json != 0) {
         $('#node-' + nid + ' .current-comments').append(json);
         container.removeAttr('disabled');
