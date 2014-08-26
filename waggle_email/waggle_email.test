@@ -47,6 +47,21 @@ class WaggleEmailUnitTestCase extends DrupalUnitTestCase {
           )
         )
       ),
+      array(
+        'file' => 'reply_with_attachment2.mail',
+        'expected' => 'Sorry for the slow response.
+
+I was away when you sent the first request adn then it got lost in the
+flood.
+
+This message has a pdf file attached.',
+        'storyid' => 720897,
+        'attachments' => array(
+          'Senate Syllabi Guidelines.pdf' => array(
+            'size' => 4
+          ),
+        ),
+      ),
     );
 
     foreach ($tests as $test) {

@@ -200,7 +200,8 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
             break;
         }
 
-        $bodyRaw = preg_split('/(^________________________________\n)?^From:|^[0-9\/]+ <' . preg_quote($toAddress) . '>$|^On.+?, <' . preg_quote($toAddress) . '> wrote:/sm', $bodyRaw);
+        # TODO: break this out into its own unit tests
+        $bodyRaw = preg_split('/(^________________________________\n)?^From:|^[0-9\/]+ <' . preg_quote($toAddress) . '>$|^[0-9]{4}-[0-9]{2}-[0-9]{2}.*<' . preg_quote($toAddress) . '>:$|^On.+?, <' . preg_quote($toAddress) . '> wrote:/sm', $bodyRaw);
 
         $body = trim($bodyRaw[0]);
 
@@ -245,7 +246,17 @@ function waggle_email_parse_attachments($message, $nodeID, $drupalUID) {
       if ($contentDisposition[0] == "attachment")
       {
 
-        $filename = $part->contentDescription;
+        $filename = '';
+        foreach ($contentDisposition as $cdPart) {
+          $kv = explode('=', $cdPart);
+          if (trim($kv[0]) === 'filename' && count($kv) > 1) {
+            $filename = trim($kv[1]);
+            break;
+          }
+        }
+        if ($filename == '' && $part->headerExists('Content-Description')) {
+          $filename = $part->contentDescription;
+        }
 
         $attachment = base64_decode($part->getContent());
 
