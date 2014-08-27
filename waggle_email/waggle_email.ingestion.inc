@@ -258,6 +258,11 @@ function waggle_email_parse_attachments($message, $nodeID, $drupalUID) {
           $filename = $part->contentDescription;
         }
 
+        // If filename is quoted, remove quotes
+        if (substr($filename, 0, 1) == '"' && substr($filename, 1, 1) == '"') {
+          $filename = substr($filename, 1, strlen($filename)-2);
+        }
+
         $attachment = base64_decode($part->getContent());
 
         $attachments[$filename] = $attachment;
