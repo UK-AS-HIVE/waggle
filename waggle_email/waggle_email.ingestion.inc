@@ -259,7 +259,7 @@ function waggle_email_parse_attachments($message, $nodeID, $drupalUID) {
         }
 
         // If filename is quoted, remove quotes
-        if (substr($filename, 0, 1) == '"' && substr($filename, 1, 1) == '"') {
+        if (substr($filename, 0, 1) == '"' && substr($filename, -1, 1) == '"') {
           $filename = substr($filename, 1, strlen($filename)-2);
         }
 
