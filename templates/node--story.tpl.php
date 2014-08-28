@@ -209,7 +209,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
       <div class="comment-arrow"></div>
       <textarea class="add-comment" id="add-comment-node-<?php print $node->nid;?>"></textarea>
       <div class="clearfix suggestions-wrapper"><div class="suggestions"></div></div>
-      <div class="cc-comment-options" title="If checked, the story author will be sent an email update including the comment.  If unchecked, only associated users will be contacted."><input type="checkbox" class="cc-author-checkbox" />CC Author</div>
+      <div class="cc-comment-options" title="If checked, the story author will be sent an email update including the comment.  If unchecked, only associated users will be contacted."><input type="checkbox" checked="true" class="cc-author-checkbox" />CC Author</div>
       <div class="submit-comment-buttons">
 
         <input type="submit" value="Submit" class="submit-comment" id="submit-comment-node-<?php print $node->nid;?>">
