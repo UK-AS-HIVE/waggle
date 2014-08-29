@@ -1,8 +1,9 @@
 Waggle
 ======
 
-Waggle is a set of modules to transform Drupal into a powerful ticketing
-and project management platform.
+[![Build Status](https://travis-ci.org/UK-AS-HIVE/waggle.svg?branch=master)](https://travis-ci.org/UK-AS-HIVE/waggle)
+
+Waggle is a set of modules to transform Drupal into a powerful ticketing system.
 
 Waggle's architecture provides:
   * E-mail integration
