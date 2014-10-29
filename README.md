@@ -30,7 +30,8 @@ ip_address
 
 Optional parameters:
 
-submitted_by
+submitted_by (deprecated - use on_behalf_of instead)
+on_behalf_of - user name of the person the request is for, which will become the author of the story node
 location
 phone
 tags - list of tag names, without hash sign, which should be set on the story.  separate tags with semicolon or newlines.

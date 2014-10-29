@@ -732,10 +732,18 @@ function waggle_remote_add() {
   $new_story->field_submitter_name['und'][0]['value'] = $_POST['submitter_name'];
   $new_story->field_submitter_email['und'][0]['value'] = $_POST['email'];
 
+  // submitted_by deprecated in favor of on_behalf_of, below
   if(isset($_POST['submitted_by'])){
     $submitted_by = user_load_by_name($_POST['submitted_by']);
     if($submitted_by){
       $new_story->field_submitted_by['und'][0]['uid'] = $submitted_by->uid;
+    }
+  }
+  if(isset($_POST['on_behalf_of'])) {
+    $on_behalf_of = user_load_by_name($_POST['on_behalf_of']);
+    if($on_behalf_of){
+      $new_story->field_submitted_by['und'][0]['uid'] = $account->uid;
+      $new_story->uid = $on_behalf_of->uid;
     }
   }
   if(isset($_POST['location'])){
