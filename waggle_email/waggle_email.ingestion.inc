@@ -50,13 +50,13 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
         0 => array(
         'value' => check_plain($body),
         'format' => 'filtered_html',
-      	),
-    	),
-  	),
-	);
+        ),
+      ),
+    ),
+  );
 
-	comment_submit($comment);
-	comment_save($comment);
+  comment_submit($comment);
+  comment_save($comment);
 
 
   //do another pass, and add any incoming attachments to the story
@@ -225,7 +225,26 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
     }
   } 
   else {
-  	$body = trim($message->getContent());
+    $bodyRaw = trim($message->getContent());
+    try {
+      $enc = array_key_exists('content-transfer-encoding', $message->getHeaders()) ? $message->contentTransferEncoding : '7bit';
+
+      switch (strtolower($enc)) {
+        case 'base64':
+          $bodyRaw = base64_decode($bodyRaw);
+          break;
+        //watchdog('waggle', 'this was base 64 encoded');
+        case 'quoted-printable':
+          $bodyRaw = quoted_printable_decode($bodyRaw);
+          break;
+      }
+    } catch (Exception $e) {
+      /* There was an error with decoding the text,
+         just continue on */
+    }
+
+    $body = $bodyRaw;
+
   }
 
   return $body;
