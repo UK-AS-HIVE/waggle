@@ -7,8 +7,7 @@
 /**
  * Implements hook_ctools_plugin_api().
  */
-function waggle_feature_ctools_plugin_api() {
-  list($module, $api) = func_get_args();
+function waggle_feature_ctools_plugin_api($module = NULL, $api = NULL) {
   if ($module == "facetapi" && $api == "facetapi_defaults") {
     return array("version" => "1");
   }
@@ -17,7 +16,7 @@ function waggle_feature_ctools_plugin_api() {
 /**
  * Implements hook_views_api().
  */
-function waggle_feature_views_api() {
+function waggle_feature_views_api($module = NULL, $api = NULL) {
   return array("api" => "3.0");
 }
 
@@ -29,16 +28,8 @@ function waggle_feature_image_default_styles() {
 
   // Exported image style: small_square.
   $styles['small_square'] = array(
-    'name' => 'small_square',
     'effects' => array(
       1 => array(
-        'label' => 'Scale and crop',
-        'help' => 'Scale and crop will maintain the aspect-ratio of the original image, then crop the larger dimension. This is most useful for creating perfectly square thumbnails without stretching the image.',
-        'effect callback' => 'image_scale_and_crop_effect',
-        'dimensions callback' => 'image_resize_dimensions',
-        'form callback' => 'image_resize_form',
-        'summary theme' => 'image_resize_summary',
-        'module' => 'image',
         'name' => 'image_scale_and_crop',
         'data' => array(
           'width' => 64,
@@ -47,6 +38,7 @@ function waggle_feature_image_default_styles() {
         'weight' => 1,
       ),
     ),
+    'label' => 'small_square',
   );
 
   return $styles;
@@ -66,6 +58,7 @@ function waggle_feature_node_info() {
       'help' => '',
     ),
   );
+  drupal_alter('node_info', $items);
   return $items;
 }
 
@@ -78,161 +71,43 @@ function waggle_feature_default_search_api_index() {
     "name" : "Default node index",
     "machine_name" : "default_node_index",
     "description" : "An automatically created search index for indexing node data. Might be configured to specific needs.",
-    "server" : "solr_server",
+    "server" : null,
     "item_type" : "node",
     "options" : {
-      "index_directly" : 0,
+      "index_directly" : 1,
       "cron_limit" : "50",
-      "data_alter_callbacks" : {
-        "search_api_alter_bundle_filter" : {
-          "status" : 1,
-          "weight" : "-10",
-          "settings" : { "default" : "0", "bundles" : { "story" : "story" } }
-        },
-        "search_api_alter_node_access" : { "status" : 1, "weight" : "0", "settings" : [] },
-        "search_api_alter_node_status" : { "status" : 0, "weight" : "0", "settings" : [] },
-        "search_api_alter_add_hierarchy" : { "status" : 0, "weight" : "0", "settings" : { "fields" : [] } },
-        "search_api_alter_add_viewed_entity" : { "status" : 1, "weight" : "0", "settings" : { "mode" : "full" } },
-        "search_api_alter_add_url" : { "status" : 0, "weight" : "0", "settings" : [] },
-        "search_api_alter_add_aggregation" : {
-          "status" : 1,
-          "weight" : "0",
-          "settings" : { "fields" : { "search_api_aggregation_1" : {
-                "name" : "Full Story text Aggregated from most fields",
-                "type" : "fulltext",
-                "fields" : [
-                  "nid",
-                  "url",
-                  "status",
-                  "created",
-                  "changed",
-                  "author",
-                  "comments",
-                  "field_phone",
-                  "field_associated_users",
-                  "field_waiting",
-                  "field_hostname",
-                  "field_user_category",
-                  "field_due_date",
-                  "field_submitted_by",
-                  "field_closed_time",
-                  "field_hr_id",
-                  "field_contact",
-                  "field_status",
-                  "field_tags",
-                  "field_ip_address",
-                  "field_location",
-                  "field_close_date",
-                  "author:uid",
-                  "author:name",
-                  "author:mail",
-                  "author:field_phone",
-                  "author:field_department",
-                  "body:value",
-                  "field_associated_users:uid",
-                  "field_associated_users:name",
-                  "field_associated_users:mail",
-                  "field_tags:name"
-                ],
-                "description" : "A Fulltext aggregation of the following fields: Node ID, URL, Status, Date created, Date changed, Author, Comments, Phone, On this story, Waiting on, Hostname, User Category, Due Date, Submitted by, Closed Time, hr_id, Contact, Status, Tags, IP address, Location, Close Date, Author \\u00bb User ID, Author \\u00bb Name, Author \\u00bb Email, Author \\u00bb Phone, Author \\u00bb Department, The main body text \\u00bb Text, On this story \\u00bb User ID, On this story \\u00bb Name, On this story \\u00bb Email, Tags \\u00bb Name."
-              }
-            }
-          }
-        }
-      },
+      "data_alter_callbacks" : { "search_api_alter_node_access" : { "status" : 1, "weight" : "0", "settings" : [] } },
       "processors" : {
-        "search_api_case_ignore" : {
-          "status" : 1,
-          "weight" : "0",
-          "settings" : { "fields" : {
-              "title" : true,
-              "field_hostname" : true,
-              "body:value" : true,
-              "field_associated_users:name" : true
-            }
-          }
-        },
+        "search_api_case_ignore" : { "status" : 1, "weight" : "0", "settings" : { "strings" : 0 } },
         "search_api_html_filter" : {
           "status" : 1,
           "weight" : "10",
           "settings" : {
-            "fields" : {
-              "title" : true,
-              "body:value" : true,
-              "field_associated_users:field_department" : true
-            },
             "title" : 0,
             "alt" : 1,
-            "tags" : "h1 = 5\\r\\nh2 = 3\\r\\nh3 = 2\\r\\nstrong = 2\\r\\nb = 2\\r\\nem = 1.5\\r\\nu = 1.5"
+            "tags" : "h1 = 5\\nh2 = 3\\nh3 = 2\\nstrong = 2\\nb = 2\\nem = 1.5\\nu = 1.5"
           }
         },
         "search_api_tokenizer" : {
-          "status" : 0,
+          "status" : 1,
           "weight" : "20",
-          "settings" : {
-            "fields" : {
-              "title" : true,
-              "body:value" : true,
-              "field_associated_users:name" : true,
-              "field_associated_users:field_department" : true,
-              "field_tags:name" : true
-            },
-            "spaces" : "[^\\\\p{L}\\\\p{N}]",
-            "ignorable" : "[-]"
-          }
-        },
-        "search_api_stopwords" : {
-          "status" : 0,
-          "weight" : "30",
-          "settings" : {
-            "fields" : {
-              "title" : true,
-              "body:value" : true,
-              "field_associated_users:field_department" : true
-            },
-            "file" : "",
-            "stopwords" : "all\\r\\nalso\\r\\nand\\r\\nany\\r\\nare\\r\\nbut\\r\\ncan\\r\\ncannot\\r\\ncould\\r\\nfor\\r\\nfrom\\r\\nget\\r\\nhas\\r\\nhave\\r\\nhelp\\r\\nknow\\r\\nlike\\r\\nneed\\r\\nneeds\\r\\nnot\\r\\none\\r\\nout\\r\\nplease\\r\\nsome\\r\\nsomeone\\r\\nthank\\r\\nthanks\\r\\nthat\\r\\nthe\\r\\nthere\\r\\nthis\\r\\nuse\\r\\nwas\\r\\nwhen\\r\\nwill\\r\\nwith\\r\\nwork\\r\\nwould\\r\\nyou"
-          }
+          "settings" : { "spaces" : "[^\\\\p{L}\\\\p{N}]", "ignorable" : "[-]" }
         }
       },
       "fields" : {
-        "nid" : { "type" : "integer" },
-        "type" : { "type" : "string" },
-        "title" : { "type" : "text" },
-        "language" : { "type" : "string" },
-        "status" : { "type" : "boolean" },
-        "created" : { "type" : "date" },
-        "changed" : { "type" : "date" },
         "author" : { "type" : "integer", "entity_type" : "user" },
-        "comment_count" : { "type" : "integer" },
-        "field_associated_users" : { "type" : "list\\u003Cinteger\\u003E", "entity_type" : "user" },
-        "field_hostname" : { "type" : "string" },
-        "field_user_category" : { "type" : "list\\u003Cinteger\\u003E", "entity_type" : "taxonomy_term" },
-        "field_due_date" : { "type" : "date" },
-        "field_submitted_by" : { "type" : "integer", "entity_type" : "user" },
-        "field_status" : { "type" : "integer", "entity_type" : "taxonomy_term" },
-        "field_tags" : { "type" : "list\\u003Cinteger\\u003E", "entity_type" : "taxonomy_term" },
-        "field_role_visibility" : { "type" : "list\\u003Cstring\\u003E" },
-        "hour_created" : { "type" : "integer" },
-        "time_to_close" : { "type" : "integer" },
-        "day_created" : { "type" : "integer" },
-        "associated_user_count" : { "type" : "integer" },
-        "action_count" : { "type" : "integer" },
-        "field_close_date" : { "type" : "date" },
-        "search_api_language" : { "type" : "string" },
-        "search_api_aggregation_1" : { "type" : "text" },
-        "search_api_access_node" : { "type" : "list\\u003Cstring\\u003E" },
-        "author:name" : { "type" : "text" },
-        "author:field_department" : { "type" : "list\\u003Cstring\\u003E" },
-        "author:field_office" : { "type" : "text" },
         "body:value" : { "type" : "text" },
-        "field_associated_users:name" : { "type" : "list\\u003Cstring\\u003E" },
-        "field_associated_users:field_department" : { "type" : "list\\u003Clist\\u003Cstring\\u003E\\u003E" },
-        "field_associated_users:field_office" : { "type" : "list\\u003Ctext\\u003E" },
-        "field_tags:name" : { "type" : "list\\u003Cstring\\u003E" }
+        "changed" : { "type" : "date" },
+        "comment_count" : { "type" : "integer" },
+        "created" : { "type" : "date" },
+        "promote" : { "type" : "boolean" },
+        "search_api_language" : { "type" : "string" },
+        "sticky" : { "type" : "boolean" },
+        "title" : { "type" : "text", "boost" : "5.0" },
+        "type" : { "type" : "string" }
       }
     },
-    "enabled" : "1",
+    "enabled" : "0",
     "read_only" : "0",
     "rdf_mapping" : []
   }');
@@ -250,14 +125,21 @@ function waggle_feature_default_search_api_server() {
     "description" : "",
     "class" : "search_api_solr_service",
     "options" : {
-      "host" : "solr.as.uky.edu",
-      "port" : "8997",
+      "clean_ids_form" : [],
+      "clean_ids" : false,
+      "site_hash_form" : [],
+      "site_hash" : false,
+      "scheme" : "http",
+      "host" : "localhost",
+      "port" : "8983",
       "path" : "\\/solr",
       "http_user" : "",
       "http_pass" : "",
       "excerpt" : 0,
       "retrieve_data" : 0,
       "highlight_data" : 0,
+      "skip_schema_check" : 0,
+      "solr_version" : "",
       "http_method" : "POST"
     },
     "enabled" : "1",

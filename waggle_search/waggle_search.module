@@ -35,11 +35,11 @@ function waggle_search_ajax_search_count() {
  *
 
  */
-function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQueryInterface $query) {
+/*function waggle_search_search_api_solr_query_alter(array &$call_args, SearchApiQueryInterface $query) {
   $waggle_search_string = isset($_GET['ws'])?$_GET['ws']:'';
 
   $call_args['params']['fq'][] = waggle_search_convert_to_fq($waggle_search_string);
-}
+}*/
 
 /**
  *  Rewrite waggle's microsyntax (e.g., @user and #tag) for processing by Solr's dismax parser.

@@ -299,6 +299,7 @@ function waggle_feature_field_default_field_instances() {
   // Exported field_instance: 'node-story-field_due_date'
   $field_instances['node-story-field_due_date'] = array(
     'bundle' => 'story',
+    'default_value' => NULL,
     'deleted' => 0,
     'description' => '',
     'display' => array(
@@ -357,7 +358,7 @@ function waggle_feature_field_default_field_instances() {
         'text_parts' => array(),
         'year_range' => '-3:+3',
       ),
-      'type' => 'date_popup',
+      'type' => 'date_select',
       'weight' => 11,
     ),
   );

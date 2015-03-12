@@ -124,7 +124,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
     <div class="meta submitted">
       <?php print $user_picture; ?>
       <?php print $submitted; ?>
-      <div class="time-ago"><?php print date('n/j/Y g:ia', $created) . '<br/>(' . ago($created) . ')'; ?></div>
+      <div class="time-ago"><?php print date('n/j/Y g:ia', $created) . '<br/>(' . date('n/j/Y g:ia', $created) . ')'; ?></div>
     </div>
   </div>
 
