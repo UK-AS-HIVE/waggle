@@ -14,7 +14,7 @@ function waggle_feature_views_default_views() {
   $view->name = 'story_search_test';
   $view->description = '';
   $view->tag = 'default';
-  $view->base_table = 'search_api_index_default_node_index';
+  $view->base_table = 'search_api_index_story_search_index';
   $view->human_name = 'Story Search';
   $view->core = 7;
   $view->api_version = '3.0';
@@ -67,13 +67,13 @@ drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\')
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   /* Field: Indexed Node: Node ID */
   $handler->display->display_options['fields']['nid']['id'] = 'nid';
-  $handler->display->display_options['fields']['nid']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['nid']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['nid']['field'] = 'nid';
   $handler->display->display_options['fields']['nid']['exclude'] = TRUE;
   $handler->display->display_options['fields']['nid']['link_to_entity'] = 0;
   /* Field: Indexed Node: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
-  $handler->display->display_options['fields']['title']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['title']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['title']['field'] = 'title';
   $handler->display->display_options['fields']['title']['link_to_entity'] = 0;
   /* Field: Content: Link */
@@ -82,14 +82,14 @@ drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\')
   $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
   /* Field: Indexed Node: On this story */
   $handler->display->display_options['fields']['field_associated_users']['id'] = 'field_associated_users';
-  $handler->display->display_options['fields']['field_associated_users']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['field_associated_users']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['field_associated_users']['field'] = 'field_associated_users';
   $handler->display->display_options['fields']['field_associated_users']['label'] = 'Associated Users';
   $handler->display->display_options['fields']['field_associated_users']['link_to_entity'] = 1;
   $handler->display->display_options['fields']['field_associated_users']['view_mode'] = 'full';
   /* Field: Indexed Node: Due Date */
   $handler->display->display_options['fields']['field_due_date']['id'] = 'field_due_date';
-  $handler->display->display_options['fields']['field_due_date']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['field_due_date']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['field_due_date']['field'] = 'field_due_date';
   $handler->display->display_options['fields']['field_due_date']['settings'] = array(
     'format_type' => 'long',
@@ -100,7 +100,7 @@ drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\')
   );
   /* Field: The main body text: Text (indexed) */
   $handler->display->display_options['fields']['body_value']['id'] = 'body_value';
-  $handler->display->display_options['fields']['body_value']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['body_value']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['body_value']['field'] = 'body_value';
   $handler->display->display_options['fields']['body_value']['alter']['max_length'] = '300';
   $handler->display->display_options['fields']['body_value']['alter']['trim'] = TRUE;
@@ -108,18 +108,18 @@ drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\')
   $handler->display->display_options['fields']['body_value']['link_to_entity'] = 1;
   /* Field: Search: Relevance */
   $handler->display->display_options['fields']['search_api_relevance']['id'] = 'search_api_relevance';
-  $handler->display->display_options['fields']['search_api_relevance']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['search_api_relevance']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['search_api_relevance']['field'] = 'search_api_relevance';
   $handler->display->display_options['fields']['search_api_relevance']['link_to_entity'] = 0;
   /* Field: Indexed Node: Tags */
   $handler->display->display_options['fields']['field_tags']['id'] = 'field_tags';
-  $handler->display->display_options['fields']['field_tags']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['field_tags']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['field_tags']['field'] = 'field_tags';
   $handler->display->display_options['fields']['field_tags']['link_to_entity'] = 1;
   $handler->display->display_options['fields']['field_tags']['view_mode'] = 'full';
   /* Field: Indexed Node: On this story */
   $handler->display->display_options['fields']['field_associated_users_1']['id'] = 'field_associated_users_1';
-  $handler->display->display_options['fields']['field_associated_users_1']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['fields']['field_associated_users_1']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['fields']['field_associated_users_1']['field'] = 'field_associated_users';
   $handler->display->display_options['fields']['field_associated_users_1']['label'] = 'Associated Users';
   $handler->display->display_options['fields']['field_associated_users_1']['link_to_entity'] = 1;
@@ -130,21 +130,21 @@ drupal_add_js(drupal_get_path(\'module\', \'waggle\') . \'/js/autocomplete.js\')
   $handler->display->display_options['fields']['rendered_entity']['field'] = 'rendered_entity';
   /* Sort criterion: Indexed Node: Date created */
   $handler->display->display_options['sorts']['created']['id'] = 'created';
-  $handler->display->display_options['sorts']['created']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['sorts']['created']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
   $handler->display->display_options['sorts']['created']['exposed'] = TRUE;
   $handler->display->display_options['sorts']['created']['expose']['label'] = 'Date created';
   /* Sort criterion: Indexed Node: Date changed */
   $handler->display->display_options['sorts']['changed']['id'] = 'changed';
-  $handler->display->display_options['sorts']['changed']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['sorts']['changed']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['sorts']['changed']['field'] = 'changed';
   $handler->display->display_options['sorts']['changed']['order'] = 'DESC';
   $handler->display->display_options['sorts']['changed']['exposed'] = TRUE;
   $handler->display->display_options['sorts']['changed']['expose']['label'] = 'Date changed';
   /* Filter criterion: Indexed Node: Content type */
   $handler->display->display_options['filters']['type']['id'] = 'type';
-  $handler->display->display_options['filters']['type']['table'] = 'search_api_index_default_node_index';
+  $handler->display->display_options['filters']['type']['table'] = 'search_api_index_story_search_index';
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = array(
     'story' => 'story',

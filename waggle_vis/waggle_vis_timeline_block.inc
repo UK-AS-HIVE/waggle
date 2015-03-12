@@ -13,7 +13,7 @@ function waggle_vis_timeline() {
 
   // Custom request, as suggested at https://drupal.org/node/1999396
   
-  $index = search_api_index_load('default_node_index');
+  $index = search_api_index_load('story_search_index');
   $server = search_api_index_get_server($index);
 
   $connection = $server->getSolrConnection();
@@ -38,7 +38,7 @@ function waggle_vis_timeline() {
     $bigFQ .= $dateFQ;
   }
 
-  $bigFQ .= waggle_search_facets_to_fq('default_node_index');
+  $bigFQ .= waggle_search_facets_to_fq('story_search_index');
 
   
   module_load_include('inc', 'waggle_vis', 'waggle_vis_security_check');

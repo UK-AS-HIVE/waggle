@@ -6,14 +6,14 @@
 function waggle_vis_close_times() {
   $output = '<svg id="waggle-vis-close-times" width="690" height="300">';
 
-  $index = search_api_index_load('default_node_index');
+  $index = search_api_index_load('story_search_index');
   $server = search_api_index_get_server($index);
 
   $connection = $server->getSolrConnection();
   
   $ws = isset($_GET['ws'])?$_GET['ws']:'';
   $fq = waggle_search_convert_to_fq($ws);
-  $fq .= waggle_search_facets_to_fq('default_node_index');
+  $fq .= waggle_search_facets_to_fq('story_search_index');
   global $user;
   $fq .= getSecurityCheckFQ($user);
 

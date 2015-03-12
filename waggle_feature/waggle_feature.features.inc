@@ -67,9 +67,9 @@ function waggle_feature_node_info() {
  */
 function waggle_feature_default_search_api_index() {
   $items = array();
-  $items['default_node_index'] = entity_import('search_api_index', '{
-    "name" : "Default node index",
-    "machine_name" : "default_node_index",
+  $items['story_search_index'] = entity_import('search_api_index', '{
+    "name" : "Story search index",
+    "machine_name" : "story_search_index",
     "description" : "An automatically created search index for indexing node data. Might be configured to specific needs.",
     "server" : "solr_server",
     "item_type" : "node",

@@ -12,7 +12,7 @@ function waggle_vis_heatmap()
   
   $sOutput = '<div id="waggle-vis-heatmap">';
 
-  $servSolr = search_api_index_get_server(search_api_index_load('default_node_index'));
+  $servSolr = search_api_index_get_server(search_api_index_load('story_search_index'));
   $connection = $servSolr->getSolrConnection();
   $sWordSearch = isset($_GET['ws']) ? $_GET['ws'] : '';
   $sStart = 'NOW/DAY-6MONTH';

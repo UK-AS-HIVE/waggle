@@ -19,7 +19,7 @@ function waggle_search_menu() {
 
 function waggle_search_ajax_search_count() {
   //$index = search_api_index_load_multiple(array('Default node index'));
-  $query = search_api_query('default_node_index',
+  $query = search_api_query('story_search_index',
     array(
       'limit' => 0,
       'search_id' => 'waggle_saved',
@@ -223,7 +223,7 @@ function waggle_story_sidebar($form, &$form_state) {
     ->condition('w.uid', $user->uid);
   $result = $query->execute();
 
-  $search_api_query = search_api_query('default_node_index', array('limit' => 0));
+  $search_api_query = search_api_query('story_search_index', array('limit' => 0));
 
   while ($record = $result->fetchAssoc()) {
     $form['saved_searches']['#markup'] .=
