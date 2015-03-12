@@ -97,7 +97,7 @@
         <?php 
           if(user_is_anonymous()){
             print '<li class="last">' . l('Login', 'user/login') . '</li>'; 
-            fancy_login_init();
+            //fancy_login_init();
           }
         ?>
       </ul>
