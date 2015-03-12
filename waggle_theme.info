@@ -33,6 +33,15 @@ regions[footer_fourthcolumn] = Footer fourth column
 regions[footer] = Footer
 
 settings[shortcut_module_link] = 0
+settings[toggle_logo] = 0
+settings[toggle_name] = 0
+settings[toggle_slogan] = 0
+settings[toggle_node_user_picture] = 1
+settings[toggle_comment_user_picture] = 1
+settings[toggle_comment_user_verification] = 1
+settings[toggle_favicon] = 0
+settings[toggle_main_menu] = 0
+settings[toggle_secondary_menu] = 1
 
 
 ; Information added by drupal.org packaging script on 2012-05-02
