@@ -27,6 +27,7 @@ dependencies[] = taxonomy
 dependencies[] = text
 dependencies[] = user_reference
 dependencies[] = uuid
+dependencies[] = uuid_features
 dependencies[] = views
 dependencies[] = views_infinite_scroll
 dependencies[] = waggle_vis
