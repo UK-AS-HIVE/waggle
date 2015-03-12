@@ -1,0 +1,6 @@
+name = Waggle Tracker
+description = Tracks content changes per revision and per field changed
+package = Waggle
+core = 7.x
+files[] = waggle_tracker.install
+files[] = waggle_tracker.module
