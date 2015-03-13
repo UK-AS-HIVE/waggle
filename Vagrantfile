@@ -76,7 +76,7 @@ Vagrant.configure(2) do |config|
     sudo a2enmod rewrite
   SHELL
 
-  config.vm.provision "file", source: "apachesite.conf", destination: "000-default.conf"
+  config.vm.provision "file", source: "vagrant/apachesite.conf", destination: "000-default.conf"
 
   config.vm.provision :shell, :privileged => false, :inline => <<-SHELL
     sudo mv 000-default.conf /etc/apache2/sites-available/000-default.conf
@@ -141,7 +141,7 @@ Vagrant.configure(2) do |config|
 
   SHELL
 
-  config.vm.provision "file", source: "solr-init.d.sh", destination: "solr-init.d.sh"
+  config.vm.provision "file", source: "vagrant/solr-init.d.sh", destination: "solr-init.d.sh"
   config.vm.provision :shell, :privileged => false, :inline => <<-SHELL
     sudo chmod +x solr-init.d.sh
     sudo mv solr-init.d.sh /etc/init.d/solr

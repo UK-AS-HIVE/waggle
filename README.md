@@ -42,3 +42,19 @@ tags - list of tag names, without hash sign, which should be set on the story.  
 associate - list of user names to add to associated users.  separate names with semicolon or newlines.  
 role_visibility - role names which should be able to view this story.  separate role names with semicolon or newlines.  
 
+
+Development
+===========
+
+The easiest way to get started is using Vagrant.
+
+    $ git clone https://github.com/UK-AS-HIVE/waggle/
+    $ cd waggle/
+    $ vagrant up
+    ... install ...
+    $ vagrant ssh
+    $ cd /var/www/sites/all/modules/waggle
+
+It will take several minutes to download dependencies and install.  Then, navigate to http://localhost:8080/ on your
+host machine.  Login using 'admin/admin'.
+
