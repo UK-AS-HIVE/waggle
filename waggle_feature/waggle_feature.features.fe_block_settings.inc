@@ -146,7 +146,8 @@ function waggle_feature_default_fe_block_settings() {
     'delta' => 'waggle_story_sidebar',
     'module' => 'waggle_search',
     'node_types' => array(),
-    'pages' => 'story-search
+    'pages' => '<front>
+story-search
 dashboard',
     'roles' => array(
       'authenticated user' => 2,

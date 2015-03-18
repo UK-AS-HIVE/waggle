@@ -21,6 +21,15 @@ function waggle_feature_views_api($module = NULL, $api = NULL) {
 }
 
 /**
+ * Implements hook_features_site_frontpage_features_default_frontpage().
+ */
+function waggle_feature_features_site_frontpage_features_default_frontpage() {
+  return array(
+    'enabled' => 'story-search/',
+  );
+}
+
+/**
  * Implements hook_image_default_styles().
  */
 function waggle_feature_image_default_styles() {

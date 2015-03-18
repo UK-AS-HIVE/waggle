@@ -72,6 +72,7 @@ features[fe_block_settings][] = waggle-waggle_add_story
 features[fe_block_settings][] = waggle_search-waggle_story_sidebar
 features[fe_block_settings][] = waggle_vis-waggle_vis_timeline
 features[features_api][] = api:2
+features[features_site_frontpage][] = story-search/
 features[field_base][] = body
 features[field_base][] = field_associated_groups
 features[field_base][] = field_associated_users
