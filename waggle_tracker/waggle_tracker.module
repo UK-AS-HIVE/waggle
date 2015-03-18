@@ -263,7 +263,7 @@ function waggle_tracker_node_page_additions($node) {
 * This is a copy of comment_node_page_additions($node)  from drupal 7
 */
 function waggle_tracker_comment_node_page_additions($node) {
-  $additions = array();
+  $additions = array('comments' => array());
   $activity = array();
 
   // Only attempt to render comments if the node has visible comments.
@@ -281,9 +281,10 @@ function waggle_tracker_comment_node_page_additions($node) {
     }
   }
 
-
   foreach ($additions['comments'] as &$comment) {
-    $comment['#weight'] = $comment['comment_body']['#object']->created;
+    if (isset($comment['#weight'])) {
+      $comment['#weight'] = $comment['comment_body']['#object']->created;
+    }
   }
   $additions['comments']['#sorted'] = FALSE;
 
@@ -306,7 +307,7 @@ function waggle_tracker_comment_node_page_additions($node) {
               '%n' => $node->nid,
             )) . '</p>',
     );*/
-    $user_load = user_load(array('uid' => $result->uid));
+    $user_load = user_load($result->uid);
     $additions['comments'][] = array(
       '#type' => 'markup',
       '#markup' => '<div class="story-activity">' . /*theme('user_picture', array('account' => $user_load)) .*/ ' '

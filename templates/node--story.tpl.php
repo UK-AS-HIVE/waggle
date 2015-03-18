@@ -87,7 +87,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
   <div class="story-head clearfix">
     <div class="top-right-corner">
-      <?php if (count($node->field_attachments['und']) > 0): ?>
+      <?php if (isset($node->field_attachments['und']) && count($node->field_attachments['und']) > 0): ?>
         <span>
 	  <i class="icon-paper-clip"></i><?php echo count($node->field_attachments['und']); ?>
         </span>
