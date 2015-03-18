@@ -10,6 +10,7 @@ dependencies[] = editablefields
 dependencies[] = entity
 dependencies[] = facetapi
 dependencies[] = fe_block
+dependencies[] = features_site_frontpage
 dependencies[] = field_permissions
 dependencies[] = filter
 dependencies[] = full_name
