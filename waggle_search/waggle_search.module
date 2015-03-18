@@ -162,9 +162,14 @@ function waggle_search_block_view($delta = '') {
       $view->set_items_per_page(0);
       $view->execute();
 
+      $sidebar_forms = array(
+        drupal_get_form('waggle_story_sidebar'),
+        drupal_get_form('waggle_saved_searches_sidebar'),
+      );
+
       return array(
         'subject' => NULL,
-        'content' => drupal_render(drupal_get_form('waggle_story_sidebar')) . drupal_render(drupal_get_form('waggle_saved_searches_sidebar')),
+        'content' => drupal_render($sidebar_forms[0]) . drupal_render($sidebar_forms[1]),
       );
       break;
   }
