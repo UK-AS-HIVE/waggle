@@ -586,7 +586,7 @@ function waggle_feature_field_default_field_instances() {
     'bundle' => 'story',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => '<i class="icon-eye-open"></i> Select the roles able to view this story.',
+    'description' => '<i class="fa fa-eye"></i> Select the roles able to view this story.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -1339,7 +1339,7 @@ function waggle_feature_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('<i class="icon-eye-open"></i> Select the roles able to view this story.');
+  t('<i class="fa fa-eye"></i> Select the roles able to view this story.');
   t('A url pointing to an image of the user.');
   t('Attachments');
   t('Author revision');

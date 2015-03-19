@@ -246,7 +246,7 @@ function waggle_story_sidebar($form, &$form_state) {
     }
     $_GET['ws'] = $original_ws;
 
-    $form['saved_searches']['#markup'] .= '</a> <a class="saved-search-delete" href="#"><i class="icon-remove"></i></a></div>';
+    $form['saved_searches']['#markup'] .= '</a> <a class="saved-search-delete" href="#"><i class="fa fa-remove"></i></a></div>';
   }
 
   $form['prompt'] = array(

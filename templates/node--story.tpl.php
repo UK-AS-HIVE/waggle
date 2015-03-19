@@ -89,7 +89,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
     <div class="top-right-corner">
       <?php if (isset($node->field_attachments['und']) && count($node->field_attachments['und']) > 0): ?>
         <span>
-	  <i class="icon-paper-clip"></i><?php echo count($node->field_attachments['und']); ?>
+	  <i class="fa fa-paperclip"></i><?php echo count($node->field_attachments['und']); ?>
         </span>
       <?php endif; ?>
 
@@ -98,7 +98,7 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
           $roles = user_roles();
       ?>
         <span title="This story is only visible to the listed roles.  Expand story details to edit the role visibility settings.">
-          <i class="icon-lock"></i> 
+          <i class="fa fa-lock"></i>
       <?php
           //print_r($node->field_role_visibility);
 
