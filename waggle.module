@@ -439,10 +439,11 @@ function waggle_story_status($node) {
     drupal_json_output(FALSE);
   }
   else if (isset($_POST['status'])) {
-    // @TODO Change vid to voc machine name
-    //drupal_json_output('first');
+    $vocabs = taxonomy_get_vocabularies();
+    $vocab = array_filter($vocabs, function($v) { return $v->machine_name == 'story_status'; });
+    $vocab = array_shift($vocab);
     $term = taxonomy_term_load($_POST['status']);
-    if ($term && $term->vid == 3) {
+    if ($term && $term->vid == $vocab->vid) {
       $node->revision = TRUE;
       dpm($node);
       $node->field_status['und'][0] = array('tid' => $_POST['status']);

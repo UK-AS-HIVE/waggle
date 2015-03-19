@@ -244,7 +244,10 @@ $content['comments'] = waggle_tracker_comment_node_page_additions($node);
 
           <li class="change-status-wrapper">
             <?php 
-              $terms = taxonomy_get_tree(3);
+              $vocabs = taxonomy_get_vocabularies();
+              $vocab = array_filter($vocabs, function($v) { return $v->machine_name == 'story_status'; });
+              $vocab = array_shift($vocab);
+              $terms = taxonomy_get_tree($vocab->vid);
               $options = array();
               foreach ($terms as $term) {
                 $options[$term->tid] = strtolower($term->name);
