@@ -12,6 +12,128 @@ function waggle_feature_default_fe_block_settings() {
 
   $export['version'] = '2.0';
 
+  $export['facetapi-2EHMX1BF7ZvtCpml0F5RsDt7rdRmYuOG'] = array(
+    'cache' => -1,
+    'delta' => '2EHMX1BF7ZvtCpml0F5RsDt7rdRmYuOG',
+    'module' => 'facetapi',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'bartik',
+        'weight' => 0,
+      ),
+      'seven' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'seven',
+        'weight' => 0,
+      ),
+      'waggle_theme' => array(
+        'region' => 'sidebar_second',
+        'status' => 1,
+        'theme' => 'waggle_theme',
+        'weight' => 0,
+      ),
+    ),
+  );
+
+  $export['facetapi-EWMrfXzc0aclsb9zLp1pxZ6iIw8T1PZg'] = array(
+    'cache' => -1,
+    'custom' => 0,
+    'delta' => 'EWMrfXzc0aclsb9zLp1pxZ6iIw8T1PZg',
+    'module' => 'facetapi',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'bartik',
+        'weight' => 0,
+      ),
+      'seven' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'seven',
+        'weight' => 0,
+      ),
+      'waggle_theme' => array(
+        'region' => 'sidebar_second',
+        'status' => 1,
+        'theme' => 'waggle_theme',
+        'weight' => 0,
+      ),
+    ),
+    'title' => '',
+    'visibility' => 0,
+  );
+
+  $export['facetapi-T0oz9cDw4tn4UqW3tpwJOYHVjq5ezBAI'] = array(
+    'cache' => -1,
+    'custom' => 0,
+    'delta' => 'T0oz9cDw4tn4UqW3tpwJOYHVjq5ezBAI',
+    'module' => 'facetapi',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'bartik',
+        'weight' => 0,
+      ),
+      'seven' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'seven',
+        'weight' => 0,
+      ),
+      'waggle_theme' => array(
+        'region' => 'sidebar_second',
+        'status' => 1,
+        'theme' => 'waggle_theme',
+        'weight' => 0,
+      ),
+    ),
+    'title' => '',
+    'visibility' => 0,
+  );
+
+  $export['facetapi-oVFY400V10Veh547A69ZXh0DD16pxzT9'] = array(
+    'cache' => -1,
+    'delta' => 'oVFY400V10Veh547A69ZXh0DD16pxzT9',
+    'module' => 'facetapi',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'bartik',
+        'weight' => 0,
+      ),
+      'seven' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'seven',
+        'weight' => 0,
+      ),
+      'waggle_theme' => array(
+        'region' => 'sidebar_second',
+        'status' => 1,
+        'theme' => 'waggle_theme',
+        'weight' => 0,
+      ),
+    ),
+  );
+
   $export['system-navigation'] = array(
     'cache' => -1,
     'custom' => 0,
