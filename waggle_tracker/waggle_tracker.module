@@ -189,7 +189,7 @@ function waggle_tracker_get_data($label, $id) {
       ->execute();
               
     $details = $field_details->fetchAssoc();
-    $data = $details[filename];
+    $data = $details['filename'];
     if ($data == NULL) {
       $field_details = db_select('waggle_tracker', 'wt')
         ->fields('wt', array('field_details'))
