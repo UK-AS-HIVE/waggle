@@ -1,0 +1,42 @@
+diff -ur ./editablefields.js /var/www/sites/all/modules/editablefields/editablefields.js
+--- ./editablefields.js	2011-11-22 07:48:55.000000000 -0500
++++ /var/www/sites/all/modules/editablefields/editablefields.js	2013-03-14 10:48:29.000000000 -0400
+@@ -6,7 +6,8 @@
+ 
+       // There is only one editable field in that form, we can hide the submit
+       // button.
+-      if ($this.find('input[type=text],textarea,select').length == 1) {
++      if ($this.find('input[type=file]')) {
++      } else if ($this.find('input[type=text],textarea,select').length == 1) {
+         $this.find('input.form-submit').hide();
+         $this.find('input[type=text],textarea,select').change(function() {
+           $this.find('input.form-submit').triggerHandler('click');
+diff -ur ./editablefields.module /var/www/sites/all/modules/editablefields/editablefields.module
+--- ./editablefields.module	2011-11-22 07:48:55.000000000 -0500
++++ /var/www/sites/all/modules/editablefields/editablefields.module	2014-07-11 16:42:22.000000000 -0400
+@@ -312,7 +312,14 @@
+   // Remove the title of the field.
+   $instance['label'] = '';
+ 
+-  $edit_mode_state = isset($form_state['edit_mode']) && drupal_array_get_nested_value($form_state['edit_mode'], $form['#parents']);
++  if(isset($form_state['edit_mode'])) {
++    if(!is_array($form_state['edit_mode']) && !$form_state['edit_mode']) {
++      $form_state['edit_mode'] = array();
++    }
++    $edit_mode_state = isset($form_state['edit_mode']) && drupal_array_get_nested_value($form_state['edit_mode'], $form['#parents']);
++  } else {
++    $edit_mode_state = FALSE;
++  }
+   $edit_mode = empty($display['settings']['click_to_edit']) || $edit_mode_state;
+ 
+   if ($edit_mode) {
+@@ -495,7 +502,8 @@
+   }
+   drupal_array_set_nested_value($form_state['edit_mode'], $parents, FALSE);
+ 
+-  $entity = $form_state['editablefields_entities'][$element['#entity_type']][$element['#entity_id']];
++  //$entity = $form_state['editablefields_entities'][$element['#entity_type']][$element['#entity_id']];
++  $entity = reset(entity_load($element['#entity_type'], array($element['#entity_id'])));
+ 
+   entity_form_submit_build_entity($element['#entity_type'], $entity, $element, $form_state);
+ 

@@ -68,14 +68,15 @@ Vagrant.configure(2) do |config|
     sudo apt-get update
     echo 'mysql-server mysql-server/root_password password waggle' | sudo debconf-set-selections
     echo 'mysql-server mysql-server/root_password_again password waggle' | sudo debconf-set-selections
-    sudo apt-get -y install git-core
+    sudo apt-get -y install git-core unzip
     sudo apt-get -y install mysql-server mysql-client
-    sudo apt-get -y install php5-cli php5-common php5-mysql php5-gd php5 libapache2-mod-php5
+    sudo apt-get -y install php5-cli php5-common php5-mysql php5-gd php5-curl php5 libapache2-mod-php5
     sudo apt-get -y install apache2
 
     sudo a2enmod rewrite
   SHELL
 
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
   config.vm.provision "file", source: "vagrant/apachesite.conf", destination: "000-default.conf"
 
   config.vm.provision :shell, :privileged => false, :inline => <<-SHELL
@@ -101,9 +102,20 @@ Vagrant.configure(2) do |config|
 
     git clone https://github.com/UK-AS-HIVE/waggle -b updating
     ln -s /var/www/sites/all/modules/waggle/waggle_theme/ ../themes/waggle_theme
+    cd waggle/waggle_theme
     git clone https://github.com/UK-AS-HIVE/full_name_field full_name
     drush dl features_extra
+    drush dl fontawesome
+    drush en -y fontawesome
+    drush fa-download
     drush en -y waggle_feature waggle waggle_tracker
+
+    drush dl-autopager
+
+    cd /var/www/sites/all/modules/editablefields
+    #wget https://www.drupal.org/files/editablefields-stale-entity-in-form-state.patch
+    #wget https://www.drupal.org/files/editablefields-1206656-65.patch
+    patch -p1 < /vagrant/vagrant/editablefields.patch
 
     drush vset site_name "Waggle"
     drush en -y waggle_theme
