@@ -127,11 +127,45 @@ function waggle_feature_default_fe_block_settings() {
       ),
       'waggle_theme' => array(
         'region' => 'sidebar_second',
-        'status' => 1,
+        'status' => 0,
         'theme' => 'waggle_theme',
         'weight' => 0,
       ),
     ),
+    'title' => '',
+    'visibility' => 0,
+  );
+
+  $export['search-form'] = array(
+    'cache' => -1,
+    'custom' => 0,
+    'delta' => 'form',
+    'module' => 'search',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => 'sidebar_first',
+        'status' => 1,
+        'theme' => 'bartik',
+        'weight' => -1,
+      ),
+      'seven' => array(
+        'region' => 'dashboard_sidebar',
+        'status' => 1,
+        'theme' => 'seven',
+        'weight' => -10,
+      ),
+      'waggle_theme' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'waggle_theme',
+        'weight' => 0,
+      ),
+    ),
+    'title' => '',
+    'visibility' => 0,
   );
 
   $export['system-navigation'] = array(
