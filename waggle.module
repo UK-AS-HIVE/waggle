@@ -725,7 +725,7 @@ function waggle_remote_add() {
   $new_story = (object) array('type' => 'story');
   node_object_prepare($new_story);
   $new_story->uid = $account->uid;
-  $new_story->title = 'story-' . time();
+  $new_story->title = isset($_POST['subject_line']) ? check_plain($_POST['subject_line']) : 'story-' . time();
   $new_story->body['und'][0]['value'] = $_POST['description'];
   $new_story->body['und'][0]['format'] = 'filtered_html';
   $new_story->field_ip_address['und'][0]['value'] = $_POST['ip_address'];

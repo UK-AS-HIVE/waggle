@@ -668,6 +668,44 @@ function waggle_feature_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'node-story-field_subject_line'
+  $field_instances['node-story-field_subject_line'] = array(
+    'bundle' => 'story',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'Used for e-mail subject lines.  Typically this will be the name of the webform being submitted.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 22,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'field_subject_line',
+    'label' => 'Subject line',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'ldap_user',
+      'settings' => array(),
+      'type' => 'ldap_user_hidden',
+      'weight' => 25,
+    ),
+  );
+
   // Exported field_instance: 'node-story-field_submitted_by'
   $field_instances['node-story-field_submitted_by'] = array(
     'bundle' => 'story',
@@ -1366,11 +1404,13 @@ function waggle_feature_field_default_field_instances() {
   t('Staff-only Notes');
   t('Status');
   t('Stores values from external forms');
+  t('Subject line');
   t('Submit Email');
   t('Submit Name');
   t('Submitted by');
   t('Tags');
   t('The computer address from which the story was submitted.');
+  t('Used for e-mail subject lines.  Typically this will be the name of the webform being submitted.');
   t('User Category');
   t('Waiting on');
   t('Wants Updates');
