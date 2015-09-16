@@ -22,7 +22,8 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
   // NMA: This might be a good spot for permissions checks, like:
   if (!node_access('update', $node = node_load($nodeID), $drupalUserObject)) { 
     watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment to: ' . $nodeID . '  and failed the node_access test');
-    return;
+    $drupalUID = 0;
+    //return;
   }
   else {
     watchdog('waggle_email', 'User with user ID ' . $drupalUID . ' and email address ' . $fromAddress . ' attempted to add a comment and passed the node_access test');
@@ -40,7 +41,7 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
     'pid' => 0,
     'uid' => $drupalUID,
     'mail' => $fromAddress,
-    'is_anonymous' => 0,
+    'is_anonymous' => ($drupalUID==0?1:0),
     'homepage' => '',
     'status' => COMMENT_PUBLISHED,
     'subject' => '',
@@ -48,7 +49,7 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
     'comment_body' => array(
       LANGUAGE_NONE => array(
         0 => array(
-        'value' => check_plain($body),
+        'value' => check_plain( ($drupalUID==0?($fromAddress . ' wrote: '):'') . $body),
         'format' => 'filtered_html',
         ),
       ),
