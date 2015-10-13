@@ -65,6 +65,11 @@ class WaggleEmailUnitTestCase extends DrupalUnitTestCase {
         'expected' => 'http://this.is.a.really.long.url.that.will.run.over.a.line.and.hopefully.come.out.right',
         'storyid' => 745436,
       ),
+      array(
+        'file' => 'chinese_gb2312.mail',
+        'expected' => 'Reply from a Chinese client.',
+        'storyid' => 764432,
+      ),
     );
 
     foreach ($tests as $test) {

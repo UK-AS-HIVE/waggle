@@ -199,10 +199,13 @@ function waggle_email_ingestion_parse_body($message, $toAddress = 'story-xxxxxx@
           case 'iso-8859-1':
             $bodyRaw = iconv('ISO-8859-1', 'UTF-8//TRANSLIT', $bodyRaw);
             break;
+          case 'gb2312':
+            $bodyRaw = iconv('GB2312', 'UTF-8//IGNORE', $bodyRaw);
+            break;
         }
 
         # TODO: break this out into its own unit tests
-        $bodyRaw = preg_split('/(^________________________________\n)?^From:|^[0-9\/]+ <' . preg_quote($toAddress) . '>$|^[0-9]{4}-[0-9]{2}-[0-9]{2}.*<' . preg_quote($toAddress) . '>:$|^On.+?, <' . preg_quote($toAddress) . '> wrote:/sm', $bodyRaw);
+        $bodyRaw = preg_split('/(^_{5,})?[\r\n]{1,2}^(From|发件人):|^[0-9\/]+ <' . preg_quote($toAddress) . '>$|^[0-9]{4}-[0-9]{2}-[0-9]{2}.*<' . preg_quote($toAddress) . '>:$|^On.+?, <' . preg_quote($toAddress) . '> wrote:/sm', $bodyRaw);
 
         $body = trim($bodyRaw[0]);
 
