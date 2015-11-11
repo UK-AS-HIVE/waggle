@@ -292,6 +292,8 @@ function waggle_add_user($node){
     druapl_exit();
   }
 
+  lock_wait('waggle_remote_update_' . $node->nid);
+  $node = node_load($node->nid);
   $found = FALSE;
   //Make sure the user isn't already attatched to this story
   if (!empty($node->field_associated_users)) {
@@ -310,6 +312,7 @@ function waggle_add_user($node){
     $account = user_load($uid);
     $json = drupal_render(user_view($account, 'waggle_association'));
   }
+  lock_release('waggle_remote_update_' . $node->nid);
   drupal_json_output('<div class="field-item">' . $json . '</div>');
 }
 
@@ -325,6 +328,8 @@ function waggle_remove_user($node){
     druapl_exit();
   }
 
+  lock_wait('waggle_remote_update_' . $node->nid);
+  $node = node_load($node->nid);
   $found = FALSE;
   //Make sure the user is attatched to this story
   foreach($node->field_associated_users['und'] as $delta => $data){
@@ -339,6 +344,7 @@ function waggle_remove_user($node){
   if ($found) {
     node_save($node);   
   }
+  lock_release('waggle_remote_update_' . $node->nid);
   drupal_json_output($found);
 }
 
@@ -382,6 +388,8 @@ function waggle_add_tag($node){
     drupal_exit();
   }
 
+  lock_wait('waggle_remote_update_' . $node->nid);
+  $node = node_load($node->nid);
   $found = FALSE;
   //Make sure the tag isn't already attatched to this story
   if (!empty($node->field_tags)) {
@@ -399,6 +407,7 @@ function waggle_add_tag($node){
     node_save($node);
     $json = '<li>' . l($term->name, 'taxonomy/term/' . $tid) . '</li>';
   }
+  lock_release('waggle_remote_update_' . $node->nid);
   drupal_json_output($json);
 }
 
@@ -414,6 +423,8 @@ function waggle_remove_tag($node){
     drupal_exit();
   }
 
+  lock_wait('waggle_remote_update_' . $node->nid);
+  $node = node_load($node->nid);
   $found = FALSE;
   //Make sure the tag is attached to this story
   foreach($node->field_tags['und'] as $delta => $data){
@@ -428,6 +439,7 @@ function waggle_remove_tag($node){
   if ($found) {
     node_save($node);   
   }
+  lock_release('waggle_remote_update_' . $node->nid);
   drupal_json_output($found);
 }
 
