@@ -292,8 +292,11 @@ function waggle_add_user($node){
     druapl_exit();
   }
 
-  lock_wait('waggle_remote_update_' . $node->nid);
-  $node = node_load($node->nid);
+
+  while (!lock_acquire('waggle_remote_update_' . $node->nid)) {
+    lock_wait('waggle_remote_update_' . $node->nid);
+  }
+  $node = node_load($node->nid, NULL, TRUE);
   $found = FALSE;
   //Make sure the user isn't already attatched to this story
   if (!empty($node->field_associated_users)) {
@@ -328,8 +331,10 @@ function waggle_remove_user($node){
     druapl_exit();
   }
 
-  lock_wait('waggle_remote_update_' . $node->nid);
-  $node = node_load($node->nid);
+  while (!lock_acquire('waggle_remote_update_' . $node->nid)) {
+    lock_wait('waggle_remote_update_' . $node->nid);
+  }
+  $node = node_load($node->nid, NULL, TRUE);
   $found = FALSE;
   //Make sure the user is attatched to this story
   foreach($node->field_associated_users['und'] as $delta => $data){
@@ -388,8 +393,10 @@ function waggle_add_tag($node){
     drupal_exit();
   }
 
-  lock_wait('waggle_remote_update_' . $node->nid);
-  $node = node_load($node->nid);
+  while (!lock_acquire('waggle_remote_update_' . $node->nid)) {
+    lock_wait('waggle_remote_update_' . $node->nid);
+  }
+  $node = node_load($node->nid, NULL, TRUE);
   $found = FALSE;
   //Make sure the tag isn't already attatched to this story
   if (!empty($node->field_tags)) {
@@ -423,8 +430,10 @@ function waggle_remove_tag($node){
     drupal_exit();
   }
 
-  lock_wait('waggle_remote_update_' . $node->nid);
-  $node = node_load($node->nid);
+  while (!lock_acquire('waggle_remote_update_' . $node->nid)) {
+    lock_wait('waggle_remote_update_' . $node->nid);
+  }
+  $node = node_load($node->nid, NULL, TRUE);
   $found = FALSE;
   //Make sure the tag is attached to this story
   foreach($node->field_tags['und'] as $delta => $data){
@@ -455,10 +464,15 @@ function waggle_story_status($node) {
     //drupal_json_output('first');
     $term = taxonomy_term_load($_POST['status']);
     if ($term && $term->vid == 3) {
+      while (!lock_acquire('waggle_remote_update_' . $node->nid)) {
+        lock_wait('waggle_remote_update_' . $node->nid);
+      }
+      $node = node_load($node->nid, NULL, TRUE);
       $node->revision = TRUE;
       dpm($node);
       $node->field_status['und'][0] = array('tid' => $_POST['status']);
       node_save($node);
+      lock_release('waggle_remote_update_' . $node->nid);
       if ($node) {
         drupal_json_output(1);
       }
