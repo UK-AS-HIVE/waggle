@@ -67,19 +67,22 @@ function waggle_email_ingest_message(Zend_Mail_Message $message) {
 function waggle_email_get_toAddress(Zend_Mail_Message $message) {
   //get the to address (may or may not be same format incoming as the from address) to in order to get the nodeID - story-XXXXXX@helpdev.as.uky.edu
   
-  $toAddress = $message->to;
-  $toAddress = trim($toAddress);
+  $toAddresses = explode(',', $message->to);
 
-  if(strpos($toAddress, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
-    //remove outside symbols
-    //watchdog('waggle_email', strlen($toAddress));
-    $toAddress = substr($toAddress, 1, -1);
+  foreach ($toAddresses as $toAddress) {
+    if(strpos($toAddress, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
+      //remove outside symbols
+      //watchdog('waggle_email', strlen($toAddress));
+      $toAddress = substr($toAddress, 1, -1);
 
-    $toArray = explode('<', $toAddress);
-    $toAddress = $toArray[1];
+      $toArray = explode('<', $toAddress);
+      $toAddress = $toArray[1];
+    }
+
+    if (substr($toAddress, 0, 6) == 'story-') {
+      return $toAddress;
+    }
   }
-  
-  return $toAddress;
 }
 
 function waggle_email_parse_story_id_from_toAddress($toAddress) {
