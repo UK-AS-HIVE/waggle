@@ -70,13 +70,16 @@ function waggle_email_get_toAddress(Zend_Mail_Message $message) {
   $toAddresses = explode(',', $message->to);
 
   foreach ($toAddresses as $toAddress) {
-    if(strpos($toAddress, ' ') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
+    $toAddress = trim($toAddress);
+    if(strpos($toAddress, '<') !== FALSE){ //EMail is most likely from Exchange and is in format "name" <address@address.com>
       //remove outside symbols
       //watchdog('waggle_email', strlen($toAddress));
-      $toAddress = substr($toAddress, 1, -1);
+      //$toAddress = substr($toAddress, 1, -1);
 
       $toArray = explode('<', $toAddress);
       $toAddress = $toArray[1];
+      $toArray = explode('>', $toAddress);
+      $toAddress = $toArray[0];
     }
 
     if (substr($toAddress, 0, 6) == 'story-') {
