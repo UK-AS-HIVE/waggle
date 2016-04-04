@@ -177,7 +177,7 @@ function waggle_email_comment_insert($comment) {
     global $user;
     $account = user_load($comment->uid);
     $uids = array_unique(array_merge(
-      ((isset($_POST['email-author']) && ($_POST['email-author'] == 'true')) ? array($node->uid) : array()),
+      ((isset($_POST['email-author']) && ($_POST['email-author'] != 'true')) ? array() : array($node->uid)),
       _check_associated_users($node)
     ));
 
